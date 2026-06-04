@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../lib/auth'
 
 const C = {
   bg: '#0A0A0A', card: '#141414', border: '#2A2A2A',
@@ -8,18 +9,36 @@ const C = {
 
 export default function Signup() {
   const navigate = useNavigate()
-  const [restaurantName, setRestaurantName] = useState('')
-  const [email, setEmail]                   = useState('')
-  const [password, setPassword]             = useState('')
-  const [error, setError]                   = useState('')
+  const { signUp } = useAuth()
 
-  function handleSubmit(e) {
+  const [restaurantName, setRestaurantName] = useState('')
+  const [email,          setEmail]          = useState('')
+  const [password,       setPassword]       = useState('')
+  const [error,          setError]          = useState('')
+  const [loading,        setLoading]        = useState(false)
+
+  async function handleSubmit(e) {
     e.preventDefault()
-    if (!restaurantName || !email || !password) {
+    if (!restaurantName.trim() || !email || !password) {
       setError('Please fill in all fields.')
       return
     }
-    localStorage.setItem('ap_session', 'true')
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    const { error: authError } = await signUp(email, password, restaurantName.trim())
+
+    if (authError) {
+      setError(authError.message)
+      setLoading(false)
+      return
+    }
+
     navigate('/dashboard')
   }
 
@@ -40,12 +59,8 @@ export default function Signup() {
         className="w-full rounded-lg px-8 py-10"
         style={{ maxWidth: 400, backgroundColor: C.card, border: `1px solid ${C.border}` }}
       >
-        <h1 className="text-xl font-semibold mb-1" style={{ color: C.primary }}>
-          Create your account
-        </h1>
-        <p className="text-sm mb-8" style={{ color: C.secondary }}>
-          Set up AutoPilot for your restaurant.
-        </p>
+        <h1 className="text-xl font-semibold mb-1" style={{ color: C.primary }}>Create your account</h1>
+        <p className="text-sm mb-8" style={{ color: C.secondary }}>Set up AutoPilot for your restaurant.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -57,7 +72,8 @@ export default function Signup() {
               value={restaurantName}
               onChange={e => { setRestaurantName(e.target.value); setError('') }}
               placeholder="Mario's Trattoria"
-              className="w-full text-sm px-4 py-2.5 rounded outline-none transition-colors"
+              autoComplete="organization"
+              className="w-full text-sm px-4 py-2.5 rounded outline-none"
               style={{ backgroundColor: '#0F0F0F', color: C.primary, border: `1px solid ${C.border}` }}
               onFocus={e => e.target.style.borderColor = C.secondary}
               onBlur={e => e.target.style.borderColor = C.border}
@@ -65,15 +81,14 @@ export default function Signup() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
-              Email
-            </label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>Email</label>
             <input
               type="email"
               value={email}
               onChange={e => { setEmail(e.target.value); setError('') }}
               placeholder="you@restaurant.com"
-              className="w-full text-sm px-4 py-2.5 rounded outline-none transition-colors"
+              autoComplete="email"
+              className="w-full text-sm px-4 py-2.5 rounded outline-none"
               style={{ backgroundColor: '#0F0F0F', color: C.primary, border: `1px solid ${C.border}` }}
               onFocus={e => e.target.style.borderColor = C.secondary}
               onBlur={e => e.target.style.borderColor = C.border}
@@ -83,29 +98,37 @@ export default function Signup() {
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
               Password
+              <span style={{ color: C.muted, fontWeight: 400, marginLeft: 6 }}>min. 6 characters</span>
             </label>
             <input
               type="password"
               value={password}
               onChange={e => { setPassword(e.target.value); setError('') }}
               placeholder="••••••••"
-              className="w-full text-sm px-4 py-2.5 rounded outline-none transition-colors"
+              autoComplete="new-password"
+              className="w-full text-sm px-4 py-2.5 rounded outline-none"
               style={{ backgroundColor: '#0F0F0F', color: C.primary, border: `1px solid ${C.border}` }}
               onFocus={e => e.target.style.borderColor = C.secondary}
               onBlur={e => e.target.style.borderColor = C.border}
             />
           </div>
 
-          {error && <p className="text-xs" style={{ color: 'rgb(248,113,113)' }}>{error}</p>}
+          {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
 
           <button
             type="submit"
-            className="w-full text-sm font-semibold py-2.5 rounded transition-colors mt-2"
-            style={{ backgroundColor: C.primary, color: '#0A0A0A' }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e4e2dd'}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = C.primary}
+            disabled={loading}
+            className="w-full text-sm font-semibold py-2.5 rounded mt-2"
+            style={{
+              backgroundColor: loading ? 'rgba(240,238,233,0.5)' : C.primary,
+              color: '#0A0A0A',
+              cursor: loading ? 'default' : 'pointer',
+              transition: 'background-color 0.15s',
+            }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = '#e4e2dd' }}
+            onMouseLeave={e => { if (!loading) e.currentTarget.style.backgroundColor = C.primary }}
           >
-            Create account
+            {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 

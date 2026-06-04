@@ -1,18 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useDashboard } from '../DashboardContext'
-
-const C = {
-  card: '#141414', border: '#2A2A2A', divider: '#1E1E1E',
-  primary: '#F0EEE9', secondary: '#888780', muted: '#3A3835', accent: '#4A90D9',
-}
+import { useApp } from '../AppContext'
 
 const LOADING_MSGS = [
-  "AutoPilot is drafting your post...",
-  "Choosing the perfect words...",
-  "Almost ready for takeoff...",
-  "Polishing your caption...",
+  'AutoPilot is drafting your post…',
+  'Choosing the perfect words…',
+  'Almost ready for takeoff…',
+  'Polishing your caption…',
 ]
-
 const TRAIL_DOTS = [12, 24, 36, 50, 63, 76, 88]
 
 const statusStyle = {
@@ -21,21 +16,25 @@ const statusStyle = {
   draft:      { bg: 'rgba(136,135,128,0.08)', color: '#888780', border: 'rgba(136,135,128,0.2)' },
 }
 
-function EmptyState() {
+function EmptyState({ C }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-8">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="mb-4" style={{ color: C.muted }}>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
+        className="mb-4" style={{ color: C.muted }}>
         <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
         <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
         <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
       </svg>
       <p className="text-sm text-center" style={{ color: C.secondary }}>No posts yet.</p>
-      <p className="text-xs text-center mt-1" style={{ color: C.muted }}>AutoPilot will schedule and publish posts automatically.</p>
+      <p className="text-xs text-center mt-1" style={{ color: C.muted }}>
+        AutoPilot will schedule and publish posts automatically.
+      </p>
     </div>
   )
 }
 
-function PostCard({ p, onDelete }) {
+function PostCard({ p, onDelete, C }) {
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting]     = useState(false)
   const s = statusStyle[p.status] ?? statusStyle.draft
@@ -48,15 +47,15 @@ function PostCard({ p, onDelete }) {
     <div
       className="rounded-lg flex flex-col"
       style={{
-        backgroundColor: C.card,
-        border: `1px solid ${C.border}`,
+        backgroundColor: C.card, border: `1px solid ${C.border}`,
         opacity: deleting ? 0 : 1,
         transform: deleting ? 'scale(0.97)' : 'scale(1)',
         transition: 'opacity 0.22s ease, transform 0.22s ease',
       }}
       onTransitionEnd={handleTransitionEnd}
     >
-      <div className="p-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.divider}` }}>
+      <div className="p-4 flex items-center justify-between"
+        style={{ borderBottom: `1px solid ${C.divider}` }}>
         <span className="text-xs font-semibold" style={{ color: C.primary }}>{p.platform}</span>
 
         {confirming ? (
@@ -65,34 +64,31 @@ function PostCard({ p, onDelete }) {
             <button
               onClick={() => setConfirming(false)}
               className="text-xs px-2 py-0.5 rounded"
-              style={{ color: C.secondary, border: `1px solid ${C.border}` }}
-            >
-              Cancel
-            </button>
+              style={{ color: C.secondary, border: `1px solid ${C.border}`, cursor: 'pointer' }}
+            >Cancel</button>
             <button
               onClick={() => setDeleting(true)}
               className="text-xs px-2 py-0.5 rounded"
-              style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
-            >
-              Delete
-            </button>
+              style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}
+            >Delete</button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
+            <span className="text-xs px-2 py-0.5 rounded"
+              style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
               {p.status}
             </span>
             <button
               onClick={() => setConfirming(true)}
-              style={{ color: C.muted, lineHeight: 1, padding: 2, transition: 'color 0.15s' }}
+              style={{ color: C.muted, lineHeight: 1, padding: 2, transition: 'color 0.15s', cursor: 'pointer' }}
               onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
               onMouseLeave={e => e.currentTarget.style.color = C.muted}
               title="Delete post"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6l-1 14H6L5 6"/>
-                <path d="M10 11v6"/><path d="M14 11v6"/>
+                <path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
                 <path d="M9 6V4h6v2"/>
               </svg>
             </button>
@@ -111,15 +107,17 @@ function PostCard({ p, onDelete }) {
 
 export default function SocialPosts() {
   const { posts: webhookPosts } = useDashboard()
+  const { C } = useApp()
+
   const [localPosts, setLocalPosts] = useState([])
   const [deletedIds, setDeletedIds] = useState(new Set())
-  const [showForm, setShowForm]     = useState(false)
-  const [platform, setPlatform]     = useState('Instagram')
-  const [topic, setTopic]           = useState('')
-  const [text, setText]             = useState('')
-  const [isLoading, setIsLoading]   = useState(false)
-  const [msgIdx, setMsgIdx]         = useState(0)
-  const [aiError, setAiError]       = useState('')
+  const [showForm,   setShowForm]   = useState(false)
+  const [platform,   setPlatform]   = useState('Instagram')
+  const [topic,      setTopic]      = useState('')
+  const [text,       setText]       = useState('')
+  const [isLoading,  setIsLoading]  = useState(false)
+  const [msgIdx,     setMsgIdx]     = useState(0)
+  const [aiError,    setAiError]    = useState('')
 
   useEffect(() => {
     if (!isLoading) return
@@ -129,45 +127,23 @@ export default function SocialPosts() {
 
   async function handleAI() {
     if (!topic.trim() || isLoading) return
-
-    console.log('[AI Assist] All VITE_GROQ env vars:', Object.fromEntries(
-      Object.entries(import.meta.env).filter(([k]) => k.startsWith('VITE_GROQ'))
-    ))
-    console.log('[AI Assist] VITE_GROQ_API_KEY value:', import.meta.env.VITE_GROQ_API_KEY)
-
     const apiKey = import.meta.env.VITE_GROQ_API_KEY
     if (!apiKey) {
       setAiError('VITE_GROQ_API_KEY is not set in .env — add your key and restart the dev server.')
       return
     }
-
-    setIsLoading(true)
-    setAiError('')
-    setMsgIdx(0)
-
-    const charHint = platform === 'Twitter'
-      ? 'Keep it under 280 characters.'
-      : 'Aim for 150–300 characters.'
-
+    setIsLoading(true); setAiError(''); setMsgIdx(0)
+    const charHint = platform === 'Twitter' ? 'Keep it under 280 characters.' : 'Aim for 150–300 characters.'
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
           max_tokens: 512,
           messages: [
-            {
-              role: 'system',
-              content: "You are a social media expert for independent restaurants. Write engaging, authentic posts that sound like a real restaurant owner wrote them — not a marketing agency. Be specific, warm, and conversational. Include relevant emojis and 3-5 hashtags.",
-            },
-            {
-              role: 'user',
-              content: `Write a ${platform} post about: ${topic.trim()}. ${charHint} Return only the post text, nothing else.`,
-            },
+            { role: 'system', content: "You are a social media expert for independent restaurants. Write engaging, authentic posts that sound like a real restaurant owner wrote them — not a marketing agency. Be specific, warm, and conversational. Include relevant emojis and 3-5 hashtags." },
+            { role: 'user', content: `Write a ${platform} post about: ${topic.trim()}. ${charHint} Return only the post text, nothing else.` },
           ],
         }),
       })
@@ -175,7 +151,6 @@ export default function SocialPosts() {
       if (!res.ok) throw new Error(data.error?.message || `Groq API error ${res.status}`)
       setText(data.choices[0].message.content.trim())
     } catch (err) {
-      console.error('AI generation error:', err)
       setAiError(err.message || 'Something went wrong.')
     } finally {
       setIsLoading(false)
@@ -193,12 +168,8 @@ export default function SocialPosts() {
   }
 
   function handleCloseForm() {
-    setShowForm(false)
-    setIsLoading(false)
-    setAiError('')
-    setText('')
-    setTopic('')
-    setPlatform('Instagram')
+    setShowForm(false); setIsLoading(false); setAiError('')
+    setText(''); setTopic(''); setPlatform('Instagram')
   }
 
   function handleDelete(id) {
@@ -218,21 +189,22 @@ export default function SocialPosts() {
         <button
           onClick={() => setShowForm(true)}
           className="text-sm font-semibold px-4 py-2 rounded transition-colors"
-          style={{ backgroundColor: C.primary, color: '#0A0A0A' }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e4e2dd'}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = C.primary}
+          style={{ backgroundColor: C.primary, color: C.bg, cursor: 'pointer' }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}
         >
           + New post
         </button>
       </div>
 
       {allPosts.length === 0 ? (
-        <div className="rounded-lg overflow-hidden" style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
-          <EmptyState />
+        <div className="rounded-lg overflow-hidden"
+          style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+          <EmptyState C={C} />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {allPosts.map(p => <PostCard key={p.id} p={p} onDelete={handleDelete} />)}
+          {allPosts.map(p => <PostCard key={p.id} p={p} onDelete={handleDelete} C={C} />)}
         </div>
       )}
 
@@ -242,10 +214,10 @@ export default function SocialPosts() {
           style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
           onClick={e => e.target === e.currentTarget && handleCloseForm()}
         >
-          <div className="w-full rounded-lg p-8" style={{ maxWidth: 520, backgroundColor: '#141414', border: `1px solid ${C.border}` }}>
+          <div className="w-full rounded-lg p-8" style={{ maxWidth: 520, backgroundColor: C.card, border: `1px solid ${C.border}` }}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-base font-semibold" style={{ color: C.primary }}>New post</h2>
-              <button onClick={handleCloseForm} style={{ color: C.muted, fontSize: 18, lineHeight: 1 }}>×</button>
+              <button onClick={handleCloseForm} style={{ color: C.muted, fontSize: 18, lineHeight: 1, cursor: 'pointer' }}>×</button>
             </div>
 
             {/* Platform */}
@@ -258,14 +230,13 @@ export default function SocialPosts() {
                     onClick={() => setPlatform(pl)}
                     className="text-sm px-4 py-1.5 rounded transition-colors"
                     style={{
-                      backgroundColor: platform === pl ? C.primary : '#0F0F0F',
-                      color: platform === pl ? '#0A0A0A' : C.secondary,
+                      backgroundColor: platform === pl ? C.primary : C.inputBg,
+                      color: platform === pl ? C.bg : C.secondary,
                       border: `1px solid ${platform === pl ? 'transparent' : C.border}`,
                       fontWeight: platform === pl ? 600 : 400,
+                      cursor: 'pointer',
                     }}
-                  >
-                    {pl}
-                  </button>
+                  >{pl}</button>
                 ))}
               </div>
             </div>
@@ -280,9 +251,9 @@ export default function SocialPosts() {
                 value={topic}
                 onChange={e => setTopic(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAI()}
-                placeholder="e.g. Taco Tuesday special, new pasta dish, happy hour deals..."
+                placeholder="e.g. Taco Tuesday special, new pasta dish, happy hour deals…"
                 className="w-full text-sm px-4 py-2.5 rounded outline-none"
-                style={{ backgroundColor: '#0F0F0F', color: C.primary, border: `1px solid ${C.border}` }}
+                style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
                 onFocus={e => e.target.style.borderColor = C.secondary}
                 onBlur={e => e.target.style.borderColor = C.border}
               />
@@ -297,35 +268,27 @@ export default function SocialPosts() {
                   disabled={!topic.trim() || isLoading}
                   className="text-xs px-2.5 py-1 rounded"
                   style={{
-                    backgroundColor: 'rgba(74,144,217,0.1)',
-                    color: C.accent,
+                    backgroundColor: 'rgba(74,144,217,0.1)', color: '#4A90D9',
                     border: '1px solid rgba(74,144,217,0.2)',
                     opacity: !topic.trim() || isLoading ? 0.4 : 1,
                     cursor: !topic.trim() || isLoading ? 'default' : 'pointer',
                     transition: 'opacity 0.2s',
                   }}
-                >
-                  ✦ AI assist
-                </button>
+                >✦ AI assist</button>
               </div>
 
-              {aiError && (
-                <p style={{ fontSize: 11, color: '#f87171', marginBottom: 6 }}>{aiError}</p>
-              )}
+              {aiError && <p style={{ fontSize: 11, color: '#f87171', marginBottom: 6 }}>{aiError}</p>}
 
               <div style={{ position: 'relative' }}>
-                {/* Textarea — fades out while loading, fades in when done */}
                 <textarea
                   rows={4}
                   value={text}
                   onChange={e => setText(e.target.value)}
-                  placeholder="Write your post, or describe it above and click AI assist..."
+                  placeholder="Write your post, or describe it above and click AI assist…"
                   className="w-full text-sm px-4 py-3 rounded outline-none resize-none"
                   readOnly={isLoading}
                   style={{
-                    backgroundColor: '#0F0F0F',
-                    color: C.primary,
-                    border: `1px solid ${C.border}`,
+                    backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}`,
                     pointerEvents: isLoading ? 'none' : 'auto',
                     opacity: isLoading ? 0 : 1,
                     transition: 'opacity 0.35s ease',
@@ -334,54 +297,28 @@ export default function SocialPosts() {
                   onBlur={e => e.target.style.borderColor = C.border}
                 />
 
-                {/* Airplane loading overlay */}
-                <div
-                  aria-hidden={!isLoading}
-                  style={{
-                    position: 'absolute', inset: 0,
-                    borderRadius: 6,
-                    backgroundColor: '#0F0F0F',
-                    border: `1px solid ${C.border}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 10,
-                    pointerEvents: isLoading ? 'auto' : 'none',
-                    opacity: isLoading ? 1 : 0,
-                    transition: 'opacity 0.35s ease',
-                  }}
-                >
-                  {/* Runway */}
+                {/* Loading overlay */}
+                <div aria-hidden={!isLoading} style={{
+                  position: 'absolute', inset: 0, borderRadius: 6,
+                  backgroundColor: C.inputBg, border: `1px solid ${C.border}`,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  justifyContent: 'center', gap: 10,
+                  pointerEvents: isLoading ? 'auto' : 'none',
+                  opacity: isLoading ? 1 : 0,
+                  transition: 'opacity 0.35s ease',
+                }}>
                   <div style={{ position: 'relative', width: '82%', height: 26 }}>
-                    <div style={{
-                      position: 'absolute',
-                      left: 0, right: 0, top: '50%',
-                      borderTop: '1px solid rgba(74,144,217,0.18)',
-                    }} />
+                    <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px solid rgba(74,144,217,0.18)' }} />
                     {TRAIL_DOTS.map((pos, i) => (
-                      <div
-                        key={i}
-                        className="ap-trail-dot"
-                        style={{ left: `${pos}%`, animationDelay: `${(pos / 100) * 2000}ms` }}
-                      />
+                      <div key={i} className="ap-trail-dot" style={{ left: `${pos}%`, animationDelay: `${(pos / 100) * 2000}ms` }} />
                     ))}
                     <span className="ap-plane-fly">✈</span>
                   </div>
-
-                  {/* Cycling message */}
-                  <p style={{
-                    fontSize: 11,
-                    color: C.secondary,
-                    textAlign: 'center',
-                    minHeight: 16,
-                    transition: 'opacity 0.3s',
-                  }}>
+                  <p style={{ fontSize: 11, color: C.secondary, textAlign: 'center', minHeight: 16 }}>
                     {LOADING_MSGS[msgIdx]}
                   </p>
                 </div>
               </div>
-
               <p className="text-xs mt-1 text-right" style={{ color: C.muted }}>{text.length}/280</p>
             </div>
 
@@ -389,19 +326,15 @@ export default function SocialPosts() {
               <button
                 onClick={() => handleSave('draft')}
                 className="text-sm px-4 py-2 rounded"
-                style={{ backgroundColor: '#0F0F0F', color: C.secondary, border: `1px solid ${C.border}` }}
-              >
-                Save draft
-              </button>
+                style={{ backgroundColor: C.inputBg, color: C.secondary, border: `1px solid ${C.border}`, cursor: 'pointer' }}
+              >Save draft</button>
               <button
                 onClick={() => handleSave('scheduled')}
                 className="text-sm font-semibold px-4 py-2 rounded"
-                style={{ backgroundColor: C.primary, color: '#0A0A0A' }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e4e2dd'}
-                onMouseLeave={e => e.currentTarget.style.backgroundColor = C.primary}
-              >
-                Schedule post
-              </button>
+                style={{ backgroundColor: C.primary, color: C.bg, cursor: 'pointer' }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >Schedule post</button>
             </div>
           </div>
         </div>

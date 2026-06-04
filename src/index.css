@@ -27,6 +27,22 @@
   }
 }
 
+/* ─── Custom slim scrollbar (chat thread) ──────────────────────────────────── */
+
+.chat-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.chat-scroll::-webkit-scrollbar { width: 4px; }
+.chat-scroll::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 2px; transition: background-color 0.2s; }
+.chat-scroll:hover { scrollbar-color: #2A2A2A transparent; }
+.chat-scroll:hover::-webkit-scrollbar-thumb { background-color: #2A2A2A; }
+
+.chat-scroll-light { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.chat-scroll-light::-webkit-scrollbar { width: 4px; }
+.chat-scroll-light::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll-light::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 2px; transition: background-color 0.2s; }
+.chat-scroll-light:hover { scrollbar-color: #CCCCCC transparent; }
+.chat-scroll-light:hover::-webkit-scrollbar-thumb { background-color: #CCCCCC; }
+
 /* ─── Gradient blob animations ─────────────────────────────────────────────── */
 
 @keyframes blobFloat1 {

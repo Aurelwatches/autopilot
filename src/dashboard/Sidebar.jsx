@@ -1,12 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-
-const C = {
-  bg: '#0A0A0A', card: '#141414', border: '#1E1E1E',
-  primary: '#F0EEE9', secondary: '#888780', muted: '#3A3835',
-  accent: '#4A90D9',
-}
-
-const RESTAURANT = "Mario's Trattoria"
+import { useApp } from './AppContext'
+import { useAuth } from '../lib/auth'
 
 const navItems = [
   {
@@ -44,24 +38,6 @@ const navItems = [
     ),
   },
   {
-    path: '/dashboard/followups',
-    label: 'Follow-ups',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-        <path fillRule="evenodd" d="M14 4H2a1 1 0 00-1 1v7a1 1 0 001 1h12a1 1 0 001-1V5a1 1 0 00-1-1zm-1.5 2.5l-4.5 3-4.5-3V5.8l4.5 3 4.5-3V6.5z" clipRule="evenodd"/>
-      </svg>
-    ),
-  },
-  {
-    path: '/dashboard/messages',
-    label: 'Messages',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-      </svg>
-    ),
-  },
-  {
     path: '/dashboard/analytics',
     label: 'Analytics',
     icon: (
@@ -84,26 +60,69 @@ const navItems = [
   },
 ]
 
+function SunIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  )
+}
+
+function MoonIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+    </svg>
+  )
+}
+
 export default function Sidebar() {
   const navigate = useNavigate()
+  const { C, theme, toggleTheme, restaurantName } = useApp()
+  const { signOut, user } = useAuth()
 
-  function handleLogout() {
-    localStorage.removeItem('ap_session')
+  async function handleLogout() {
+    await signOut()
     navigate('/login')
   }
 
   return (
     <aside
       className="fixed top-0 left-0 bottom-0 flex flex-col z-40"
-      style={{ width: 240, backgroundColor: C.bg, borderRight: `1px solid ${C.border}` }}
+      style={{ width: 240, backgroundColor: C.bg, borderRight: `1px solid ${C.divider}` }}
     >
-      {/* Logo */}
-      <div className="px-5 py-5 flex items-center gap-2.5" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
-            stroke={C.primary} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <span className="text-sm font-semibold tracking-tight" style={{ color: C.primary }}>AutoPilot</span>
+      {/* Logo + theme toggle */}
+      <div className="px-5 py-5 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.divider}` }}>
+        <div className="flex items-center gap-2.5">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
+              stroke={C.primary} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span className="text-sm font-semibold tracking-tight" style={{ color: C.primary }}>AutoPilot</span>
+        </div>
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          style={{
+            color: C.muted, padding: 4, borderRadius: 6,
+            border: `1px solid ${C.border}`,
+            backgroundColor: 'transparent',
+            cursor: 'pointer', transition: 'color 0.15s, border-color 0.15s',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = C.secondary; e.currentTarget.style.borderColor = C.secondary }}
+          onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.borderColor = C.border }}
+        >
+          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </button>
       </div>
 
       {/* Nav */}
@@ -115,7 +134,7 @@ export default function Sidebar() {
             className="flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors"
             style={({ isActive }) => ({
               color: isActive ? C.primary : C.secondary,
-              backgroundColor: isActive ? '#1A1A1A' : 'transparent',
+              backgroundColor: isActive ? (theme === 'dark' ? '#1A1A1A' : '#EEEDE9') : 'transparent',
               borderLeft: isActive ? `2px solid ${C.accent}` : '2px solid transparent',
             })}
           >
@@ -125,15 +144,20 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Bottom */}
-      <div className="px-5 py-4" style={{ borderTop: `1px solid ${C.border}` }}>
-        <p className="text-xs font-medium mb-0.5 truncate" style={{ color: C.primary }}>
-          {RESTAURANT}
+      {/* Bottom: restaurant name + email + logout */}
+      <div className="px-5 py-4" style={{ borderTop: `1px solid ${C.divider}` }}>
+        <p className="text-xs font-semibold truncate" style={{ color: C.primary }}>
+          {restaurantName}
         </p>
+        {user?.email && (
+          <p className="text-[10px] truncate mt-0.5 mb-1" style={{ color: C.muted }}>
+            {user.email}
+          </p>
+        )}
         <button
           onClick={handleLogout}
           className="text-xs transition-colors"
-          style={{ color: C.secondary }}
+          style={{ color: C.secondary, marginTop: user?.email ? 0 : 4 }}
           onMouseEnter={e => e.target.style.color = C.primary}
           onMouseLeave={e => e.target.style.color = C.secondary}
         >

@@ -23,8 +23,20 @@ function pushToClients() {
   sseClients.forEach(res => res.write(payload))
 }
 
+// Look up user_id from profiles table by restaurant name (for webhook inserts)
+async function getUserId(restaurantName) {
+  if (!supabase || !restaurantName) return null
+  const { data } = await supabase
+    .from('profiles')
+    .select('id')
+    .ilike('restaurant_name', restaurantName.trim())
+    .limit(1)
+    .single()
+  return data?.id ?? null
+}
+
 // POST /api/webhook — called by Make.com
-app.post('/api/webhook', (req, res) => {
+app.post('/api/webhook', async (req, res) => {
   console.log('Webhook received:', JSON.stringify(req.body, null, 2))
   console.log('Webhook fields present:', Object.keys(req.body))
 
@@ -57,6 +69,38 @@ app.post('/api/webhook', (req, res) => {
 
   events.unshift(event)
   if (events.length > MAX_EVENTS) events.length = MAX_EVENTS
+
+  // Persist to Supabase with user_id lookup
+  if (supabase) {
+    // The webhook payload should include restaurant_name so we can look up the owner
+    const webhookRestaurantName = req.body.restaurant_name ?? customerName ?? null
+
+    if (type === 'review_replied') {
+      getUserId(webhookRestaurantName).then(userId => {
+        supabase.from('reviews').insert({
+          user_id:       userId,
+          customer_name: customerName ?? '',
+          review_text:   reviewText ?? details ?? '',
+          ai_reply:      aiReply    ?? '',
+          rating:        rating != null ? Number(rating) : null,
+          status:        'replied',
+          created_at:    timestamp  ?? new Date().toISOString(),
+        }).then(({ error: e }) => { if (e) console.error('Supabase review insert:', e.message) })
+      })
+    }
+
+    if (type === 'post_scheduled') {
+      getUserId(webhookRestaurantName).then(userId => {
+        supabase.from('activity_feed').insert({
+          user_id:    userId,
+          type:       'post_scheduled',
+          details:    details  ?? '',
+          platform:   platform ?? null,
+          created_at: timestamp ?? new Date().toISOString(),
+        }).then(({ error: e }) => { if (e) console.error('Supabase activity insert:', e.message) })
+      })
+    }
+  }
 
   pushToClients()
   res.json({ ok: true, event })

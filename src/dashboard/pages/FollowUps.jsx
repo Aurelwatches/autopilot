@@ -1,14 +1,12 @@
 import { useDashboard } from '../DashboardContext'
+import { useApp } from '../AppContext'
 
-const C = {
-  card: '#141414', border: '#2A2A2A', divider: '#1E1E1E',
-  primary: '#F0EEE9', secondary: '#888780', muted: '#3A3835', accent: '#4A90D9',
-}
-
-function EmptyState() {
+function EmptyState({ C }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-8">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="mb-4" style={{ color: C.muted }}>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
+        className="mb-4" style={{ color: C.muted }}>
         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
         <polyline points="22,6 12,13 2,6"/>
       </svg>
@@ -20,6 +18,7 @@ function EmptyState() {
 
 export default function FollowUps() {
   const { followUps, stats } = useDashboard()
+  const { C } = useApp()
 
   return (
     <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
@@ -34,12 +33,16 @@ export default function FollowUps() {
         </div>
       </div>
 
-      <div className="rounded-lg overflow-hidden" style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
-        {followUps.length === 0 ? <EmptyState /> : (
+      <div className="rounded-lg overflow-hidden"
+        style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+        {followUps.length === 0 ? <EmptyState C={C} /> : (
           <>
             <div
               className="grid text-xs font-medium uppercase tracking-wider px-5 py-3"
-              style={{ gridTemplateColumns: '1.5fr 1fr 1fr 2.5fr 0.8fr', color: C.muted, borderBottom: `1px solid ${C.divider}` }}
+              style={{
+                gridTemplateColumns: '1.5fr 1fr 1fr 2.5fr 0.8fr',
+                color: C.muted, borderBottom: `1px solid ${C.divider}`,
+              }}
             >
               <span>Customer</span>
               <span>Phone</span>

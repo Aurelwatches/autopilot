@@ -1,9 +1,6 @@
+import { useNavigate } from 'react-router-dom'
 import { useDashboard } from '../DashboardContext'
-
-const C = {
-  card: '#141414', border: '#2A2A2A', divider: '#1E1E1E',
-  primary: '#F0EEE9', secondary: '#888780', muted: '#3A3835', accent: '#4A90D9',
-}
+import { useApp } from '../AppContext'
 
 const today    = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 const hour     = new Date().getHours()
@@ -26,10 +23,12 @@ function relativeTime(iso) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function EmptyFeed() {
+function EmptyFeed({ C }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-8">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="mb-4" style={{ color: C.muted }}>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
+        className="mb-4" style={{ color: C.muted }}>
         <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
       </svg>
       <p className="text-sm text-center" style={{ color: C.secondary }}>No activity yet.</p>
@@ -40,6 +39,8 @@ function EmptyFeed() {
 
 export default function Overview() {
   const { events, stats } = useDashboard()
+  const { C, restaurantName } = useApp()
+  const navigate = useNavigate()
 
   const feed = events.map((e, i) => {
     const mapped = TYPE_MAP[e.type] ?? { type: 'review', text: e.type }
@@ -53,55 +54,78 @@ export default function Overview() {
   })
 
   const statCards = [
-    { label: 'Reviews Replied', value: stats.reviewsReplied },
-    { label: 'Posts Scheduled', value: stats.postsScheduled },
-    { label: 'Texts Sent',      value: stats.textsSent      },
-    { label: 'Avg Rating',      value: stats.avgRating      },
+    { label: 'Reviews Replied', value: stats.reviewsReplied, path: '/dashboard/reviews' },
+    { label: 'Posts Scheduled', value: stats.postsScheduled, path: '/dashboard/posts'   },
+    { label: 'Texts Sent',      value: stats.textsSent,      path: '/dashboard/followups' },
+    { label: 'Avg Rating',      value: stats.avgRating,      path: '/dashboard/analytics' },
   ]
 
   return (
     <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
 
       {/* Status bar */}
-      <div className="flex items-center gap-3 rounded px-4 py-3 mb-8 text-sm" style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
-        <span className="w-2 h-2 rounded-full shrink-0 pulse-dot" style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
+      <div className="flex items-center gap-3 rounded px-4 py-3 mb-8 text-sm"
+        style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+        <span className="w-2 h-2 rounded-full shrink-0 pulse-dot"
+          style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
         <span style={{ color: C.primary }}>AutoPilot is running</span>
         <span style={{ color: C.muted }}>·</span>
         <span style={{ color: C.secondary }}>
-          {events.length > 0 ? `${events.length} event${events.length !== 1 ? 's' : ''} received` : 'Waiting for first event'}
+          {events.length > 0
+            ? `${events.length} event${events.length !== 1 ? 's' : ''} received`
+            : 'Waiting for first event'}
         </span>
       </div>
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>{greeting}, Mario's Trattoria</h1>
+        <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>
+          {greeting}, {restaurantName}
+        </h1>
         <p className="text-sm" style={{ color: C.secondary }}>{today}</p>
       </div>
 
-      {/* Stat cards */}
+      {/* Stat cards — clickable */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map(s => (
-          <div key={s.label} className="rounded-lg px-5 py-5" style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
-            <p className="text-[11px] font-medium uppercase tracking-widest mb-3" style={{ color: C.muted }}>{s.label}</p>
-            <p className="text-3xl font-semibold tracking-tight mb-1" style={{ color: C.primary }}>{s.value}</p>
-            <p className="text-xs" style={{ color: C.muted }}>—</p>
-          </div>
+          <button
+            key={s.label}
+            onClick={() => navigate(s.path)}
+            className="rounded-lg px-5 py-5 text-left w-full transition-colors"
+            style={{
+              backgroundColor: C.card, border: `1px solid ${C.border}`,
+              cursor: 'pointer',
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = C.secondary}
+            onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
+          >
+            <p className="text-[11px] font-medium uppercase tracking-widest mb-3"
+              style={{ color: C.muted }}>{s.label}</p>
+            <p className="text-3xl font-semibold tracking-tight mb-1"
+              style={{ color: C.primary }}>{s.value}</p>
+            <p className="text-xs flex items-center gap-1" style={{ color: C.muted }}>
+              View →
+            </p>
+          </button>
         ))}
       </div>
 
       {/* Activity feed */}
-      <div className="rounded-lg overflow-hidden" style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
-        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.divider}` }}>
+      <div className="rounded-lg overflow-hidden"
+        style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+        <div className="px-5 py-4 flex items-center justify-between"
+          style={{ borderBottom: `1px solid ${C.divider}` }}>
           <h2 className="text-sm font-semibold" style={{ color: C.primary }}>Recent Activity</h2>
           {events.length > 0 && (
             <span className="text-[11px] flex items-center gap-1.5" style={{ color: C.secondary }}>
-              <span className="w-1.5 h-1.5 rounded-full pulse-dot" style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
+              <span className="w-1.5 h-1.5 rounded-full pulse-dot"
+                style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
               Live
             </span>
           )}
         </div>
 
-        {feed.length === 0 ? <EmptyFeed /> : (
+        {feed.length === 0 ? <EmptyFeed C={C} /> : (
           <div>
             {feed.map((item, i) => (
               <div
@@ -122,7 +146,8 @@ export default function Overview() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium" style={{ color: C.primary }}>{item.text}</span>
                     {item.newest && (
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0 pulse-dot" style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0 pulse-dot"
+                        style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
                     )}
                   </div>
                   <p className="text-xs mt-0.5" style={{ color: C.secondary }}>{item.detail}</p>

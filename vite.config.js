@@ -9,4 +9,14 @@ export default defineConfig({
     },
     allowedHosts: ['disown-slogan-yanking.ngrok-free.dev'],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          charts: ['recharts'],
+        },
+      },
+    },
+  },
 })
