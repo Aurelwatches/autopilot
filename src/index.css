@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #0A0A0A;
+    color: #F0EEE9;
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: rgba(74, 144, 217, 0.25);
+  }
+}
+
+/* ─── Gradient blob animations ─────────────────────────────────────────────── */
+
+@keyframes blobFloat1 {
+  0%, 100% { transform: translate(0%, 0%)   scale(1); }
+  25%       { transform: translate(5%, -8%)  scale(1.06); }
+  50%       { transform: translate(-4%, 6%)  scale(0.94); }
+  75%       { transform: translate(8%, 2%)   scale(1.03); }
+}
+
+@keyframes blobFloat2 {
+  0%, 100% { transform: translate(0%, 0%)   scale(1); }
+  33%       { transform: translate(-7%, 9%)  scale(1.09); }
+  66%       { transform: translate(6%, -5%)  scale(0.92); }
+}
+
+@keyframes blobFloat3 {
+  0%, 100% { transform: translate(0%, 0%)    scale(1); }
+  20%       { transform: translate(9%, 5%)   scale(0.95); }
+  60%       { transform: translate(-5%, -8%) scale(1.1); }
+}
+
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* ─── Perspective grid ──────────────────────────────────────────────────────── */
+
+.hero-grid {
+  position: absolute;
+  bottom: 0;
+  left: -20%;
+  right: -20%;
+  height: 52%;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.038) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.038) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: perspective(480px) rotateX(52deg);
+  transform-origin: bottom center;
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ─── Scroll offset for fixed navbar (h-14 = 56px + 16px breathing room) ────── */
+
+#features,
+#pricing,
+#waitlist {
+  scroll-margin-top: 72px;
+}
+
+/* ─── Pulsing status dot ────────────────────────────────────────────────────── */
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+.pulse-dot {
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+/* ─── Section heading highlight on scroll arrival ───────────────────────────── */
+
+@keyframes sectionHighlight {
+  0%   { filter: brightness(2.2); }
+  100% { filter: brightness(1); }
+}
+
+.section-highlight {
+  animation: sectionHighlight 600ms ease-out forwards;
+}
+
+/* ─── Pricing card float ────────────────────────────────────────────────────── */
+
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* ─── Support chat pop-in ───────────────────────────────────────────────────── */
+
+@keyframes chatPopIn {
+  from { opacity: 0; transform: scale(0.93) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* ─── AutoPilot airplane loader ─────────────────────────────────────────────── */
+
+@keyframes apPlaneFly {
+  0%   { left: -24px; }
+  100% { left: calc(100% + 24px); }
+}
+
+@keyframes apTrailDot {
+  0%   { opacity: 0; transform: translateY(-50%) scale(0.3); }
+  7%   { opacity: 0.75; transform: translateY(-50%) scale(1); }
+  90%  { opacity: 0.12; transform: translateY(-50%) scale(1); }
+  100% { opacity: 0; transform: translateY(-50%) scale(0.3); }
+}
+
+.ap-plane-fly {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  line-height: 1;
+  color: #4A90D9;
+  animation: apPlaneFly 2s linear infinite;
+}
+
+.ap-trail-dot {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #4A90D9;
+  opacity: 0;
+  animation: apTrailDot 2s linear infinite;
+}

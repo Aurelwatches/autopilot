@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npm cache *)",
+      "PowerShell(Get-PSDrive C | Select-Object @{n='FreeMB';e={[math]::Round\\($_.Free/1MB,1\\)}}, @{n='UsedGB';e={[math]::Round\\($_.Used/1GB,1\\)}})",
+      "PowerShell(cd \"C:\\\\Users\\\\Owner\\\\autopilot\"; Get-ChildItem node_modules -Directory | Where-Object { $_.Name -in @\\('react','react-dom','three','@react-three','framer-motion','vite','tailwindcss'\\) } | Select-Object Name; Get-ChildItem node_modules\\\\@react-three -Directory -ErrorAction SilentlyContinue | Select-Object Name)",
+      "PowerShell(Get-PSDrive C | Select-Object @{n='FreeMB';e={[math]::Round\\($_.Free/1MB,1\\)}}; Get-ChildItem \"C:\\\\Users\\\\Owner\\\\autopilot\\\\node_modules\\\\framer-motion\\\\dist\\\\es\" | Select-Object Name, Length | Select-Object -First 10)",
+      "PowerShell(cd \"C:\\\\Users\\\\Owner\\\\autopilot\"; npx vite build 2>&1 | Where-Object { $_ -match \"error|Error|warn\" } | Select-Object -First 20)",
+      "PowerShell(Start-Sleep -Seconds 2; try { $r = Invoke-WebRequest \"http://localhost:5201/\" -TimeoutSec 5; $r.StatusCode; $r.Content.Substring\\(0,500\\) } catch { $_.Exception.Message })",
+      "PowerShell(Start-Sleep -Seconds 2; & curl.exe -s \"http://localhost:5201/\" 2>&1 | Select-Object -First 20)",
+      "PowerShell(& curl.exe -s \"http://localhost:5201/src/main.jsx\" 2>&1 | Select-Object -First 5)",
+      "PowerShell(& curl.exe -s \"http://localhost:5202/\" 2>&1 | Select-Object -First 8)",
+      "PowerShell(& curl.exe -s \"http://localhost:5202/\" 2>&1 | Select-Object -Last 10)",
+      "PowerShell(& curl.exe -s \"http://localhost:5202/assets/index-t_k950E8.js\" 2>&1 | Select-Object -First 3 | ForEach-Object { $_.Substring\\(0, [Math]::Min\\(300, $_.Length\\)\\) })",
+      "PowerShell(& curl.exe -s \"http://localhost:5201/src/App.jsx\" 2>&1 | Select-Object -First 20)",
+      "PowerShell(Get-Process *)",
+      "PowerShell($port = netstat -ano | Select-String \"5173\" | Select-Object -First 1; $pid = \\($port -split '\\\\s+'\\)[-1]; Write-Output \"PID: $pid\")",
+      "PowerShell(Start-Sleep -Seconds 2; $response = Invoke-WebRequest -Uri \"http://localhost:5173/\" -ErrorAction SilentlyContinue; if \\($response\\) { Write-Output \"Status: $\\($response.StatusCode\\)\"; $response.Content | Select-String \"error|Error|Error\" } else { Write-Output \"Could not reach server\" })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Owner\\\\autopilot\\\\src\\\\components\" | ForEach-Object { Remove-Item $_.FullName -Force }; Get-ChildItem -Path \"C:\\\\Users\\\\Owner\\\\autopilot\\\\src\\\\pages\" | ForEach-Object { Remove-Item $_.FullName -Force }; Write-Host \"Done\")",
+      "PowerShell(Start-Process \"http://localhost:5173\")",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Owner\\\\autopilot\" -Recurse | Select-Object -Property FullName | ForEach-Object { $_.FullName })",
+      "PowerShell(netstat *)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3001/api/events\" -TimeoutSec 5; \"Status: $\\($r.StatusCode\\)\"; $r.Content } catch { \"Error: $_\" })",
+      "PowerShell(curl.exe -s -o NUL -w \"%{http_code}\" http://localhost:3001/api/events/stream --max-time 3; Write-Host \"\"; curl.exe -s -o NUL -w \"%{http_code}\" http://localhost:5173/api/events/stream --max-time 3)",
+      "PowerShell(node --version; Write-Host \"---\"; if \\($env:ANTHROPIC_API_KEY\\) { Write-Host \"ANTHROPIC_API_KEY is set in system env \\(length: $\\($env:ANTHROPIC_API_KEY.Length\\)\\)\" } else { Write-Host \"ANTHROPIC_API_KEY is NOT set in system env\" })",
+      "PowerShell(Stop-Job *)",
+      "PowerShell(Receive-Job *)",
+      "PowerShell(try { $r = Invoke-RestMethod -Uri \"http://localhost:3001/api/generate-post\" -Method POST -ContentType \"application/json\" -Body '{\"topic\":\"test\",\"platform\":\"Instagram\"}'; $r | ConvertTo-Json } catch { Write-Host \"HTTP $\\($_.Exception.Response.StatusCode.value__\\)\"; $reader = [System.IO.StreamReader]::new\\($_.Exception.Response.GetResponseStream\\(\\)\\); Write-Host $reader.ReadToEnd\\(\\) })",
+      "PowerShell(Get-Content \"C:\\\\Users\\\\Owner\\\\autopilot\\\\.env\" | ForEach-Object { \"'$_'\" })",
+      "PowerShell(Get-Content \"C:\\\\Users\\\\Owner\\\\autopilot\\\\.env.txt\" | ForEach-Object { \"'$_'\" })",
+      "PowerShell(Copy-Item *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Owner\\\\autopilot\" -Exclude node_modules | Select-Object Name, @{Name=\"Type\";Expression={if\\($_.PSIsContainer\\){\"Dir\"}else{\"File\"}}};)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Owner\\\\autopilot\\\\.claude\" | Select-Object Name, @{Name=\"Type\";Expression={if\\($_.PSIsContainer\\){\"Dir\"}else{\"File\"}}};)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Owner\\\\autopilot\\\\src\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\Owner\\\\autopilot\\\\\", \"\"\\) })"
+    ]
+  }
+}
