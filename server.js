@@ -17,6 +17,11 @@ app.use((req, _res, next) => {
   next()
 })
 
+// Health check — Railway uses this to confirm the server is up
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
 // In-memory ring buffer — newest first, capped at 50
 const events = []
 const MAX_EVENTS = 50
