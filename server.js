@@ -184,6 +184,6 @@ app.post('/api/generate-post', async (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
-  console.log(`API server → http://localhost:${PORT}`)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`API server → http://0.0.0.0:${PORT}`)
 })
