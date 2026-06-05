@@ -11,6 +11,12 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
 
 app.use(express.json())
 
+// Log every incoming request so we can diagnose routing issues in production
+app.use((req, _res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`)
+  next()
+})
+
 // In-memory ring buffer — newest first, capped at 50
 const events = []
 const MAX_EVENTS = 50
