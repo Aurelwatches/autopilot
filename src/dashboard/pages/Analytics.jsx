@@ -123,14 +123,21 @@ export default function Analytics() {
     // Wait for auth to resolve so charts are filtered to the logged-in user
     // (fetching with userId null returns nothing under RLS and never refetched).
     if (!userId) { setLoading(false); return }
-    const reviewQ = supabase.from('reviews')
-      .select('id, rating, status, created_at').eq('user_id', userId).order('created_at')
-    const actQ = supabase.from('activity_feed')
-      .select('id, type, created_at').eq('user_id', userId).order('created_at')
-    Promise.all([reviewQ, actQ]).then(([r, a]) => {
-      setReviews(r.data ?? [])
-      setActivities(a.data ?? [])
-    }).catch(console.error).finally(() => setLoading(false))
+
+    function fetchData() {
+      const reviewQ = supabase.from('reviews')
+        .select('id, rating, status, created_at').eq('user_id', userId).order('created_at')
+      const actQ = supabase.from('activity_feed')
+        .select('id, type, created_at').eq('user_id', userId).order('created_at')
+      Promise.all([reviewQ, actQ]).then(([r, a]) => {
+        setReviews(r.data ?? [])
+        setActivities(a.data ?? [])
+      }).catch(console.error).finally(() => setLoading(false))
+    }
+
+    fetchData()
+    const interval = setInterval(fetchData, 30000)
+    return () => clearInterval(interval)
   }, [userId])
 
   // Filter to selected range

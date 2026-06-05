@@ -198,7 +198,7 @@ export default function SocialPosts() {
     const { data, error } = await supabase.from('posts').insert({
       user_id:      userId,
       platform,
-      text:         text.trim(),
+      content:      text.trim(),   // DB column is 'content', not 'text'
       status,
       scheduled_at: status === 'scheduled' ? tomorrow10am() : null,
     }).select().single()
@@ -225,7 +225,7 @@ export default function SocialPosts() {
   const allPosts = posts.map(p => ({
     id:          p.id,
     platform:    p.platform,
-    text:        p.text,
+    text:        p.content,   // DB column is 'content'
     status:      p.status,
     scheduledAt: formatSchedule(p),
   }))

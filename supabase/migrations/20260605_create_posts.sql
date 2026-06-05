@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS posts (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   platform     text NOT NULL DEFAULT 'Instagram',
-  text         text NOT NULL DEFAULT '',
+  content      text NOT NULL DEFAULT '',
   status       text NOT NULL DEFAULT 'draft',   -- 'draft' | 'scheduled' | 'published'
   scheduled_at timestamptz,                      -- null for drafts
   created_at   timestamptz NOT NULL DEFAULT now()

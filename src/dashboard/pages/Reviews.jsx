@@ -40,7 +40,7 @@ function rowToReview(row) {
   return {
     id:     row.id,
     name:   row.customer_name || 'Anonymous',
-    rating: row.rating ?? 5,
+    rating: row.rating ?? null,   // preserve null so it's excluded from the average
     date:   formatDate(row.created_at),
     status: row.status ?? 'pending',
     text:   row.review_text ?? '',
@@ -93,12 +93,18 @@ export default function Reviews() {
     if (f === 'Replied')  return r.status === 'replied'
     if (f === 'Pending')  return r.status === 'pending'
     if (f === '5 Star')   return r.rating === 5
-    if (f === '1–2 Star') return r.rating <= 2
+    if (f === '1–2 Star') return r.rating >= 1 && r.rating <= 2  // exclude null (don't coerce to 0)
     return true
   }
 
   const countFor = f => reviews.filter(r => matchesFilter(r, f)).length
   const filtered = reviews.filter(r => matchesFilter(r, active))
+
+  // Average rating across reviews that actually have a rating — null/0 excluded
+  const ratedReviews = reviews.filter(r => Number(r.rating) > 0)
+  const avgRating = ratedReviews.length
+    ? (ratedReviews.reduce((s, r) => s + Number(r.rating), 0) / ratedReviews.length).toFixed(1)
+    : null
 
   return (
     <div className="px-8 py-8" style={{ maxWidth: 900 }}>
@@ -109,12 +115,20 @@ export default function Reviews() {
             {reviews.length} review{reviews.length !== 1 ? 's' : ''} · synced automatically
           </p>
         </div>
-        {repliedCount > 0 && (
-          <span className="text-sm px-3 py-1 rounded"
-            style={{ backgroundColor: 'rgba(74,222,128,0.08)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.15)' }}>
-            {repliedCount} replied this month
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {avgRating && (
+            <span className="text-sm px-3 py-1 rounded"
+              style={{ backgroundColor: 'rgba(232,160,32,0.1)', color: '#E8A020', border: '1px solid rgba(232,160,32,0.2)' }}>
+              ★ {avgRating} avg
+            </span>
+          )}
+          {repliedCount > 0 && (
+            <span className="text-sm px-3 py-1 rounded"
+              style={{ backgroundColor: 'rgba(74,222,128,0.08)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.15)' }}>
+              {repliedCount} replied this month
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Filters — label + live count (star-rating breakdown) */}
