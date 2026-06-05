@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 import { useDashboard } from '../DashboardContext'
 import { useApp } from '../AppContext'
 
@@ -38,27 +40,90 @@ function EmptyFeed({ C }) {
 }
 
 export default function Overview() {
-  const { events, stats } = useDashboard()
-  const { C, restaurantName } = useApp()
+  const { events } = useDashboard()
+  const { C, restaurantName, userId } = useApp()
   const navigate = useNavigate()
 
-  const feed = events.map((e, i) => {
-    const mapped = TYPE_MAP[e.type] ?? { type: 'review', text: e.type }
-    return {
-      type:   mapped.type,
-      text:   mapped.text,
-      detail: [e.customerName, e.details].filter(Boolean).join(' · ') || '—',
-      time:   relativeTime(e.receivedAt),
-      newest: i === 0,
+  const [reviews,  setReviews]  = useState([])
+  const [activity, setActivity] = useState([])
+  const [loading,  setLoading]  = useState(true)
+  const [error,    setError]    = useState('')
+
+  async function fetchData() {
+    if (!supabase) { setError('Supabase is not configured.'); setLoading(false); return }
+    // Wait for auth to resolve — fetching before userId exists would either
+    // return nothing under RLS or pull other accounts' data.
+    if (!userId) { setLoading(false); return }
+    try {
+      const [revRes, actRes] = await Promise.all([
+        supabase.from('reviews').select('*')
+          .eq('user_id', userId).order('created_at', { ascending: false }),
+        supabase.from('activity_feed').select('*')
+          .eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
+      ])
+      if (revRes.error) throw revRes.error
+      if (actRes.error) throw actRes.error
+      setReviews(revRes.data ?? [])
+      setActivity(actRes.data ?? [])
+      setError('')
+    } catch (e) {
+      setError(e.message || 'Could not load dashboard data.')
+    } finally {
+      setLoading(false)
     }
-  })
+  }
+
+  // Re-fetch when auth resolves (userId null → real id) and poll every 30s
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(fetchData, 30000)
+    return () => clearInterval(interval)
+  }, [userId])
+
+  // Instant refresh when an event streams in over SSE
+  useEffect(() => { if (events.length > 0) fetchData() }, [events.length])
+
+  // ── Stats from real Supabase data ─────────────────────────────────────────
+  const repliedCount   = reviews.filter(r => (r.status ?? 'replied') === 'replied').length
+  const postsScheduled = activity.filter(a => a.type === 'post_scheduled').length
+  const textsSent      = activity.filter(a => a.type === 'follow_up_sent').length
+
+  const ratedReviews = reviews.filter(r => Number(r.rating) > 0)
+  const avgRating = ratedReviews.length
+    ? (ratedReviews.reduce((s, r) => s + Number(r.rating), 0) / ratedReviews.length).toFixed(1)
+    : '0'
 
   const statCards = [
-    { label: 'Reviews Replied', value: stats.reviewsReplied, path: '/dashboard/reviews' },
-    { label: 'Posts Scheduled', value: stats.postsScheduled, path: '/dashboard/posts'   },
-    { label: 'Texts Sent',      value: stats.textsSent,      path: '/dashboard/followups' },
-    { label: 'Avg Rating',      value: stats.avgRating,      path: '/dashboard/analytics' },
+    { label: 'Reviews Replied', value: repliedCount,   path: '/dashboard/reviews'   },
+    { label: 'Posts Scheduled', value: postsScheduled, path: '/dashboard/posts'     },
+    { label: 'Texts Sent',      value: textsSent,      path: '/dashboard/followups' },
+    { label: 'Avg Rating',      value: avgRating,      path: '/dashboard/analytics' },
   ]
+
+  // Recent activity: activity_feed rows plus review replies, newest first.
+  // Reviews land in their own table, so we merge them in to keep the feed useful.
+  const feed = [
+    ...reviews.map(r => ({
+      type:   'review',
+      text:   'Review replied',
+      detail: [r.customer_name, r.review_text].filter(Boolean).join(' · ') || '—',
+      ts:     r.created_at,
+    })),
+    ...activity.map(a => {
+      const mapped = TYPE_MAP[a.type] ?? { type: 'post', text: a.type }
+      return {
+        type:   mapped.type,
+        text:   mapped.text,
+        detail: [a.platform, a.details].filter(Boolean).join(' · ') || '—',
+        ts:     a.created_at,
+      }
+    }),
+  ]
+    .sort((a, b) => new Date(b.ts) - new Date(a.ts))
+    .slice(0, 12)
+    .map((item, i) => ({ ...item, time: relativeTime(item.ts), newest: i === 0 }))
+
+  const totalTracked = reviews.length + activity.length
 
   return (
     <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
@@ -71,9 +136,11 @@ export default function Overview() {
         <span style={{ color: C.primary }}>AutoPilot is running</span>
         <span style={{ color: C.muted }}>·</span>
         <span style={{ color: C.secondary }}>
-          {events.length > 0
-            ? `${events.length} event${events.length !== 1 ? 's' : ''} received`
-            : 'Waiting for first event'}
+          {loading
+            ? 'Loading…'
+            : totalTracked > 0
+              ? `${totalTracked} event${totalTracked !== 1 ? 's' : ''} tracked`
+              : 'Waiting for first event'}
         </span>
       </div>
 
@@ -84,6 +151,15 @@ export default function Overview() {
         </h1>
         <p className="text-sm" style={{ color: C.secondary }}>{today}</p>
       </div>
+
+      {error && (
+        <div style={{
+          padding: '11px 16px', borderRadius: 8, marginBottom: 14,
+          backgroundColor: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)',
+        }}>
+          <p style={{ fontSize: 12, color: '#f87171', margin: 0 }}>{error}</p>
+        </div>
+      )}
 
       {/* Stat cards — clickable */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -116,7 +192,7 @@ export default function Overview() {
         <div className="px-5 py-4 flex items-center justify-between"
           style={{ borderBottom: `1px solid ${C.divider}` }}>
           <h2 className="text-sm font-semibold" style={{ color: C.primary }}>Recent Activity</h2>
-          {events.length > 0 && (
+          {feed.length > 0 && (
             <span className="text-[11px] flex items-center gap-1.5" style={{ color: C.secondary }}>
               <span className="w-1.5 h-1.5 rounded-full pulse-dot"
                 style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
@@ -125,7 +201,11 @@ export default function Overview() {
           )}
         </div>
 
-        {feed.length === 0 ? <EmptyFeed C={C} /> : (
+        {loading && feed.length === 0 ? (
+          <div className="flex justify-center py-16">
+            <p className="text-sm" style={{ color: C.muted }}>Loading…</p>
+          </div>
+        ) : feed.length === 0 ? <EmptyFeed C={C} /> : (
           <div>
             {feed.map((item, i) => (
               <div
