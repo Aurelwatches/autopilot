@@ -13,7 +13,7 @@ const client = new Client({
 })
 
 const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID
-const API_URL    = process.env.API_URL ?? 'http://localhost:3001'
+const API_URL    = (process.env.API_URL ?? 'http://localhost:3001').replace(/\/+$/, '')  // strip trailing slashes
 
 client.once('clientReady', () => {
   console.log(`Discord bot ready → ${client.user.tag}`)
