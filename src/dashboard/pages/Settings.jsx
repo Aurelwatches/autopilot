@@ -79,7 +79,14 @@ function Field({ label, value, onChange, type = 'text', C }) {
 }
 
 export default function Settings() {
-  const { C, theme, toggleTheme, restaurantName, setRestaurantName } = useApp()
+  const { C, theme, toggleTheme, restaurantName, setRestaurantName, userId } = useApp()
+
+  // Personal webhook URL — includes this restaurant's user_id so Make.com data
+  // lands on the right account. Only buildable once we know the deployed URL.
+  const hasDeployedWebhook = WEBHOOK_URL && !WEBHOOK_URL.startsWith('/')
+  const personalWebhookUrl = hasDeployedWebhook && userId
+    ? `${WEBHOOK_URL}?user_id=${userId}`
+    : null
 
   // Controlled form fields — seed from context/localStorage
   const [name,    setName]    = useState(restaurantName)
@@ -232,13 +239,24 @@ export default function Settings() {
           <div>
             <p className="text-sm font-medium mb-1" style={{ color: C.primary }}>Make.com Webhook</p>
             <p className="text-xs mb-2" style={{ color: C.secondary }}>
-              Paste this URL as the webhook target in your Make.com scenario
+              Paste this URL as the webhook target in your Make.com scenario. It's
+              unique to your restaurant — reviews and posts sent here land on your account.
             </p>
-            {WEBHOOK_URL && !WEBHOOK_URL.startsWith('/') ? (
+            {personalWebhookUrl ? (
               <div className="flex items-center gap-2 px-3 py-2 rounded text-xs font-mono"
                 style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}`, color: C.secondary }}>
-                <span className="flex-1 truncate">{WEBHOOK_URL}</span>
-                <CopyButton value={WEBHOOK_URL} C={C} />
+                <span className="flex-1 truncate">{personalWebhookUrl}</span>
+                <CopyButton value={personalWebhookUrl} C={C} />
+              </div>
+            ) : hasDeployedWebhook ? (
+              <div className="px-3 py-2.5 rounded"
+                style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}` }}>
+                <p className="text-xs font-medium" style={{ color: C.secondary }}>
+                  Sign in to see your personal webhook URL
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: C.muted }}>
+                  We add your account ID to the URL so your data routes correctly
+                </p>
               </div>
             ) : (
               <div className="px-3 py-2.5 rounded"

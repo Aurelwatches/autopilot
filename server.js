@@ -46,6 +46,28 @@ async function getUserId(restaurantName) {
   return data?.id ?? null
 }
 
+// Decide which user(s) a webhook belongs to. Priority:
+//   1. Explicit user_id from the personalized webhook URL (?user_id=...) or body
+//   2. Look up the owner by restaurant name
+//   3. Fallback so data is never lost: a configured default test account
+//      (DEFAULT_USER_ID), otherwise fan out to every active user
+// Always returns a non-empty array (worst case [null] → legacy insert with no owner).
+async function resolveUserIds(req, restaurantName) {
+  const explicit = req.query.user_id ?? req.body.user_id
+  if (explicit) return [explicit]
+
+  const byName = await getUserId(restaurantName)
+  if (byName) return [byName]
+
+  if (process.env.DEFAULT_USER_ID) return [process.env.DEFAULT_USER_ID]
+
+  if (supabase) {
+    const { data } = await supabase.from('profiles').select('id')
+    if (data?.length) return data.map(r => r.id)
+  }
+  return [null]
+}
+
 // POST /api/webhook — called by Make.com
 app.post('/api/webhook', async (req, res) => {
   console.log('Webhook received:', JSON.stringify(req.body, null, 2))
@@ -87,8 +109,8 @@ app.post('/api/webhook', async (req, res) => {
     const webhookRestaurantName = req.body.restaurant_name ?? customerName ?? null
 
     if (type === 'review_replied') {
-      getUserId(webhookRestaurantName).then(userId => {
-        supabase.from('reviews').insert({
+      resolveUserIds(req, webhookRestaurantName).then(userIds => {
+        const rows = userIds.map(userId => ({
           user_id:       userId,
           customer_name: customerName ?? '',
           review_text:   reviewText ?? details ?? '',
@@ -96,19 +118,23 @@ app.post('/api/webhook', async (req, res) => {
           rating:        rating != null ? Number(rating) : null,
           status:        'replied',
           created_at:    timestamp  ?? new Date().toISOString(),
-        }).then(({ error: e }) => { if (e) console.error('Supabase review insert:', e.message) })
+        }))
+        supabase.from('reviews').insert(rows)
+          .then(({ error: e }) => { if (e) console.error('Supabase review insert:', e.message) })
       })
     }
 
     if (type === 'post_scheduled') {
-      getUserId(webhookRestaurantName).then(userId => {
-        supabase.from('activity_feed').insert({
+      resolveUserIds(req, webhookRestaurantName).then(userIds => {
+        const rows = userIds.map(userId => ({
           user_id:    userId,
           type:       'post_scheduled',
           details:    details  ?? '',
           platform:   platform ?? null,
           created_at: timestamp ?? new Date().toISOString(),
-        }).then(({ error: e }) => { if (e) console.error('Supabase activity insert:', e.message) })
+        }))
+        supabase.from('activity_feed').insert(rows)
+          .then(({ error: e }) => { if (e) console.error('Supabase activity insert:', e.message) })
       })
     }
   }
