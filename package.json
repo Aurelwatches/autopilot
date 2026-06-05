@@ -10,9 +10,8 @@
     "client": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start:server": "node server.js",
-    "start:bot": "node bot.js",
-    "start": "concurrently -n api,bot -c cyan,yellow \"node server.js\" \"node bot.js\""
+    "start": "node server.js",
+    "start:bot": "node bot.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
