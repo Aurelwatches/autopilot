@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../AppContext'
 
-const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL ?? '/api/webhook'
-
 function CopyButton({ value, C }) {
   const [copied, setCopied] = useState(false)
   function handleCopy() {
@@ -82,10 +80,9 @@ export default function Settings() {
   const { C, theme, toggleTheme, restaurantName, setRestaurantName, userId } = useApp()
 
   // Personal webhook URL — includes this restaurant's user_id so Make.com data
-  // lands on the right account. Only buildable once we know the deployed URL.
-  const hasDeployedWebhook = WEBHOOK_URL && !WEBHOOK_URL.startsWith('/')
-  const personalWebhookUrl = hasDeployedWebhook && userId
-    ? `${WEBHOOK_URL}?user_id=${userId}`
+  // lands on the right account. Points at the deployed Railway backend.
+  const webhookUrl = userId
+    ? `https://autopilot-production-7671.up.railway.app/api/webhook?user_id=${userId}`
     : null
 
   // Controlled form fields — seed from context/localStorage
@@ -242,30 +239,20 @@ export default function Settings() {
               Paste this URL as the webhook target in your Make.com scenario. It's
               unique to your restaurant — reviews and posts sent here land on your account.
             </p>
-            {personalWebhookUrl ? (
+            {webhookUrl ? (
               <div className="flex items-center gap-2 px-3 py-2 rounded text-xs font-mono"
                 style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}`, color: C.secondary }}>
-                <span className="flex-1 truncate">{personalWebhookUrl}</span>
-                <CopyButton value={personalWebhookUrl} C={C} />
-              </div>
-            ) : hasDeployedWebhook ? (
-              <div className="px-3 py-2.5 rounded"
-                style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}` }}>
-                <p className="text-xs font-medium" style={{ color: C.secondary }}>
-                  Sign in to see your personal webhook URL
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-                  We add your account ID to the URL so your data routes correctly
-                </p>
+                <span className="flex-1 truncate">{webhookUrl}</span>
+                <CopyButton value={webhookUrl} C={C} />
               </div>
             ) : (
               <div className="px-3 py-2.5 rounded"
                 style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}` }}>
                 <p className="text-xs font-medium" style={{ color: C.secondary }}>
-                  Deploy your app first to get your webhook URL
+                  Sign in to see your webhook URL
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-                  This will update automatically after deployment
+                  We add your account ID to the URL so your data routes correctly
                 </p>
               </div>
             )}
