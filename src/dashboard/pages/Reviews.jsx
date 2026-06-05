@@ -36,15 +36,19 @@ function EmptyState({ C }) {
   )
 }
 
+// Reviews table mixes two schemas:
+//   old: reviewer_name, review, response, star_rating (text)
+//   new: customer_name, review_text, ai_reply, rating, status, user_id
+// Read from whichever columns are present.
 function rowToReview(row) {
   return {
     id:     row.id,
-    name:   row.customer_name || 'Anonymous',
-    rating: row.rating ?? null,   // preserve null so it's excluded from the average
+    name:   row.customer_name || row.reviewer_name || 'Unknown',
+    rating: row.rating || parseInt(row.star_rating) || null,  // null excluded from the average
     date:   formatDate(row.created_at),
-    status: row.status ?? 'pending',
-    text:   row.review_text ?? '',
-    reply:  row.ai_reply    ?? '',
+    status: row.status || 'replied',
+    text:   row.review_text || row.review || '',
+    reply:  row.ai_reply || row.response || '',
   }
 }
 

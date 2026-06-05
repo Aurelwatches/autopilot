@@ -61,6 +61,16 @@ export default function Overview() {
         supabase.from('activity_feed').select('*')
           .eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
       ])
+
+      console.group('[Overview] Supabase fetch for user', userId)
+      console.log('reviews:', revRes.error ? `ERROR ${revRes.error.message}` : `${revRes.data?.length ?? 0} rows`, revRes.data)
+      console.log('activity_feed:', actRes.error ? `ERROR ${actRes.error.message}` : `${actRes.data?.length ?? 0} rows`, actRes.data)
+      const acts = actRes.data ?? []
+      console.log('activity_feed types:', acts.reduce((m, a) => { m[a.type ?? '(null)'] = (m[a.type ?? '(null)'] || 0) + 1; return m }, {}))
+      console.log('post_scheduled:', acts.filter(a => a.type === 'post_scheduled').length,
+        '| follow_up_sent:', acts.filter(a => a.type === 'follow_up_sent').length)
+      console.groupEnd()
+
       if (revRes.error) throw revRes.error
       if (actRes.error) throw actRes.error
       setReviews(revRes.data ?? [])
@@ -84,13 +94,16 @@ export default function Overview() {
   useEffect(() => { if (events.length > 0) fetchData() }, [events.length])
 
   // ── Stats from real Supabase data ─────────────────────────────────────────
-  const repliedCount   = reviews.filter(r => (r.status ?? 'replied') === 'replied').length
+  // reviews table mixes two schemas (old: star_rating; new: rating), so read both.
+  const reviewRating = r => Number(r.rating) || parseInt(r.star_rating) || 0
+
+  const repliedCount   = reviews.filter(r => (r.status || 'replied') === 'replied').length
   const postsScheduled = activity.filter(a => a.type === 'post_scheduled').length
   const textsSent      = activity.filter(a => a.type === 'follow_up_sent').length
 
-  const ratedReviews = reviews.filter(r => Number(r.rating) > 0)
+  const ratedReviews = reviews.filter(r => reviewRating(r) > 0)
   const avgRating = ratedReviews.length
-    ? (ratedReviews.reduce((s, r) => s + Number(r.rating), 0) / ratedReviews.length).toFixed(1)
+    ? (ratedReviews.reduce((s, r) => s + reviewRating(r), 0) / ratedReviews.length).toFixed(1)
     : '0'
 
   const statCards = [
@@ -106,7 +119,7 @@ export default function Overview() {
     ...reviews.map(r => ({
       type:   'review',
       text:   'Review replied',
-      detail: [r.customer_name, r.review_text].filter(Boolean).join(' · ') || '—',
+      detail: [r.customer_name || r.reviewer_name, r.review_text || r.review].filter(Boolean).join(' · ') || '—',
       ts:     r.created_at,
     })),
     ...activity.map(a => {

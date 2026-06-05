@@ -138,8 +138,16 @@ export default function Analytics() {
       Promise.all([reviewQ, actQ]).then(([r, a]) => {
         if (r.error) console.error('[Analytics] reviews fetch error:', r.error.message)
         if (a.error) console.error('[Analytics] activity_feed fetch error:', a.error.message)
-        console.log('[Analytics] fetched for user', userId,
-          '— reviews:', r.data?.length ?? 0, 'activity_feed:', a.data?.length ?? 0)
+        const revs = r.data ?? [], acts = a.data ?? []
+        console.group('[Analytics] fetched for user', userId)
+        console.log('reviews:', revs.length, revs)
+        console.log('  with a numeric rating (>0):', revs.filter(x => Number(x.rating) > 0).length,
+          '| null/0 rating:', revs.filter(x => !(Number(x.rating) > 0)).length)
+        console.log('  replied:', revs.filter(x => x.status === 'replied').length)
+        console.log('activity_feed:', acts.length, acts)
+        console.log('  post_scheduled:', acts.filter(x => x.type === 'post_scheduled').length,
+          '| follow_up_sent:', acts.filter(x => x.type === 'follow_up_sent').length)
+        console.groupEnd()
         setReviews(r.data ?? [])
         setActivities(a.data ?? [])
       }).catch(console.error).finally(() => setLoading(false))
@@ -211,6 +219,15 @@ export default function Analytics() {
   const repliedHasData = repliedData.filter(d => d.count > 0).length >= 2
   const postsHasData   = postsData.filter(d => d.count > 0).length >= 2
   const ratingHasData  = ratingData.length >= 2
+
+  // Why each chart renders or shows "Not enough data yet" (needs >= 2 non-empty points)
+  useEffect(() => {
+    if (loading) return
+    console.log(`[Analytics] chart readiness (range ${range}) —`,
+      'reviewsReplied:', `${repliedData.filter(d => d.count > 0).length} pts → ${repliedHasData ? 'CHART' : 'empty'}`,
+      '| postsScheduled:', `${postsData.filter(d => d.count > 0).length} pts → ${postsHasData ? 'CHART' : 'empty'}`,
+      '| avgRating:', `${ratingData.length} pts → ${ratingHasData ? 'CHART' : 'empty'}`)
+  }, [loading, range, repliedHasData, postsHasData, ratingHasData])
 
   // ── Stat cards ────────────────────────────────────────────────────────────
 
