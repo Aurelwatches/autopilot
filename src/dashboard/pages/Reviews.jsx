@@ -59,10 +59,12 @@ export default function Reviews() {
 
   async function fetchReviews() {
     if (!supabase) { setError('Supabase is not configured.'); setLoading(false); return }
+    // Wait for auth so the query is always filtered to the logged-in user
+    if (!userId) { setLoading(false); return }
     try {
-      let q = supabase.from('reviews').select('*').order('created_at', { ascending: false })
-      if (userId) q = q.eq('user_id', userId)
-      const { data, error: err } = await q
+      const { data, error: err } = await supabase
+        .from('reviews').select('*')
+        .eq('user_id', userId).order('created_at', { ascending: false })
       if (err) throw err
       setReviews((data ?? []).map(rowToReview))
       setError('')
@@ -115,18 +117,23 @@ export default function Reviews() {
             {reviews.length} review{reviews.length !== 1 ? 's' : ''} · synced automatically
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {avgRating && (
-            <span className="text-sm px-3 py-1 rounded"
-              style={{ backgroundColor: 'rgba(232,160,32,0.1)', color: '#E8A020', border: '1px solid rgba(232,160,32,0.2)' }}>
-              ★ {avgRating} avg
-            </span>
-          )}
+        <div className="flex items-center gap-5">
           {repliedCount > 0 && (
             <span className="text-sm px-3 py-1 rounded"
               style={{ backgroundColor: 'rgba(74,222,128,0.08)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.15)' }}>
               {repliedCount} replied this month
             </span>
+          )}
+          {avgRating && (
+            <div className="text-right">
+              <div className="flex items-center gap-1.5 justify-end">
+                <span style={{ fontSize: 38, fontWeight: 700, lineHeight: 1, color: C.primary }}>{avgRating}</span>
+                <span style={{ fontSize: 22, color: '#E8A020', lineHeight: 1 }}>★</span>
+              </div>
+              <p className="text-xs mt-1" style={{ color: C.muted }}>
+                avg rating · {ratedReviews.length} rated
+              </p>
+            </div>
           )}
         </div>
       </div>

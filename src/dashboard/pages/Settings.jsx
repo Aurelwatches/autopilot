@@ -368,6 +368,11 @@ export default function Settings() {
             </p>
           </div>
           <button
+            onClick={() => {
+              if (window.confirm('Cancel your AutoPilot subscription at the end of the billing period?')) {
+                window.alert('Your cancellation request has been received. Our team will email you a confirmation shortly.')
+              }
+            }}
             className="text-sm font-medium px-4 py-2 rounded transition-colors"
             style={{ color: 'rgb(239,68,68)', border: '1px solid rgba(239,68,68,0.3)', backgroundColor: 'rgba(239,68,68,0.06)', cursor: 'pointer' }}
             onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.12)'}

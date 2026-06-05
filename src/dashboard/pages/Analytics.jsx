@@ -75,7 +75,7 @@ function DarkTooltip({ active, payload, label, C }) {
 
 // ── Chart card ────────────────────────────────────────────────────────────────
 
-function ChartCard({ title, subtitle, hasData, C, children }) {
+function ChartCard({ title, subtitle, hasData, loading, C, children }) {
   return (
     <div style={{
       borderRadius: 10, marginBottom: 20,
@@ -89,14 +89,20 @@ function ChartCard({ title, subtitle, hasData, C, children }) {
           height: 180, display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 6,
         }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.muted}
-            strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-            <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
-          </svg>
-          <p style={{ fontSize: 12, color: C.secondary, margin: 0 }}>
-            Not enough data yet — check back soon
-          </p>
+          {loading ? (
+            <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Loading…</p>
+          ) : (
+            <>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.muted}
+                strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+              </svg>
+              <p style={{ fontSize: 12, color: C.secondary, margin: 0 }}>
+                Not enough data yet — check back soon
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -130,6 +136,10 @@ export default function Analytics() {
       const actQ = supabase.from('activity_feed')
         .select('id, type, created_at').eq('user_id', userId).order('created_at')
       Promise.all([reviewQ, actQ]).then(([r, a]) => {
+        if (r.error) console.error('[Analytics] reviews fetch error:', r.error.message)
+        if (a.error) console.error('[Analytics] activity_feed fetch error:', a.error.message)
+        console.log('[Analytics] fetched for user', userId,
+          '— reviews:', r.data?.length ?? 0, 'activity_feed:', a.data?.length ?? 0)
         setReviews(r.data ?? [])
         setActivities(a.data ?? [])
       }).catch(console.error).finally(() => setLoading(false))
@@ -270,6 +280,7 @@ export default function Analytics() {
         title="Reviews Replied"
         subtitle={range === '30d' ? 'Per day, last 30 days' : range === '90d' ? 'Per week, last 90 days' : 'Per month, last year'}
         hasData={repliedHasData}
+        loading={loading}
         C={C}
       >
         <ResponsiveContainer width="100%" height={200}>
@@ -289,6 +300,7 @@ export default function Analytics() {
         title="Posts Scheduled"
         subtitle={range === '30d' ? 'Per week, last 30 days' : range === '90d' ? 'Per week, last 90 days' : 'Per month, last year'}
         hasData={postsHasData}
+        loading={loading}
         C={C}
       >
         <ResponsiveContainer width="100%" height={200}>
@@ -307,6 +319,7 @@ export default function Analytics() {
         title="Average Rating Over Time"
         subtitle="Weeks with data only"
         hasData={ratingHasData}
+        loading={loading}
         C={C}
       >
         <ResponsiveContainer width="100%" height={200}>

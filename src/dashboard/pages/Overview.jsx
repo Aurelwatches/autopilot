@@ -96,7 +96,7 @@ export default function Overview() {
   const statCards = [
     { label: 'Reviews Replied', value: repliedCount,   path: '/dashboard/reviews'   },
     { label: 'Posts Scheduled', value: postsScheduled, path: '/dashboard/posts'     },
-    { label: 'Texts Sent',      value: textsSent,      path: '/dashboard/followups' },
+    { label: 'Texts Sent',      value: textsSent,      path: null                   }, // no follow-ups page
     { label: 'Avg Rating',      value: avgRating,      path: '/dashboard/analytics' },
   ]
 
@@ -166,22 +166,25 @@ export default function Overview() {
         {statCards.map(s => (
           <button
             key={s.label}
-            onClick={() => navigate(s.path)}
+            onClick={() => s.path && navigate(s.path)}
+            disabled={!s.path}
             className="rounded-lg px-5 py-5 text-left w-full transition-colors"
             style={{
               backgroundColor: C.card, border: `1px solid ${C.border}`,
-              cursor: 'pointer',
+              cursor: s.path ? 'pointer' : 'default',
             }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = C.secondary}
-            onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
+            onMouseEnter={e => { if (s.path) e.currentTarget.style.borderColor = C.secondary }}
+            onMouseLeave={e => { if (s.path) e.currentTarget.style.borderColor = C.border }}
           >
             <p className="text-[11px] font-medium uppercase tracking-widest mb-3"
               style={{ color: C.muted }}>{s.label}</p>
             <p className="text-3xl font-semibold tracking-tight mb-1"
               style={{ color: C.primary }}>{s.value}</p>
-            <p className="text-xs flex items-center gap-1" style={{ color: C.muted }}>
-              View →
-            </p>
+            {s.path && (
+              <p className="text-xs flex items-center gap-1" style={{ color: C.muted }}>
+                View →
+              </p>
+            )}
           </button>
         ))}
       </div>

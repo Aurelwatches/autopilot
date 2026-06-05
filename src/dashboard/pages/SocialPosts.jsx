@@ -2,22 +2,28 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useApp } from '../AppContext'
 
-function tomorrow10am() {
+// Default the schedule picker to tomorrow 10am, formatted for <input type="datetime-local">
+// (which needs local 'YYYY-MM-DDTHH:mm', not an ISO/UTC string).
+function defaultScheduleLocal() {
   const d = new Date()
   d.setDate(d.getDate() + 1)
   d.setHours(10, 0, 0, 0)
-  return d.toISOString()
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+const STATUS_LABEL = { draft: 'Draft', scheduled: 'Scheduled', published: 'Published' }
+
+function fmtDateTime(iso) {
+  return new Date(iso).toLocaleString('en-US',
+    { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
 function formatSchedule(row) {
-  if (row.status === 'scheduled' && row.scheduled_at) {
-    return new Date(row.scheduled_at).toLocaleString('en-US',
-      { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-  }
-  if (row.status === 'draft') return 'Draft'
-  return row.created_at
-    ? new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    : '—'
+  if (row.status === 'scheduled' && row.scheduled_at) return `Scheduled · ${fmtDateTime(row.scheduled_at)}`
+  if (row.status === 'published') return `Published · ${fmtDateTime(row.scheduled_at || row.created_at)}`
+  if (row.status === 'draft')     return 'Draft'
+  return row.created_at ? fmtDateTime(row.created_at) : '—'
 }
 
 const LOADING_MSGS = [
@@ -94,7 +100,7 @@ function PostCard({ p, onDelete, C }) {
           <div className="flex items-center gap-2">
             <span className="text-xs px-2 py-0.5 rounded"
               style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
-              {p.status}
+              {STATUS_LABEL[p.status] ?? p.status}
             </span>
             <button
               onClick={() => setConfirming(true)}
@@ -133,6 +139,7 @@ export default function SocialPosts() {
   const [platform,   setPlatform]   = useState('Instagram')
   const [topic,      setTopic]      = useState('')
   const [text,       setText]       = useState('')
+  const [scheduledAt, setScheduledAt] = useState(defaultScheduleLocal())
   const [isLoading,  setIsLoading]  = useState(false)
   const [msgIdx,     setMsgIdx]     = useState(0)
   const [aiError,    setAiError]    = useState('')
@@ -194,13 +201,23 @@ export default function SocialPosts() {
   async function handleSave(status) {
     if (!text.trim() || saving) return
     if (!supabase || !userId) { setAiError('Sign in to save posts.'); return }
+
+    // Resolve scheduled_at by status: scheduled → picked time; published → now; draft → null
+    let scheduled_at = null
+    if (status === 'scheduled') {
+      if (!scheduledAt) { setAiError('Pick a date and time to schedule.'); return }
+      scheduled_at = new Date(scheduledAt).toISOString()
+    } else if (status === 'published') {
+      scheduled_at = new Date().toISOString()
+    }
+
     setSaving(true)
     const { data, error } = await supabase.from('posts').insert({
-      user_id:      userId,
+      user_id:  userId,
       platform,
-      content:      text.trim(),   // DB column is 'content', not 'text'
+      content:  text.trim(),   // DB column is 'content', not 'text'
       status,
-      scheduled_at: status === 'scheduled' ? tomorrow10am() : null,
+      scheduled_at,
     }).select().single()
     setSaving(false)
     if (error) { setAiError(error.message); return }
@@ -210,7 +227,7 @@ export default function SocialPosts() {
 
   function handleCloseForm() {
     setShowForm(false); setIsLoading(false); setAiError('')
-    setText(''); setTopic(''); setPlatform('Instagram')
+    setText(''); setTopic(''); setPlatform('Instagram'); setScheduledAt(defaultScheduleLocal())
   }
 
   // Called by PostCard after its exit animation finishes
@@ -378,6 +395,23 @@ export default function SocialPosts() {
               <p className="text-xs mt-1 text-right" style={{ color: C.muted }}>{text.length}/280</p>
             </div>
 
+            {/* Schedule time picker */}
+            <div className="mb-4">
+              <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
+                Schedule for
+                <span style={{ color: C.muted }}> (used when you click Schedule)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={e => setScheduledAt(e.target.value)}
+                className="w-full text-sm px-4 py-2.5 rounded outline-none"
+                style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}`, colorScheme: 'dark' }}
+                onFocus={e => e.target.style.borderColor = C.secondary}
+                onBlur={e => e.target.style.borderColor = C.border}
+              />
+            </div>
+
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => handleSave('draft')}
@@ -390,6 +424,16 @@ export default function SocialPosts() {
                 }}
               >Save draft</button>
               <button
+                onClick={() => handleSave('published')}
+                disabled={!text.trim() || saving}
+                className="text-sm px-4 py-2 rounded"
+                style={{
+                  backgroundColor: 'rgba(74,222,128,0.1)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.25)',
+                  opacity: !text.trim() || saving ? 0.5 : 1,
+                  cursor: !text.trim() || saving ? 'default' : 'pointer',
+                }}
+              >Publish now</button>
+              <button
                 onClick={() => handleSave('scheduled')}
                 disabled={!text.trim() || saving}
                 className="text-sm font-semibold px-4 py-2 rounded"
@@ -400,7 +444,7 @@ export default function SocialPosts() {
                 }}
                 onMouseEnter={e => { if (text.trim() && !saving) e.currentTarget.style.opacity = '0.85' }}
                 onMouseLeave={e => { if (text.trim() && !saving) e.currentTarget.style.opacity = '1' }}
-              >{saving ? 'Saving…' : 'Schedule post'}</button>
+              >{saving ? 'Saving…' : 'Schedule'}</button>
             </div>
           </div>
         </div>
