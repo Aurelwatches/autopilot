@@ -84,10 +84,11 @@ client.on('interactionCreate', async interaction => {
 
   // ── Modal submitted → POST to /api/reply ──────────────────────────────────
   if (interaction.isModalSubmit() && interaction.customId.startsWith('modal:')) {
+    // Defer FIRST — must happen within 3 s or Discord throws 10062
+    await interaction.deferReply({ ephemeral: true })
+
     const messageId = interaction.customId.slice('modal:'.length)
     const replyText = interaction.fields.getTextInputValue('reply_text')
-
-    await interaction.deferReply({ ephemeral: true })
 
     try {
       const res = await fetch(`${API_URL}/api/reply`, {
