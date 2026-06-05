@@ -87,20 +87,27 @@ export default function Reviews() {
 
   const repliedCount = reviews.filter(r => r.status === 'replied').length
 
-  const filtered = reviews.filter(r => {
-    if (active === 'Replied')  return r.status === 'replied'
-    if (active === 'Pending')  return r.status === 'pending'
-    if (active === '5 Star')   return r.rating === 5
-    if (active === '1–2 Star') return r.rating <= 2
+  // Count matching reviews for a given filter — drives the per-tab badges
+  // (the star-rating breakdown) and reuses the same predicate as filtering.
+  function matchesFilter(r, f) {
+    if (f === 'Replied')  return r.status === 'replied'
+    if (f === 'Pending')  return r.status === 'pending'
+    if (f === '5 Star')   return r.rating === 5
+    if (f === '1–2 Star') return r.rating <= 2
     return true
-  })
+  }
+
+  const countFor = f => reviews.filter(r => matchesFilter(r, f)).length
+  const filtered = reviews.filter(r => matchesFilter(r, active))
 
   return (
     <div className="px-8 py-8" style={{ maxWidth: 900 }}>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Reviews</h1>
-          <p className="text-sm" style={{ color: C.secondary }}>Google Reviews — synced automatically</p>
+          <p className="text-sm" style={{ color: C.secondary }}>
+            {reviews.length} review{reviews.length !== 1 ? 's' : ''} · synced automatically
+          </p>
         </div>
         {repliedCount > 0 && (
           <span className="text-sm px-3 py-1 rounded"
@@ -110,24 +117,32 @@ export default function Reviews() {
         )}
       </div>
 
-      {/* Filters */}
+      {/* Filters — label + live count (star-rating breakdown) */}
       <div className="flex gap-1 mb-6">
-        {filters.map(f => (
-          <button
-            key={f}
-            onClick={() => setActive(f)}
-            className="text-xs px-3 py-1.5 rounded transition-colors"
-            style={{
-              backgroundColor: active === f ? C.primary : C.card,
-              color:           active === f ? C.bg : C.secondary,
-              border:          `1px solid ${active === f ? 'transparent' : C.border}`,
-              fontWeight:      active === f ? 600 : 400,
-              cursor: 'pointer',
-            }}
-          >
-            {f}
-          </button>
-        ))}
+        {filters.map(f => {
+          const n = countFor(f)
+          return (
+            <button
+              key={f}
+              onClick={() => setActive(f)}
+              className="text-xs px-3 py-1.5 rounded transition-colors flex items-center gap-1.5"
+              style={{
+                backgroundColor: active === f ? C.primary : C.card,
+                color:           active === f ? C.bg : C.secondary,
+                border:          `1px solid ${active === f ? 'transparent' : C.border}`,
+                fontWeight:      active === f ? 600 : 400,
+                cursor: 'pointer',
+              }}
+            >
+              {f}
+              <span style={{
+                fontSize: 10, fontWeight: 600, borderRadius: 999, padding: '0 6px',
+                backgroundColor: active === f ? 'rgba(0,0,0,0.18)' : C.inputBg,
+                color: active === f ? C.bg : C.muted,
+              }}>{n}</span>
+            </button>
+          )
+        })}
       </div>
 
       {error && (

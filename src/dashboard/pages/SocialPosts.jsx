@@ -1,6 +1,24 @@
 import { useState, useEffect } from 'react'
-import { useDashboard } from '../DashboardContext'
+import { supabase } from '../../lib/supabase'
 import { useApp } from '../AppContext'
+
+function tomorrow10am() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  d.setHours(10, 0, 0, 0)
+  return d.toISOString()
+}
+
+function formatSchedule(row) {
+  if (row.status === 'scheduled' && row.scheduled_at) {
+    return new Date(row.scheduled_at).toLocaleString('en-US',
+      { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+  }
+  if (row.status === 'draft') return 'Draft'
+  return row.created_at
+    ? new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : '—'
+}
 
 const LOADING_MSGS = [
   'AutoPilot is drafting your post…',
@@ -106,11 +124,11 @@ function PostCard({ p, onDelete, C }) {
 }
 
 export default function SocialPosts() {
-  const { posts: webhookPosts } = useDashboard()
-  const { C } = useApp()
+  const { C, userId } = useApp()
 
-  const [localPosts, setLocalPosts] = useState([])
-  const [deletedIds, setDeletedIds] = useState(new Set())
+  const [posts,      setPosts]      = useState([])
+  const [loading,    setLoading]    = useState(true)
+  const [saving,     setSaving]     = useState(false)
   const [showForm,   setShowForm]   = useState(false)
   const [platform,   setPlatform]   = useState('Instagram')
   const [topic,      setTopic]      = useState('')
@@ -118,6 +136,22 @@ export default function SocialPosts() {
   const [isLoading,  setIsLoading]  = useState(false)
   const [msgIdx,     setMsgIdx]     = useState(0)
   const [aiError,    setAiError]    = useState('')
+
+  // Load the user's saved posts; re-fetch once auth resolves and poll every 30s
+  async function fetchPosts() {
+    if (!supabase || !userId) { setLoading(false); return }
+    const { data, error } = await supabase
+      .from('posts').select('*')
+      .eq('user_id', userId).order('created_at', { ascending: false })
+    if (!error) setPosts(data ?? [])
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchPosts()
+    const id = setInterval(fetchPosts, 30000)
+    return () => clearInterval(id)
+  }, [userId])
 
   useEffect(() => {
     if (!isLoading) return
@@ -157,13 +191,20 @@ export default function SocialPosts() {
     }
   }
 
-  function handleSave(status) {
-    if (!text.trim()) return
-    setLocalPosts(prev => [{
-      id: Date.now(), platform, text,
-      scheduledAt: status === 'scheduled' ? 'Tomorrow, 10:00 AM' : '—',
+  async function handleSave(status) {
+    if (!text.trim() || saving) return
+    if (!supabase || !userId) { setAiError('Sign in to save posts.'); return }
+    setSaving(true)
+    const { data, error } = await supabase.from('posts').insert({
+      user_id:      userId,
+      platform,
+      text:         text.trim(),
       status,
-    }, ...prev])
+      scheduled_at: status === 'scheduled' ? tomorrow10am() : null,
+    }).select().single()
+    setSaving(false)
+    if (error) { setAiError(error.message); return }
+    setPosts(prev => [data, ...prev])
     handleCloseForm()
   }
 
@@ -172,12 +213,22 @@ export default function SocialPosts() {
     setText(''); setTopic(''); setPlatform('Instagram')
   }
 
-  function handleDelete(id) {
-    setLocalPosts(prev => prev.filter(p => p.id !== id))
-    setDeletedIds(prev => new Set([...prev, id]))
+  // Called by PostCard after its exit animation finishes
+  async function handleDelete(id) {
+    setPosts(prev => prev.filter(p => p.id !== id))
+    if (supabase) {
+      const { error } = await supabase.from('posts').delete().eq('id', id)
+      if (error) fetchPosts() // re-sync if the delete didn't persist
+    }
   }
 
-  const allPosts = [...localPosts, ...webhookPosts].filter(p => !deletedIds.has(p.id))
+  const allPosts = posts.map(p => ({
+    id:          p.id,
+    platform:    p.platform,
+    text:        p.text,
+    status:      p.status,
+    scheduledAt: formatSchedule(p),
+  }))
 
   return (
     <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
@@ -197,7 +248,12 @@ export default function SocialPosts() {
         </button>
       </div>
 
-      {allPosts.length === 0 ? (
+      {loading && allPosts.length === 0 ? (
+        <div className="rounded-lg overflow-hidden flex justify-center py-20"
+          style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+          <p className="text-sm" style={{ color: C.muted }}>Loading…</p>
+        </div>
+      ) : allPosts.length === 0 ? (
         <div className="rounded-lg overflow-hidden"
           style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
           <EmptyState C={C} />
@@ -325,16 +381,26 @@ export default function SocialPosts() {
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => handleSave('draft')}
+                disabled={!text.trim() || saving}
                 className="text-sm px-4 py-2 rounded"
-                style={{ backgroundColor: C.inputBg, color: C.secondary, border: `1px solid ${C.border}`, cursor: 'pointer' }}
+                style={{
+                  backgroundColor: C.inputBg, color: C.secondary, border: `1px solid ${C.border}`,
+                  opacity: !text.trim() || saving ? 0.5 : 1,
+                  cursor: !text.trim() || saving ? 'default' : 'pointer',
+                }}
               >Save draft</button>
               <button
                 onClick={() => handleSave('scheduled')}
+                disabled={!text.trim() || saving}
                 className="text-sm font-semibold px-4 py-2 rounded"
-                style={{ backgroundColor: C.primary, color: C.bg, cursor: 'pointer' }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-              >Schedule post</button>
+                style={{
+                  backgroundColor: C.primary, color: C.bg,
+                  opacity: !text.trim() || saving ? 0.5 : 1,
+                  cursor: !text.trim() || saving ? 'default' : 'pointer',
+                }}
+                onMouseEnter={e => { if (text.trim() && !saving) e.currentTarget.style.opacity = '0.85' }}
+                onMouseLeave={e => { if (text.trim() && !saving) e.currentTarget.style.opacity = '1' }}
+              >{saving ? 'Saving…' : 'Schedule post'}</button>
             </div>
           </div>
         </div>
