@@ -73,8 +73,15 @@ export default function Reviews() {
     }
   }
 
-  useEffect(() => { fetchReviews() }, [])
+  // Re-fetch when auth resolves (userId goes null → real id) and poll every 30s
+  // so newly saved reviews appear without a manual refresh.
+  useEffect(() => {
+    fetchReviews()
+    const interval = setInterval(fetchReviews, 30000)
+    return () => clearInterval(interval)
+  }, [userId])
 
+  // Instant refresh when a review_replied event streams in over SSE
   const reviewEventCount = events.filter(e => e.type === 'review_replied').length
   useEffect(() => { if (reviewEventCount > 0) fetchReviews() }, [reviewEventCount])
 
