@@ -179,8 +179,12 @@ export default function Reviews() {
         </div>
       )}
 
-      <div className="rounded-lg overflow-hidden"
-        style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+      <div style={{
+        backgroundColor: C.card, border: `1px solid ${C.border}`,
+        borderRadius: 16, overflow: 'hidden',
+        backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+        boxShadow: C.cardShadow,
+      }}>
         {loading ? (
           <div className="flex justify-center py-20">
             <p className="text-sm" style={{ color: C.muted }}>Loading…</p>

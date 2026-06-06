@@ -278,7 +278,7 @@ function HeroContent() {
         </div>
 
         {/* Card 3 — bottom */}
-        <div style={{ ...card3, position: 'absolute', bottom: '20%', left: '50%', marginLeft: -130 }}>
+        <div style={{ ...card3, position: 'absolute', bottom: 'calc(20% - 40px)', left: '50%', marginLeft: -130 }}>
           <Card style={{ animation: 'cardBob 6s ease-in-out infinite' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <span className="pulse-dot" style={{

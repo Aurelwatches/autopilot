@@ -75,7 +75,7 @@ function DateTimePicker({ value, onChange, C }) {
   }
 
   return (
-    <div style={{ backgroundColor: '#141414', border: `1px solid ${C.border}`, borderRadius: 10, padding: 14 }}>
+    <div style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 10, padding: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <button type="button" onClick={() => setView(new Date(year, month - 1, 1))} style={navBtn} aria-label="Previous month">‹</button>
         <span style={{ fontSize: 13, fontWeight: 600, color: '#F0EEE9' }}>{MONTHS[month]} {year}</span>
@@ -167,9 +167,12 @@ function PostCard({ p, onDelete, C }) {
 
   return (
     <div
-      className="rounded-lg flex flex-col"
+      className="flex flex-col"
       style={{
         backgroundColor: C.card, border: `1px solid ${C.border}`,
+        borderRadius: 16,
+        backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+        boxShadow: C.cardShadow,
         opacity: deleting ? 0 : 1,
         transform: deleting ? 'scale(0.97)' : 'scale(1)',
         transition: 'opacity 0.22s ease, transform 0.22s ease',
@@ -399,13 +402,22 @@ export default function SocialPosts() {
       </div>
 
       {loading && allPosts.length === 0 ? (
-        <div className="rounded-lg overflow-hidden flex justify-center py-20"
-          style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+        <div style={{
+          backgroundColor: C.card, border: `1px solid ${C.border}`,
+          borderRadius: 16, overflow: 'hidden',
+          backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+          boxShadow: C.cardShadow,
+          display: 'flex', justifyContent: 'center', padding: '80px 0',
+        }}>
           <p className="text-sm" style={{ color: C.muted }}>Loading…</p>
         </div>
       ) : allPosts.length === 0 ? (
-        <div className="rounded-lg overflow-hidden"
-          style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+        <div style={{
+          backgroundColor: C.card, border: `1px solid ${C.border}`,
+          borderRadius: 16, overflow: 'hidden',
+          backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+          boxShadow: C.cardShadow,
+        }}>
           <EmptyState C={C} />
         </div>
       ) : (
@@ -420,7 +432,12 @@ export default function SocialPosts() {
           style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
           onClick={e => e.target === e.currentTarget && handleCloseForm()}
         >
-          <div className="w-full rounded-lg p-8" style={{ maxWidth: 520, backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+          <div className="w-full p-8" style={{
+            maxWidth: 520, backgroundColor: C.card, border: `1px solid ${C.border}`,
+            borderRadius: 20,
+            backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+            boxShadow: C.cardShadow,
+          }}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-base font-semibold" style={{ color: C.primary }}>New post</h2>
               <button onClick={handleCloseForm} style={{ color: C.muted, fontSize: 18, lineHeight: 1, cursor: 'pointer' }}>×</button>

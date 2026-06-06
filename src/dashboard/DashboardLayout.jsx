@@ -9,7 +9,7 @@ import { useAuth } from '../lib/auth'
 function LoadingScreen() {
   return (
     <div style={{
-      minHeight: '100vh', backgroundColor: '#0A0A0A',
+      minHeight: '100vh', backgroundColor: '#000000',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div style={{ textAlign: 'center' }}>

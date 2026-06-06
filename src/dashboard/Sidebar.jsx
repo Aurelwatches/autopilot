@@ -97,7 +97,13 @@ export default function Sidebar() {
   return (
     <aside
       className="fixed top-0 left-0 bottom-0 flex flex-col z-40"
-      style={{ width: 240, backgroundColor: C.bg, borderRight: `1px solid ${C.divider}` }}
+      style={{
+        width: 240,
+        backgroundColor: C.sidebarBg,
+        borderRight: `1px solid ${C.sidebarBorder}`,
+        backdropFilter: C.glassFilter,
+        WebkitBackdropFilter: C.glassFilter,
+      }}
     >
       {/* Logo + theme toggle */}
       <div className="px-5 py-5 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.divider}` }}>
@@ -134,7 +140,7 @@ export default function Sidebar() {
             className="flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors"
             style={({ isActive }) => ({
               color: isActive ? C.primary : C.secondary,
-              backgroundColor: isActive ? (theme === 'dark' ? '#1A1A1A' : '#EEEDE9') : 'transparent',
+              backgroundColor: isActive ? C.sidebarActiveBg : 'transparent',
               borderLeft: isActive ? `2px solid ${C.accent}` : '2px solid transparent',
             })}
           >

@@ -74,7 +74,9 @@ function DarkTooltip({ active, payload, label, C }) {
   return (
     <div style={{
       backgroundColor: C.card, border: `1px solid ${C.border}`,
-      borderRadius: 6, padding: '7px 11px', fontSize: 12,
+      backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+      boxShadow: C.cardShadow,
+      borderRadius: 8, padding: '7px 11px', fontSize: 12,
     }}>
       <p style={{ color: C.secondary, marginBottom: 3 }}>{label}</p>
       {payload.map(p => (
@@ -91,8 +93,10 @@ function DarkTooltip({ active, payload, label, C }) {
 function ChartCard({ title, subtitle, hasData, loading, C, children }) {
   return (
     <div style={{
-      borderRadius: 10, marginBottom: 20,
+      borderRadius: 16, marginBottom: 20,
       backgroundColor: C.card, border: `1px solid ${C.border}`,
+      backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+      boxShadow: C.cardShadow,
       padding: '20px 24px',
     }}>
       <p style={{ fontSize: 13, fontWeight: 600, color: C.primary, marginBottom: 2 }}>{title}</p>
@@ -297,8 +301,13 @@ export default function Analytics() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map(s => (
-          <div key={s.label} className="rounded-lg px-5 py-5"
-            style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+          <div key={s.label} className="px-5 py-5"
+            style={{
+              backgroundColor: C.card, border: `1px solid ${C.border}`,
+              borderRadius: 16,
+              backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+              boxShadow: C.cardShadow,
+            }}>
             <p className="text-[11px] font-medium uppercase tracking-widest mb-3"
               style={{ color: C.muted }}>{s.label}</p>
             <p className="text-3xl font-semibold tracking-tight" style={{ color: C.primary }}>

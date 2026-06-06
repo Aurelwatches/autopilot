@@ -142,8 +142,13 @@ export default function Overview() {
     <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
 
       {/* Status bar */}
-      <div className="flex items-center gap-3 rounded px-4 py-3 mb-8 text-sm"
-        style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+      <div className="flex items-center gap-3 px-4 py-3 mb-8 text-sm"
+        style={{
+          backgroundColor: C.card, border: `1px solid ${C.border}`,
+          borderRadius: 12,
+          backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+          boxShadow: C.cardShadow,
+        }}>
         <span className="w-2 h-2 rounded-full shrink-0 pulse-dot"
           style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
         <span style={{ color: C.primary }}>AutoPilot is running</span>
@@ -181,9 +186,12 @@ export default function Overview() {
             key={s.label}
             onClick={() => s.path && navigate(s.path)}
             disabled={!s.path}
-            className="rounded-lg px-5 py-5 text-left w-full transition-colors"
+            className="px-5 py-5 text-left w-full transition-colors"
             style={{
               backgroundColor: C.card, border: `1px solid ${C.border}`,
+              borderRadius: 16,
+              backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+              boxShadow: C.cardShadow,
               cursor: s.path ? 'pointer' : 'default',
             }}
             onMouseEnter={e => { if (s.path) e.currentTarget.style.borderColor = C.secondary }}
@@ -203,8 +211,12 @@ export default function Overview() {
       </div>
 
       {/* Activity feed */}
-      <div className="rounded-lg overflow-hidden"
-        style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+      <div style={{
+        backgroundColor: C.card, border: `1px solid ${C.border}`,
+        borderRadius: 16, overflow: 'hidden',
+        backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+        boxShadow: C.cardShadow,
+      }}>
         <div className="px-5 py-4 flex items-center justify-between"
           style={{ borderBottom: `1px solid ${C.divider}` }}>
           <h2 className="text-sm font-semibold" style={{ color: C.primary }}>Recent Activity</h2>

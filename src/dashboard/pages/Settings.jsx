@@ -85,8 +85,12 @@ function Toggle({ checked, onChange, C }) {
 
 function Card({ title, children, C }) {
   return (
-    <div className="rounded-lg overflow-hidden mb-6"
-      style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
+    <div style={{
+      backgroundColor: C.card, border: `1px solid ${C.border}`,
+      borderRadius: 16, overflow: 'hidden', marginBottom: 24,
+      backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+      boxShadow: C.cardShadow,
+    }}>
       <div className="px-6 py-4" style={{ borderBottom: `1px solid ${C.divider}` }}>
         <h2 className="text-sm font-semibold" style={{ color: C.primary }}>{title}</h2>
       </div>
@@ -206,7 +210,7 @@ export default function Settings() {
             <button
               type="submit"
               className="text-sm font-semibold px-5 py-2 rounded transition-colors"
-              style={{ backgroundColor: C.primary, color: theme === 'dark' ? '#0A0A0A' : '#FFFFFF', cursor: 'pointer' }}
+              style={{ backgroundColor: C.primary, color: theme === 'dark' ? C.bg : '#FFFFFF', cursor: 'pointer' }}
               onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
               onMouseLeave={e => e.currentTarget.style.opacity = '1'}
             >
@@ -500,8 +504,12 @@ export default function Settings() {
       </Card>
 
       {/* Danger zone */}
-      <div className="rounded-lg overflow-hidden"
-        style={{ backgroundColor: C.card, border: '1px solid rgba(239,68,68,0.2)' }}>
+      <div style={{
+        backgroundColor: C.card, border: '1px solid rgba(239,68,68,0.2)',
+        borderRadius: 16, overflow: 'hidden',
+        backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+        boxShadow: C.cardShadow,
+      }}>
         <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(239,68,68,0.1)' }}>
           <h2 className="text-sm font-semibold" style={{ color: 'rgb(239,68,68)' }}>Danger zone</h2>
         </div>

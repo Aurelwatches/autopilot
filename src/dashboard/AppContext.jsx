@@ -4,14 +4,30 @@ import { useAuth } from '../lib/auth'
 
 export const THEMES = {
   dark: {
-    bg: '#0A0A0A', card: '#141414', border: '#2A2A2A', divider: '#1E1E1E',
-    primary: '#F0EEE9', secondary: '#888780', muted: '#3A3835',
-    accent: '#4A90D9', inputBg: '#0F0F0F', sentBubble: '#1D1D1D',
+    bg: '#000000',
+    card: 'rgba(255,255,255,0.03)',
+    border: 'rgba(255,255,255,0.08)',
+    divider: 'rgba(255,255,255,0.05)',
+    primary: '#F0EEE9', secondary: '#888780', muted: '#555550',
+    accent: '#4A8EFF',
+    inputBg: 'rgba(255,255,255,0.04)',
+    sentBubble: 'rgba(255,255,255,0.06)',
+    cardShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+    glassFilter: 'blur(20px)',
+    sidebarBg: 'rgba(255,255,255,0.02)',
+    sidebarBorder: 'rgba(255,255,255,0.06)',
+    sidebarActiveBg: 'rgba(255,255,255,0.06)',
   },
   light: {
     bg: '#F5F4F0', card: '#FFFFFF', border: '#E5E4E0', divider: '#EEEDE9',
     primary: '#0A0A0A', secondary: '#5A5955', muted: '#9A9994',
-    accent: '#4A90D9', inputBg: '#F8F7F4', sentBubble: '#E8E6E1',
+    accent: '#4A8EFF',
+    inputBg: '#F8F7F4', sentBubble: '#E8E6E1',
+    cardShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    glassFilter: 'none',
+    sidebarBg: '#F5F4F0',
+    sidebarBorder: '#EEEDE9',
+    sidebarActiveBg: '#EEEDE9',
   },
 }
 
