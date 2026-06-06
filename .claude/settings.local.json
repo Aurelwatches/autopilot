@@ -35,7 +35,10 @@
       "Bash(npm run *)",
       "Bash(npx vite *)",
       "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('react:', p.dependencies.react\\); const lock = require\\('./package-lock.json'\\); console.log\\('@react-three/fiber version:', lock.packages['node_modules/@react-three/fiber']?.version\\); console.log\\('react-reconciler version:', lock.packages['node_modules/react-reconciler']?.version\\);\")",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }

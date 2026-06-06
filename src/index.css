@@ -55,6 +55,25 @@
   50%      { transform: translate(-50px, -40px) scale(1.12); }
 }
 
+/* ─── Feature section responsive grid ───────────────────────────────────────── */
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .feature-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+  }
+  /* textSide === 'right' → flip columns on desktop (mockup left, text right) */
+  .feature-grid--flip > :first-child { order: 2; }
+  .feature-grid--flip > :last-child  { order: 1; }
+}
+
 /* ─── Hero skeleton shimmer sweep (left → right) ────────────────────────────── */
 
 @keyframes heroShimmer {
@@ -80,8 +99,7 @@
 /* ─── Scroll offset for fixed navbar (h-14 = 56px + 16px breathing room) ────── */
 
 #features,
-#pricing,
-#waitlist {
+#pricing {
   scroll-margin-top: 72px;
 }
 

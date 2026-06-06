@@ -201,8 +201,7 @@ function HeroContent() {
           flexWrap: 'wrap',
         }}>
           <a
-            href="#waitlist"
-            onClick={e => { e.preventDefault(); smoothScrollTo('waitlist') }}
+            href="/signup"
             style={{
               display: 'inline-block',
               backgroundColor: '#FFFFFF',

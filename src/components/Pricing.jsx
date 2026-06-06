@@ -1,104 +1,86 @@
-import { smoothScrollTo } from '../utils/smoothScroll'
+import { Link } from 'react-router-dom'
+import { useInView } from '../utils/useInView'
+
+const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
 const C = {
   primary:   '#F0EEE9',
-  secondary: '#888780',
-  muted:     '#3A3835',
-  card:      '#141414',
-  border:    '#2A2A2A',
-  divider:   '#222220',
+  secondary: '#888888',
+  muted:     '#555555',
 }
 
-const includes = [
-  'Unlimited Google review replies',
-  'Social media content & scheduling',
-  'Automated customer follow-up campaigns',
-  'Analytics and performance dashboard',
-  'Dedicated onboarding and setup',
-  'Email support',
-]
-
 export default function Pricing() {
+  const [ref, inView] = useInView({ threshold: 0.3 })
+
+  const reveal = {
+    opacity: inView ? 1 : 0,
+    transform: inView ? 'translateY(0)' : 'translateY(40px)',
+    transition: `opacity 700ms ${EASE}, transform 700ms ${EASE}`,
+  }
+
   return (
     <section
       id="pricing"
-      className="py-24 md:py-32 px-6 text-center"
-      style={{ borderTop: '1px solid #1E1E1E' }}
+      style={{ borderTop: '1px solid #1A1A1A', padding: '112px 24px', textAlign: 'center' }}
     >
-      <div className="max-w-6xl mx-auto">
-        <p className="text-xs font-medium uppercase tracking-widest mb-16" style={{ color: C.secondary }}>
+      <div ref={ref} style={{ maxWidth: 640, margin: '0 auto', ...reveal }}>
+        <p style={{
+          fontSize: 12, fontWeight: 500, textTransform: 'uppercase',
+          letterSpacing: '0.1em', color: C.secondary, marginBottom: 20,
+        }}>
           Pricing
         </p>
 
-        {/* Centered card — floating */}
-        <div
-          className="mx-auto rounded-lg px-10 py-12"
+        <h2 style={{
+          fontSize: 'clamp(36px, 6vw, 56px)',
+          fontWeight: 800,
+          letterSpacing: '-0.03em',
+          color: C.primary,
+          marginBottom: 24,
+        }}>
+          Simple pricing.
+        </h2>
+
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
+          <span style={{ fontSize: 'clamp(56px, 9vw, 88px)', fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1, color: C.primary }}>
+            $200
+          </span>
+          <span style={{ fontSize: 20, color: C.secondary, marginBottom: 12 }}>/ month</span>
+        </div>
+
+        <p style={{ fontSize: 18, lineHeight: 1.6, color: C.secondary, maxWidth: 420, margin: '0 auto 36px' }}>
+          Everything you need to automate your restaurant.
+        </p>
+
+        <Link
+          to="/pricing"
           style={{
-            maxWidth: '480px',
-            backgroundColor: C.card,
-            border: `1px solid ${C.border}`,
-            animation: 'cardFloat 4s ease-in-out infinite',
-            boxShadow: '0 32px 72px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'rgba(255,255,255,0.05)',
+            color: '#FFFFFF',
+            border: '1px solid rgba(255,255,255,0.2)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: 980,
+            padding: '13px 28px',
+            fontSize: 16,
+            fontWeight: 500,
+            textDecoration: 'none',
+            transition: 'border-color 0.15s, background-color 0.15s',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'
+            e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
+            e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
           }}
         >
-          {/* Label above price */}
-          <p className="text-xs font-medium uppercase tracking-widest mb-6" style={{ color: C.muted }}>
-            One plan. No surprises.
-          </p>
-
-          {/* Price */}
-          <div className="flex items-end justify-center gap-2 mb-2">
-            <span
-              className="font-bold leading-none tracking-[-0.05em]"
-              style={{ fontSize: '96px', color: C.primary }}
-            >
-              $200
-            </span>
-            <span className="text-base mb-3" style={{ color: C.secondary }}>/&nbsp;mo</span>
-          </div>
-
-          <p className="text-sm mb-10" style={{ color: C.secondary }}>
-            Less than one hour of labor. More than a full-time employee.
-          </p>
-
-          {/* Divider */}
-          <div className="h-px mb-2" style={{ backgroundColor: C.divider }} />
-
-          {/* Feature list with line separators */}
-          <ul className="mb-2 text-left">
-            {includes.map((item, i) => (
-              <li
-                key={item}
-                className="py-3.5 text-sm"
-                style={{
-                  color: C.secondary,
-                  borderBottom: i < includes.length - 1 ? `1px solid ${C.divider}` : 'none',
-                }}
-              >
-                {item}
-              </li>
-            ))}
-          </ul>
-
-          {/* Divider */}
-          <div className="h-px mb-8" style={{ backgroundColor: C.divider }} />
-
-          {/* Full-width button */}
-          <a
-            href="#waitlist"
-            className="block w-full text-sm font-semibold py-3 rounded text-center transition-colors"
-            style={{ backgroundColor: '#F0EEE9', color: '#0A0A0A' }}
-            onClick={e => { e.preventDefault(); smoothScrollTo('waitlist') }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e4e2dd'}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F0EEE9'}
-          >
-            Start free trial
-          </a>
-
-          <p className="text-xs mt-4" style={{ color: C.muted }}>
-            14 days free — no credit card required.
-          </p>
-        </div>
+          See full pricing →
+        </Link>
       </div>
     </section>
   )
