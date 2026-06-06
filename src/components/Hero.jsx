@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import ThreeBox from './ThreeBox'
+import ThreeAirplane from './ThreeAirplane'
 import { smoothScrollTo } from '../utils/smoothScroll'
 
 function useFadeIn(delayMs) {
@@ -128,8 +128,8 @@ export default function Hero() {
         </div>
 
         {/* ── Right: 3D scene ──────────────────────────────────────────────── */}
-        <div style={{ height: '70vh', minHeight: 480, maxHeight: 720 }}>
-          <ThreeBox />
+        <div style={{ height: '75vh', minHeight: 520, maxHeight: 780 }}>
+          <ThreeAirplane />
         </div>
 
       </div>
