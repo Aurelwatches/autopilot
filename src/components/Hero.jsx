@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { smoothScrollTo } from '../utils/smoothScroll'
 
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
+const SKELETON_MS = 1200
 
 // ── Staggered reveal ─────────────────────────────────────────────────────────
 function useReveal(delayMs, { scale = false, duration = 900 } = {}) {
@@ -41,9 +42,86 @@ function Card({ style, children }) {
   )
 }
 
-// ── Hero ─────────────────────────────────────────────────────────────────────
-export default function Hero() {
-  const blobs   = useReveal(0,    { duration: 1000 })
+// ── Skeleton shape with left-to-right shimmer sweep ──────────────────────────
+function Sk({ w, h, r = 4, delay = 0, style }) {
+  return (
+    <div style={{
+      position: 'relative',
+      overflow: 'hidden',
+      width: w,
+      height: h,
+      borderRadius: r,
+      backgroundColor: '#ffffff0f',
+      ...style,
+    }}>
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%)',
+        animation: 'heroShimmer 1.8s linear infinite',
+        animationDelay: `${delay}s`,
+      }} />
+    </div>
+  )
+}
+
+// ── Skeleton placeholder layout ───────────────────────────────────────────────
+function HeroSkeleton({ hidden }) {
+  return (
+    <div style={{
+      position: 'absolute',
+      inset: 0,
+      zIndex: 3,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      pointerEvents: 'none',
+      opacity: hidden ? 0 : 1,
+      transition: 'opacity 300ms ease-out',
+    }}>
+      {/* Centered column mirrors the real content */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}>
+        {/* Eyebrow */}
+        <Sk w={120} h={12} r={6} delay={0} style={{ marginBottom: 28 }} />
+
+        {/* Headline lines */}
+        <Sk w="min(480px, 80vw)" h={72} r={12} delay={0.2} style={{ marginBottom: 14 }} />
+        <Sk w="min(380px, 66vw)" h={72} r={12} delay={0.4} style={{ marginBottom: 28 }} />
+
+        {/* Gradient line */}
+        <Sk w={120} h={2} r={2} delay={0.6} style={{ marginBottom: 32 }} />
+
+        {/* Subheadline lines */}
+        <Sk w="min(440px, 76vw)" h={16} r={8} delay={0.8} style={{ marginBottom: 12 }} />
+        <Sk w="min(320px, 60vw)" h={16} r={8} delay={1.0} style={{ marginBottom: 40 }} />
+
+        {/* Buttons */}
+        <div style={{ display: 'flex', gap: 14 }}>
+          <Sk w={160} h={48} r={980} delay={1.2} />
+          <Sk w={160} h={48} r={980} delay={1.4} />
+        </div>
+      </div>
+
+      {/* Card outlines in their positions */}
+      <div style={{ position: 'absolute', top: '52%', left: 'max(28px, 7%)' }}>
+        <Sk w={170} h={44} r={16} delay={1.6} />
+      </div>
+      <div style={{ position: 'absolute', top: '28%', right: 'max(28px, 7%)' }}>
+        <Sk w={195} h={44} r={16} delay={1.8} />
+      </div>
+      <div style={{ position: 'absolute', bottom: '20%', left: '50%', marginLeft: -130 }}>
+        <Sk w={235} h={44} r={16} delay={2.0} />
+      </div>
+    </div>
+  )
+}
+
+// ── Real hero content (mounts after skeleton, runs staggered reveals) ─────────
+function HeroContent() {
   const eyebrow = useReveal(300)
   const head    = useReveal(500,  { scale: true })
   const line    = useReveal(700)
@@ -54,45 +132,7 @@ export default function Hero() {
   const card3   = useReveal(1600)
 
   return (
-    <section style={{
-      position: 'relative',
-      minHeight: '100vh',
-      backgroundColor: '#000000',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-      paddingTop: 140,
-      paddingBottom: 80,
-      paddingLeft: 24,
-      paddingRight: 24,
-    }}>
-
-      {/* Breathing gradient blobs */}
-      <div style={{ ...blobs, position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        <div style={{
-          position: 'absolute',
-          top: '-15%', left: '-10%',
-          width: 720, height: 720,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, #3B0764 0%, transparent 70%)',
-          opacity: 0.4,
-          filter: 'blur(40px)',
-          animation: 'heroBlobA 15s ease-in-out infinite',
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: '-20%', right: '-10%',
-          width: 760, height: 760,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, #0C1A4E 0%, transparent 70%)',
-          opacity: 0.4,
-          filter: 'blur(40px)',
-          animation: 'heroBlobB 15s ease-in-out infinite',
-        }} />
-      </div>
-
+    <>
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 820 }}>
 
@@ -253,6 +293,66 @@ export default function Hero() {
         </div>
 
       </div>
+    </>
+  )
+}
+
+// ── Hero ─────────────────────────────────────────────────────────────────────
+export default function Hero() {
+  const blobs = useReveal(0, { duration: 1000 })
+  const [showReal, setShowReal] = useState(false)
+  const [mountSkeleton, setMountSkeleton] = useState(true)
+
+  useEffect(() => {
+    // At 1.2s: reveal real content + start the 300ms skeleton fade-out
+    const t1 = setTimeout(() => setShowReal(true), SKELETON_MS)
+    // After the fade completes, drop the skeleton from the tree
+    const t2 = setTimeout(() => setMountSkeleton(false), SKELETON_MS + 350)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
+
+  return (
+    <section style={{
+      position: 'relative',
+      minHeight: '100vh',
+      backgroundColor: '#000000',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+      paddingTop: 140,
+      paddingBottom: 80,
+      paddingLeft: 24,
+      paddingRight: 24,
+    }}>
+
+      {/* Breathing gradient blobs — visible behind both skeleton and content */}
+      <div style={{ ...blobs, position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute',
+          top: '-15%', left: '-10%',
+          width: 720, height: 720,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, #3B0764 0%, transparent 70%)',
+          opacity: 0.4,
+          filter: 'blur(40px)',
+          animation: 'heroBlobA 15s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: '-20%', right: '-10%',
+          width: 760, height: 760,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, #0C1A4E 0%, transparent 70%)',
+          opacity: 0.4,
+          filter: 'blur(40px)',
+          animation: 'heroBlobB 15s ease-in-out infinite',
+        }} />
+      </div>
+
+      {mountSkeleton && <HeroSkeleton hidden={showReal} />}
+      {showReal && <HeroContent />}
     </section>
   )
 }

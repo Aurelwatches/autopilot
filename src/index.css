@@ -55,6 +55,13 @@
   50%      { transform: translate(-50px, -40px) scale(1.12); }
 }
 
+/* ─── Hero skeleton shimmer sweep (left → right) ────────────────────────────── */
+
+@keyframes heroShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 /* ─── Hero floating card animations ─────────────────────────────────────────── */
 
 /* Gentle bob — different durations so the 3 cards never sync */
