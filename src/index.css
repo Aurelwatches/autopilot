@@ -43,19 +43,19 @@
 .chat-scroll-light:hover { scrollbar-color: #CCCCCC transparent; }
 .chat-scroll-light:hover::-webkit-scrollbar-thumb { background-color: #CCCCCC; }
 
-/* ─── Hero responsive: stack to single column on narrow screens ─────────────── */
-@media (max-width: 768px) {
-  .hero-grid-override {
-    grid-template-columns: 1fr !important;
-    text-align: center;
-  }
-  .hero-grid-override h1 {
-    font-size: 42px !important;
-  }
-  .hero-grid-override > div:last-child {
-    height: 360px !important;
-    min-height: 360px !important;
-  }
+/* ─── Hero floating card animations ─────────────────────────────────────────── */
+
+/* Gentle bob — different delays so the 3 cards never sync */
+@keyframes cardBob {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+/* Blue pulse ring on status dot */
+@keyframes cardPulse {
+  0%   { box-shadow: 0 0 0 0   rgba(74, 142, 255, 0.55); }
+  60%  { box-shadow: 0 0 0 6px rgba(74, 142, 255, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(74, 142, 255, 0); }
 }
 
 /* ─── Scroll offset for fixed navbar (h-14 = 56px + 16px breathing room) ────── */
