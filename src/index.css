@@ -43,52 +43,25 @@
 .chat-scroll-light:hover { scrollbar-color: #CCCCCC transparent; }
 .chat-scroll-light:hover::-webkit-scrollbar-thumb { background-color: #CCCCCC; }
 
-/* ─── Gradient blob animations ─────────────────────────────────────────────── */
+/* ─── Hero floating card animations ────────────────────────────────────────── */
 
-@keyframes blobFloat1 {
-  0%, 100% { transform: translate(0%, 0%)   scale(1); }
-  25%       { transform: translate(5%, -8%)  scale(1.06); }
-  50%       { transform: translate(-4%, 6%)  scale(0.94); }
-  75%       { transform: translate(8%, 2%)   scale(1.03); }
+/* Gentle bob — cards float up and down on different delays */
+@keyframes cardBob {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
 }
 
-@keyframes blobFloat2 {
-  0%, 100% { transform: translate(0%, 0%)   scale(1); }
-  33%       { transform: translate(-7%, 9%)  scale(1.09); }
-  66%       { transform: translate(6%, -5%)  scale(0.92); }
+/* Green pulse ring on the status dot */
+@keyframes cardPulse {
+  0%   { box-shadow: 0 0 0 0   rgba(48, 209, 88, 0.55); }
+  60%  { box-shadow: 0 0 0 6px rgba(48, 209, 88, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(48, 209, 88, 0); }
 }
 
-@keyframes blobFloat3 {
-  0%, 100% { transform: translate(0%, 0%)    scale(1); }
-  20%       { transform: translate(9%, 5%)   scale(0.95); }
-  60%       { transform: translate(-5%, -8%) scale(1.1); }
-}
-
-.hero-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(90px);
-  pointer-events: none;
-  will-change: transform;
-}
-
-/* ─── Perspective grid ──────────────────────────────────────────────────────── */
-
-.hero-grid {
-  position: absolute;
-  bottom: 0;
-  left: -20%;
-  right: -20%;
-  height: 52%;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.038) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.038) 1px, transparent 1px);
-  background-size: 64px 64px;
-  transform: perspective(480px) rotateX(52deg);
-  transform-origin: bottom center;
-  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
-  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
-  pointer-events: none;
+/* WebGL fallback background pulse */
+@keyframes fallbackPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.75; }
 }
 
 /* ─── Scroll offset for fixed navbar (h-14 = 56px + 16px breathing room) ────── */

@@ -1,91 +1,242 @@
+import { useEffect, useState } from 'react'
+import ShaderBackground from './ShaderBackground'
 import { smoothScrollTo } from '../utils/smoothScroll'
 
-export default function Hero() {
+// ── Staggered fade-in hook ────────────────────────────────────────────────────
+function useFadeIn(delayMs) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const id = setTimeout(() => setVisible(true), delayMs)
+    return () => clearTimeout(id)
+  }, [delayMs])
+  return visible
+}
+
+function fadeStyle(visible) {
+  return {
+    opacity:    visible ? 1 : 0,
+    transform:  visible ? 'translateY(0)' : 'translateY(20px)',
+    transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
+  }
+}
+
+// ── Notification cards ────────────────────────────────────────────────────────
+function Dot({ color, pulse }) {
   return (
-    <section className="relative min-h-screen flex flex-col justify-center px-6 pt-14 overflow-hidden">
+    <span style={{
+      display: 'inline-block',
+      width: 7, height: 7, borderRadius: '50%',
+      backgroundColor: color, flexShrink: 0,
+      boxShadow: pulse ? `0 0 0 0 ${color}` : 'none',
+      animation: pulse ? 'cardPulse 2s ease-out infinite' : 'none',
+    }} />
+  )
+}
 
-      {/* ── Animated gradient mesh ──────────────────────────────────────────── */}
-      <div className="hero-blob" style={{
-        width: '700px', height: '700px',
-        background: 'radial-gradient(circle, #0d1b55 0%, transparent 70%)',
-        top: '-180px', left: '-160px',
-        opacity: 0.5,
-        animation: 'blobFloat1 16s ease-in-out infinite',
-      }} />
-      <div className="hero-blob" style={{
-        width: '560px', height: '560px',
-        background: 'radial-gradient(circle, #1a0a3c 0%, transparent 70%)',
-        top: '5%', right: '-120px',
-        opacity: 0.45,
-        animation: 'blobFloat2 21s ease-in-out infinite',
-      }} />
-      <div className="hero-blob" style={{
-        width: '800px', height: '800px',
-        background: 'radial-gradient(circle, #0a1f42 0%, transparent 70%)',
-        bottom: '-260px', left: '15%',
-        opacity: 0.4,
-        animation: 'blobFloat3 13s ease-in-out infinite',
-      }} />
-      <div className="hero-blob" style={{
-        width: '420px', height: '420px',
-        background: 'radial-gradient(circle, #1e0847 0%, transparent 70%)',
-        top: '30%', left: '42%',
-        opacity: 0.35,
-        animation: 'blobFloat1 19s ease-in-out infinite reverse',
+function Card({ children, style }) {
+  return (
+    <div style={{
+      position: 'absolute',
+      backgroundColor: '#111111',
+      border: '1px solid #222222',
+      borderRadius: 12,
+      padding: '10px 14px',
+      fontSize: 13,
+      color: '#f5f5f7',
+      whiteSpace: 'nowrap',
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)',
+      ...style,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+export default function Hero() {
+  const eyebrow  = useFadeIn(0)
+  const headline = useFadeIn(200)
+  const sub      = useFadeIn(400)
+  const buttons  = useFadeIn(600)
+  const cards    = useFadeIn(800)
+
+  return (
+    <section style={{
+      position: 'relative',
+      minHeight: '100vh',
+      backgroundColor: '#000000',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+      paddingTop: 140,
+      paddingBottom: 80,
+      paddingLeft: 24,
+      paddingRight: 24,
+    }}>
+
+      {/* WebGL shader background */}
+      <ShaderBackground />
+
+      {/* Radial glow behind the headline */}
+      <div style={{
+        position: 'absolute',
+        top: '30%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 700,
+        height: 500,
+        background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.03) 0%, transparent 65%)',
+        pointerEvents: 'none',
+        zIndex: 1,
       }} />
 
-      {/* ── Perspective grid overlay ─────────────────────────────────────────── */}
-      <div className="hero-grid" />
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', maxWidth: 900 }}>
 
-      {/* ── Content ─────────────────────────────────────────────────────────── */}
-      <div className="max-w-6xl mx-auto w-full py-28 md:py-36 relative z-10">
-        <p
-          className="text-xs font-medium uppercase tracking-widest mb-10"
-          style={{ color: '#888780' }}
-        >
-          Restaurant automation
+        {/* Eyebrow — delay 0ms */}
+        <p style={{
+          ...fadeStyle(eyebrow),
+          fontSize: 14,
+          fontWeight: 500,
+          letterSpacing: '0.02em',
+          color: '#6e6e73',
+          marginBottom: 20,
+        }}>
+          Introducing AutoPilot
         </p>
 
-        <h1
-          className="text-[52px] sm:text-[68px] md:text-[84px] lg:text-[100px] font-bold leading-[0.92] tracking-[-0.04em] mb-8"
-          style={{ maxWidth: '820px', color: '#F0EEE9' }}
-        >
+        {/* Headline — delay 200ms */}
+        <h1 style={{
+          ...fadeStyle(headline),
+          fontSize: 'clamp(48px, 8vw, 80px)',
+          fontWeight: 700,
+          lineHeight: 1.05,
+          letterSpacing: '-0.02em',
+          color: '#f5f5f7',
+          marginBottom: 24,
+        }}>
           Your restaurant
           <br />
           runs itself.
         </h1>
 
-        <p
-          className="text-base md:text-lg leading-relaxed mb-12"
-          style={{ maxWidth: '480px', color: '#888780' }}
-        >
+        {/* Sub — delay 400ms */}
+        <p style={{
+          ...fadeStyle(sub),
+          fontSize: 21,
+          lineHeight: 1.5,
+          color: '#6e6e73',
+          maxWidth: 560,
+          margin: '0 auto 40px',
+        }}>
           AutoPilot handles Google reviews, social posts, and customer
-          follow-ups — automatically. So you can run the kitchen, not the
-          inbox.
+          follow-ups — automatically.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        {/* Buttons — delay 600ms */}
+        <div style={{
+          ...fadeStyle(buttons),
+          display: 'flex',
+          gap: 12,
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+        }}>
           <a
             href="#waitlist"
-            className="text-sm font-semibold px-5 py-2.5 rounded transition-colors"
-            style={{ backgroundColor: '#F0EEE9', color: '#0A0A0A' }}
             onClick={e => { e.preventDefault(); smoothScrollTo('waitlist') }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e4e2dd'}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F0EEE9'}
+            style={{
+              display: 'inline-block',
+              backgroundColor: '#ffffff',
+              color: '#000000',
+              borderRadius: 980,
+              padding: '12px 28px',
+              fontSize: 17,
+              fontWeight: 600,
+              textDecoration: 'none',
+              transition: 'opacity 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
           >
             Start free trial
           </a>
           <a
             href="#features"
-            className="text-sm px-5 py-2.5 rounded border transition-colors"
-            style={{ borderColor: '#F0EEE9', color: '#F0EEE9' }}
             onClick={e => { e.preventDefault(); smoothScrollTo('features') }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(240,238,233,0.06)' }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
+            style={{
+              display: 'inline-block',
+              backgroundColor: 'transparent',
+              color: '#ffffff',
+              border: '1px solid rgba(255,255,255,0.5)',
+              borderRadius: 980,
+              padding: '12px 28px',
+              fontSize: 17,
+              fontWeight: 500,
+              textDecoration: 'none',
+              transition: 'border-color 0.15s, background 0.15s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = '#fff'
+              e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}
           >
             See how it works
           </a>
         </div>
+      </div>
+
+      {/* Floating notification cards — delay 800ms */}
+      {/* Each card has a different bob animation delay so they don't sync */}
+      <div style={{ ...fadeStyle(cards), position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
+
+        {/* Card 1 — bottom-left: review replied */}
+        <Card style={{
+          bottom: '18%',
+          left: 'max(24px, 6%)',
+          animation: 'cardBob 4s ease-in-out infinite',
+          animationDelay: '0s',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Dot color="#30d158" pulse={false} />
+            <span>Review replied</span>
+            <span style={{ color: '#6e6e73', marginLeft: 4 }}>· 2s ago</span>
+          </div>
+        </Card>
+
+        {/* Card 2 — top-right: rating */}
+        <Card style={{
+          top: '22%',
+          right: 'max(24px, 6%)',
+          animation: 'cardBob 4s ease-in-out infinite',
+          animationDelay: '1.3s',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ color: '#E8A020', fontSize: 14, lineHeight: 1 }}>★</span>
+            <span>4.9</span>
+            <span style={{ color: '#6e6e73' }}>avg rating this month</span>
+          </div>
+        </Card>
+
+        {/* Card 3 — bottom-right: running status */}
+        <Card style={{
+          bottom: '22%',
+          right: 'max(24px, 6%)',
+          animation: 'cardBob 4s ease-in-out infinite',
+          animationDelay: '2.6s',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Dot color="#30d158" pulse={true} />
+            <span>AutoPilot is running</span>
+          </div>
+        </Card>
+
       </div>
     </section>
   )
