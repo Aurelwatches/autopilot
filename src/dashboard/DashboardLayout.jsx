@@ -1,10 +1,14 @@
 import { Outlet, Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Sidebar from './Sidebar'
 import SupportChat from './SupportChat'
 import { DashboardProvider } from './DashboardContext'
 import { AppProvider, useApp } from './AppContext'
 import { useAuth } from '../lib/auth'
+import DashboardSkeleton from './DashboardSkeleton'
+import RevealCtx from './revealContext'
+
+const SKELETON_MS = 1500
 
 function LoadingScreen() {
   return (
@@ -24,7 +28,24 @@ function LoadingScreen() {
 }
 
 function DashboardContent() {
-  const { C } = useApp()
+  const { C, theme } = useApp()
+  const isDark = theme === 'dark'
+
+  // Skeleton only on first visit per session, dark mode only
+  const [revealed,      setRevealed]      = useState(() => !isDark || !!sessionStorage.getItem('ap_dl'))
+  const [showSkeleton,  setShowSkeleton]  = useState(() =>  isDark && !sessionStorage.getItem('ap_dl'))
+  const [mountSkeleton, setMountSkeleton] = useState(() =>  isDark && !sessionStorage.getItem('ap_dl'))
+
+  useEffect(() => {
+    if (revealed) return
+    const t1 = setTimeout(() => {
+      setShowSkeleton(false)
+      setRevealed(true)
+      sessionStorage.setItem('ap_dl', '1')
+    }, SKELETON_MS)
+    const t2 = setTimeout(() => setMountSkeleton(false), SKELETON_MS + 320)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
 
   useEffect(() => {
     document.body.style.backgroundColor = C.bg
@@ -32,13 +53,38 @@ function DashboardContent() {
   }, [C])
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg }}>
-      <Sidebar />
-      <main style={{ marginLeft: 240, flex: 1, minHeight: '100vh', color: C.primary }}>
-        <Outlet />
-      </main>
-      <SupportChat />
-    </div>
+    <RevealCtx.Provider value={revealed}>
+      <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg, position: 'relative' }}>
+
+        {/* Ambient gradient blobs — always present in dark mode, visible through glass surfaces */}
+        {isDark && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+            <div style={{
+              position: 'absolute', top: '-15%', right: '-5%',
+              width: 600, height: 600, borderRadius: '50%',
+              background: 'radial-gradient(circle, #3B0764 0%, transparent 70%)',
+              opacity: 0.2, filter: 'blur(50px)',
+              animation: 'heroBlobA 15s ease-in-out infinite',
+            }} />
+            <div style={{
+              position: 'absolute', bottom: '-15%', left: '-5%',
+              width: 640, height: 640, borderRadius: '50%',
+              background: 'radial-gradient(circle, #0C1A4E 0%, transparent 70%)',
+              opacity: 0.2, filter: 'blur(50px)',
+              animation: 'heroBlobB 15s ease-in-out infinite',
+            }} />
+          </div>
+        )}
+
+        <Sidebar />
+        <main style={{ position: 'relative', zIndex: 1, marginLeft: 240, flex: 1, minHeight: '100vh', color: C.primary }}>
+          <Outlet />
+        </main>
+        <SupportChat />
+
+        {mountSkeleton && <DashboardSkeleton hidden={!showSkeleton} />}
+      </div>
+    </RevealCtx.Provider>
   )
 }
 

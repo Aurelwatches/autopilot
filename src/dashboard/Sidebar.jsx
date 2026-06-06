@@ -1,6 +1,9 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useApp } from './AppContext'
 import { useAuth } from '../lib/auth'
+import { useDashboardReveal } from './revealContext'
+
+const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
 const navItems = [
   {
@@ -88,6 +91,7 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const { C, theme, toggleTheme, restaurantName } = useApp()
   const { signOut, user } = useAuth()
+  const revealed = useDashboardReveal()
 
   async function handleLogout() {
     await signOut()
@@ -106,7 +110,11 @@ export default function Sidebar() {
       }}
     >
       {/* Logo + theme toggle */}
-      <div className="px-5 py-5 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.divider}` }}>
+      <div className="px-5 py-5 flex items-center justify-between" style={{
+        borderBottom: `1px solid ${C.divider}`,
+        opacity: revealed ? 1 : 0,
+        transition: `opacity 400ms ${EASE}`,
+      }}>
         <div className="flex items-center gap-2.5">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
@@ -133,15 +141,19 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ path, label, icon }) => (
+        {navItems.map(({ path, label, icon }, index) => (
           <NavLink
             key={path}
             to={path}
-            className="flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded text-sm"
             style={({ isActive }) => ({
               color: isActive ? C.primary : C.secondary,
               backgroundColor: isActive ? C.sidebarActiveBg : 'transparent',
               borderLeft: isActive ? `2px solid ${C.accent}` : '2px solid transparent',
+              opacity: revealed ? 1 : 0,
+              transform: revealed ? 'translateX(0)' : 'translateX(-14px)',
+              transition: `color 0.15s, background-color 0.15s, opacity 400ms ${EASE}, transform 400ms ${EASE}`,
+              transitionDelay: revealed ? `${index * 50}ms` : '0ms',
             })}
           >
             {icon}
@@ -151,7 +163,12 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom: restaurant name + email + logout */}
-      <div className="px-5 py-4" style={{ borderTop: `1px solid ${C.divider}` }}>
+      <div className="px-5 py-4" style={{
+        borderTop: `1px solid ${C.divider}`,
+        opacity: revealed ? 1 : 0,
+        transition: `opacity 400ms ${EASE}`,
+        transitionDelay: revealed ? '280ms' : '0ms',
+      }}>
         <p className="text-xs font-semibold truncate" style={{ color: C.primary }}>
           {restaurantName}
         </p>

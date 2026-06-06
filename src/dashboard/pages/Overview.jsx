@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useDashboard } from '../DashboardContext'
 import { useApp } from '../AppContext'
+import { useDashboardReveal } from '../revealContext'
+
+const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
 const today    = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 const hour     = new Date().getHours()
@@ -43,6 +46,7 @@ export default function Overview() {
   const { events } = useDashboard()
   const { C, restaurantName, userId } = useApp()
   const navigate = useNavigate()
+  const revealed = useDashboardReveal()
 
   const [reviews,  setReviews]  = useState([])
   const [activity, setActivity] = useState([])
@@ -148,6 +152,9 @@ export default function Overview() {
           borderRadius: 12,
           backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
           boxShadow: C.cardShadow,
+          opacity: revealed ? 1 : 0,
+          transform: revealed ? 'translateY(0)' : 'translateY(-6px)',
+          transition: `opacity 500ms ${EASE}, transform 500ms ${EASE}`,
         }}>
         <span className="w-2 h-2 rounded-full shrink-0 pulse-dot"
           style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
@@ -163,7 +170,11 @@ export default function Overview() {
       </div>
 
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8" style={{
+        opacity: revealed ? 1 : 0,
+        transition: `opacity 500ms ${EASE}`,
+        transitionDelay: revealed ? '50ms' : '0ms',
+      }}>
         <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>
           {greeting}, {restaurantName}
         </h1>
@@ -181,18 +192,22 @@ export default function Overview() {
 
       {/* Stat cards — clickable */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map(s => (
+        {statCards.map((s, index) => (
           <button
             key={s.label}
             onClick={() => s.path && navigate(s.path)}
             disabled={!s.path}
-            className="px-5 py-5 text-left w-full transition-colors"
+            className="px-5 py-5 text-left w-full"
             style={{
               backgroundColor: C.card, border: `1px solid ${C.border}`,
               borderRadius: 16,
               backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
               boxShadow: C.cardShadow,
               cursor: s.path ? 'pointer' : 'default',
+              opacity: revealed ? 1 : 0,
+              transform: revealed ? 'scale(1)' : 'scale(0.95)',
+              transition: `border-color 0.15s, opacity 600ms ${EASE}, transform 600ms ${EASE}`,
+              transitionDelay: revealed ? `${index * 100}ms` : '0ms',
             }}
             onMouseEnter={e => { if (s.path) e.currentTarget.style.borderColor = C.secondary }}
             onMouseLeave={e => { if (s.path) e.currentTarget.style.borderColor = C.border }}
@@ -216,6 +231,9 @@ export default function Overview() {
         borderRadius: 16, overflow: 'hidden',
         backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
         boxShadow: C.cardShadow,
+        opacity: revealed ? 1 : 0,
+        transition: `opacity 500ms ${EASE}`,
+        transitionDelay: revealed ? '350ms' : '0ms',
       }}>
         <div className="px-5 py-4 flex items-center justify-between"
           style={{ borderBottom: `1px solid ${C.divider}` }}>
@@ -242,6 +260,10 @@ export default function Overview() {
                 style={{
                   borderBottom: i < feed.length - 1 ? `1px solid ${C.divider}` : 'none',
                   backgroundColor: item.newest ? 'rgba(74,222,128,0.03)' : 'transparent',
+                  opacity: revealed ? 1 : 0,
+                  transform: revealed ? 'translateY(0)' : 'translateY(10px)',
+                  transition: `opacity 500ms ${EASE}, transform 500ms ${EASE}`,
+                  transitionDelay: revealed ? `${400 + i * 80}ms` : '0ms',
                 }}
               >
                 <div
