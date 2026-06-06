@@ -1,5 +1,41 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../AppContext'
+import { supabase } from '../../lib/supabase'
+
+const REPLY_SPEED_OPTIONS = [
+  { value: 'instant',    label: 'Instant',        desc: 'replies as soon as a review comes in' },
+  { value: 'within_1h',  label: 'Within 1 hour',  desc: 'replies within 1 hour of a new review' },
+  { value: 'within_4h',  label: 'Within 4 hours', desc: 'replies within 4 hours of a new review' },
+  { value: 'within_24h', label: 'Within 24 hours', desc: 'replies within 24 hours of a new review' },
+  { value: 'manual',     label: 'Manual',          desc: 'waits for your approval before sending each reply' },
+]
+
+const POST_TONE_OPTIONS = [
+  { value: 'friendly',    label: 'Friendly & casual'  },
+  { value: 'professional', label: 'Professional'       },
+  { value: 'energetic',   label: 'Energetic & fun'    },
+]
+
+function SelectField({ label, value, onChange, options, C }) {
+  return (
+    <div>
+      <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>{label}</label>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full text-sm px-4 py-2.5 rounded outline-none"
+        style={{
+          backgroundColor: C.inputBg, color: C.primary,
+          border: `1px solid ${C.border}`, colorScheme: 'dark', cursor: 'pointer',
+        }}
+        onFocus={e => e.target.style.borderColor = C.secondary}
+        onBlur={e => e.target.style.borderColor = C.border}
+      >
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  )
+}
 
 function CopyButton({ value, C }) {
   const [copied, setCopied] = useState(false)
@@ -91,8 +127,42 @@ export default function Settings() {
   const [phone,   setPhone]   = useState(() => localStorage.getItem('ap_phone')   || '(415) 555-0182')
   const [website, setWebsite] = useState(() => localStorage.getItem('ap_website') || 'mariostrattoria.com')
 
-  const [saved,   setSaved]   = useState(false)
-  const [notifs,  setNotifs]  = useState({ email: true, sms: false, weekly: true, alerts: true })
+  const [saved,      setSaved]      = useState(false)
+  const [prefSaved,  setPrefSaved]  = useState(false)
+  const [notifs,     setNotifs]     = useState({ email: true, sms: false, weekly: true, alerts: true })
+
+  // ── Automation preferences ────────────────────────────────────────────────
+  const [replySpeed,     setReplySpeed]     = useState('within_1h')
+  const [postTone,       setPostTone]       = useState('friendly')
+  const [autoPostEnabled, setAutoPostEnabled] = useState(true)
+  const [prefsLoading,   setPrefsLoading]   = useState(false)
+
+  // Load saved preferences from Supabase profiles on mount / when user id resolves
+  useEffect(() => {
+    if (!supabase || !userId) return
+    supabase.from('profiles').select('reply_speed, post_tone, auto_post_enabled')
+      .eq('id', userId).single()
+      .then(({ data }) => {
+        if (!data) return
+        if (data.reply_speed      != null) setReplySpeed(data.reply_speed)
+        if (data.post_tone        != null) setPostTone(data.post_tone)
+        if (data.auto_post_enabled != null) setAutoPostEnabled(data.auto_post_enabled)
+      })
+  }, [userId])
+
+  async function handlePrefsSave() {
+    if (!supabase || !userId) return
+    setPrefsLoading(true)
+    const { error } = await supabase.from('profiles').upsert({
+      id:                userId,
+      reply_speed:       replySpeed,
+      post_tone:         postTone,
+      auto_post_enabled: autoPostEnabled,
+    })
+    setPrefsLoading(false)
+    if (!error) { setPrefSaved(true); setTimeout(() => setPrefSaved(false), 2500) }
+    else console.error('[Settings] prefs save:', error.message)
+  }
 
   // Connection status — stored per restaurant name, default all false
   function loadConnections(rName) {
@@ -326,6 +396,81 @@ export default function Settings() {
                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}
               >Connect</button>
             )}
+          </div>
+
+        </div>
+      </Card>
+
+      {/* Automation preferences */}
+      <Card title="Automation preferences" C={C}>
+        <div className="space-y-5">
+
+          {/* Review reply speed */}
+          <div>
+            <SelectField
+              label="Review reply speed"
+              value={replySpeed}
+              onChange={setReplySpeed}
+              options={REPLY_SPEED_OPTIONS}
+              C={C}
+            />
+            <p className="text-xs mt-1.5" style={{ color: C.muted }}>
+              AutoPilot will reply to new Google reviews{' '}
+              <span style={{ color: C.secondary }}>
+                {REPLY_SPEED_OPTIONS.find(o => o.value === replySpeed)?.desc ?? '…'}
+              </span>
+            </p>
+          </div>
+
+          <div className="h-px" style={{ backgroundColor: C.divider }} />
+
+          {/* Post tone */}
+          <div>
+            <SelectField
+              label="Post tone"
+              value={postTone}
+              onChange={setPostTone}
+              options={POST_TONE_OPTIONS}
+              C={C}
+            />
+            <p className="text-xs mt-1.5" style={{ color: C.muted }}>
+              AI-generated social posts will match this writing style.
+            </p>
+          </div>
+
+          <div className="h-px" style={{ backgroundColor: C.divider }} />
+
+          {/* Auto-post schedule */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium" style={{ color: C.primary }}>Auto-post schedule</p>
+              <p className="text-xs mt-0.5" style={{ color: C.secondary }}>
+                {autoPostEnabled
+                  ? 'When on, AutoPilot posts automatically.'
+                  : 'When off, posts need your approval before publishing.'}
+              </p>
+            </div>
+            <Toggle checked={autoPostEnabled} onChange={setAutoPostEnabled} C={C} />
+          </div>
+
+          <div className="pt-1 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handlePrefsSave}
+              disabled={prefsLoading}
+              className="text-sm font-semibold px-5 py-2 rounded transition-colors"
+              style={{
+                backgroundColor: C.primary,
+                color: theme === 'dark' ? '#0A0A0A' : '#FFFFFF',
+                cursor: prefsLoading ? 'default' : 'pointer',
+                opacity: prefsLoading ? 0.6 : 1,
+              }}
+              onMouseEnter={e => { if (!prefsLoading) e.currentTarget.style.opacity = '0.85' }}
+              onMouseLeave={e => { if (!prefsLoading) e.currentTarget.style.opacity = '1' }}
+            >
+              {prefsLoading ? 'Saving…' : 'Save preferences'}
+            </button>
+            {prefSaved && <span className="text-xs" style={{ color: '#4ade80' }}>✓ Saved</span>}
           </div>
 
         </div>
