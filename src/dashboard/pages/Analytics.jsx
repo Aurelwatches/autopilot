@@ -13,11 +13,20 @@ function isoDay(d) { return d.toISOString().slice(0, 10) }
 
 function rangeStart(range) {
   const d = new Date()
+  if (range === '1d')  { d.setHours(0, 0, 0, 0); return d }
   if (range === '30d') d.setDate(d.getDate() - 30)
   if (range === '90d') d.setDate(d.getDate() - 90)
   if (range === '1y')  d.setFullYear(d.getFullYear() - 1)
   return d
 }
+
+// Returns 24 buckets "HH" for today's hours (00–23)
+function todayHours() {
+  return Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
+}
+
+// "HH" from an ISO string
+function hourOf(iso) { return iso.slice(11, 13) }
 
 function lastNDays(n) {
   const days = []
@@ -50,8 +59,12 @@ function lastNMonths(n) {
 }
 
 function shortLabel(key, range) {
-  if (range === '1y') return key.slice(5) // MM from YYYY-MM
-  return key.slice(5) // MM-DD from YYYY-MM-DD or MM-DD from week start
+  if (range === '1d') {
+    const h = parseInt(key, 10)
+    return h === 0 ? '12a' : h < 12 ? `${h}a` : h === 12 ? '12p' : `${h - 12}p`
+  }
+  if (range === '1y') return key.slice(5) // MM
+  return key.slice(5)                     // MM-DD
 }
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
@@ -110,6 +123,7 @@ function ChartCard({ title, subtitle, hasData, loading, C, children }) {
 }
 
 const RANGE_OPTIONS = [
+  { value: '1d',  label: 'Today'        },
   { value: '30d', label: 'Last 30 days' },
   { value: '90d', label: 'Last 90 days' },
   { value: '1y',  label: 'Last year'    },
@@ -166,11 +180,13 @@ export default function Analytics() {
   // ── Chart data (memoised) ─────────────────────────────────────────────────
 
   const { repliedData, postsData, ratingData } = useMemo(() => {
-    const groupKey = range === '30d' ? d => isoDay(new Date(d))
+    const groupKey = range === '1d'  ? d => hourOf(d)
+                   : range === '30d' ? d => isoDay(new Date(d))
                    : range === '90d' ? d => weekOf(d)
                    :                   d => monthOf(d)
 
-    const buckets = range === '30d' ? lastNDays(30)
+    const buckets = range === '1d'  ? todayHours()
+                  : range === '30d' ? lastNDays(30)
                   : range === '90d' ? lastNWeeks(13)
                   :                   lastNMonths(12)
 
@@ -216,9 +232,9 @@ export default function Analytics() {
     return { repliedData, postsData, ratingData }
   }, [filteredReviews, filteredActivities, range])
 
-  const repliedHasData = repliedData.filter(d => d.count > 0).length >= 2
-  const postsHasData   = postsData.filter(d => d.count > 0).length >= 2
-  const ratingHasData  = ratingData.length >= 2
+  const repliedHasData = repliedData.filter(d => d.count > 0).length >= 1
+  const postsHasData   = postsData.filter(d => d.count > 0).length >= 1
+  const ratingHasData  = ratingData.length >= 1
 
   // Why each chart renders or shows "Not enough data yet" (needs >= 2 non-empty points)
   useEffect(() => {
@@ -247,7 +263,7 @@ export default function Analytics() {
 
   const axisStyle  = { fontSize: 10, fill: C.muted }
   const gridStyle  = { stroke: C.divider, strokeDasharray: '3 3' }
-  const ticks      = range === '30d' ? { interval: 4 } : { interval: 2 }
+  const ticks      = range === '1d' ? { interval: 5 } : range === '30d' ? { interval: 4 } : { interval: 2 }
 
   return (
     <div className="px-8 py-8" style={{ maxWidth: 1000 }}>
@@ -295,7 +311,7 @@ export default function Analytics() {
       {/* Chart 1 */}
       <ChartCard
         title="Reviews Replied"
-        subtitle={range === '30d' ? 'Per day, last 30 days' : range === '90d' ? 'Per week, last 90 days' : 'Per month, last year'}
+        subtitle={range === '1d' ? 'By hour, today' : range === '30d' ? 'Per day, last 30 days' : range === '90d' ? 'Per week, last 90 days' : 'Per month, last year'}
         hasData={repliedHasData}
         loading={loading}
         C={C}
@@ -315,7 +331,7 @@ export default function Analytics() {
       {/* Chart 2 */}
       <ChartCard
         title="Posts Scheduled"
-        subtitle={range === '30d' ? 'Per week, last 30 days' : range === '90d' ? 'Per week, last 90 days' : 'Per month, last year'}
+        subtitle={range === '1d' ? 'By hour, today' : range === '30d' ? 'Per week, last 30 days' : range === '90d' ? 'Per week, last 90 days' : 'Per month, last year'}
         hasData={postsHasData}
         loading={loading}
         C={C}

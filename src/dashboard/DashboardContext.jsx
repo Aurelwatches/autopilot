@@ -13,8 +13,13 @@ export function DashboardProvider({ children }) {
     let es = null
     let retryTimer = null
 
+    // Use the absolute Railway API URL so the SSE stream connects to the
+    // Express server, not the Netlify frontend (a relative URL would hit
+    // Netlify and get back an HTML 404, not text/event-stream).
+    const API = 'https://autopilot-production-7671.up.railway.app'
+
     function connect() {
-      es = new EventSource('/api/events/stream')
+      es = new EventSource(`${API}/api/events/stream`)
 
       es.onmessage = e => {
         try { setEvents(JSON.parse(e.data)) } catch {}
@@ -24,7 +29,7 @@ export function DashboardProvider({ children }) {
         es.close()
         es = null
         // Fetch a snapshot so the UI isn't empty while waiting to reconnect
-        fetch('/api/events').then(r => r.json()).then(setEvents).catch(() => {})
+        fetch(`${API}/api/events`).then(r => r.json()).then(setEvents).catch(() => {})
         retryTimer = setTimeout(connect, 5000)
       }
     }
