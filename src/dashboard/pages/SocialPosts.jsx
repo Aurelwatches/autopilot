@@ -241,6 +241,14 @@ export default function SocialPosts() {
   const [isLoading,  setIsLoading]  = useState(false)
   const [msgIdx,     setMsgIdx]     = useState(0)
   const [aiError,    setAiError]    = useState('')
+  const [postTone,   setPostTone]   = useState('friendly')
+
+  // Fetch the user's post_tone preference so AI Assist matches their style
+  useEffect(() => {
+    if (!supabase || !userId) return
+    supabase.from('profiles').select('post_tone').eq('id', userId).single()
+      .then(({ data }) => { if (data?.post_tone) setPostTone(data.post_tone) })
+  }, [userId])
 
   // Load the user's saved posts; re-fetch once auth resolves and poll every 30s
   async function fetchPosts() {
@@ -273,6 +281,14 @@ export default function SocialPosts() {
     }
     setIsLoading(true); setAiError(''); setMsgIdx(0)
     const charHint = platform === 'Twitter' ? 'Keep it under 280 characters.' : 'Aim for 150–300 characters.'
+
+    const TONE_DESC = {
+      friendly:     'Friendly & casual, warm and conversational',
+      professional: 'Professional and polished, business-appropriate',
+      energetic:    'Energetic and fun, lots of enthusiasm and personality',
+    }
+    const toneDesc = TONE_DESC[postTone] ?? TONE_DESC.friendly
+
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -281,7 +297,7 @@ export default function SocialPosts() {
           model: 'llama-3.3-70b-versatile',
           max_tokens: 512,
           messages: [
-            { role: 'system', content: "You are a social media expert for independent restaurants. Write engaging, authentic posts that sound like a real restaurant owner wrote them — not a marketing agency. Be specific, warm, and conversational. Include relevant emojis and 3-5 hashtags." },
+            { role: 'system', content: `You are a social media expert for independent restaurants. Write engaging, authentic posts that sound like a real restaurant owner wrote them — not a marketing agency. Be specific and include relevant emojis and 3-5 hashtags. Tone: ${toneDesc}.` },
             { role: 'user', content: `Write a ${platform} post about: ${topic.trim()}. ${charHint} Return only the post text, nothing else.` },
           ],
         }),
