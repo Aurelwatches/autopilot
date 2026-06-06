@@ -1,35 +1,39 @@
 import { useEffect, useState } from 'react'
 import { smoothScrollTo } from '../utils/smoothScroll'
 
-// ── Staggered fade-in ────────────────────────────────────────────────────────
-function useFadeIn(delayMs) {
+const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
+
+// ── Staggered reveal ─────────────────────────────────────────────────────────
+function useReveal(delayMs, { scale = false, duration = 900 } = {}) {
   const [on, setOn] = useState(false)
   useEffect(() => {
     const id = setTimeout(() => setOn(true), delayMs)
     return () => clearTimeout(id)
   }, [delayMs])
+  const hidden = scale ? 'translateY(24px) scale(0.97)' : 'translateY(24px)'
+  const shown  = scale ? 'translateY(0) scale(1)'       : 'translateY(0)'
   return {
     opacity:    on ? 1 : 0,
-    transform:  on ? 'translateY(0)' : 'translateY(20px)',
-    transition: 'opacity 0.65s ease-out, transform 0.65s ease-out',
+    transform:  on ? shown : hidden,
+    transition: `opacity ${duration}ms ${EASE}, transform ${duration}ms ${EASE}`,
   }
 }
 
-// ── Notification card ────────────────────────────────────────────────────────
+// ── Glass notification card ──────────────────────────────────────────────────
 function Card({ style, children }) {
   return (
     <div style={{
-      position: 'absolute',
-      backgroundColor: '#111111',
-      border: '1px solid #222222',
-      borderRadius: 12,
-      padding: '10px 15px',
+      position: 'relative',
+      background: 'rgba(255,255,255,0.05)',
+      border: '1px solid rgba(255,255,255,0.1)',
+      borderRadius: 16,
+      padding: '12px 18px',
       fontSize: 13,
       color: '#F0EEE9',
       whiteSpace: 'nowrap',
-      backdropFilter: 'blur(8px)',
-      WebkitBackdropFilter: 'blur(8px)',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
       ...style,
     }}>
       {children}
@@ -37,31 +41,23 @@ function Card({ style, children }) {
   )
 }
 
-function Dot({ pulse }) {
-  return (
-    <span style={{
-      display: 'inline-block',
-      width: 7, height: 7, borderRadius: '50%',
-      backgroundColor: '#4A8EFF',
-      flexShrink: 0,
-      animation: pulse ? 'cardPulse 2s ease-out infinite' : 'none',
-    }} />
-  )
-}
-
 // ── Hero ─────────────────────────────────────────────────────────────────────
 export default function Hero() {
-  const s0 = useFadeIn(0)
-  const s1 = useFadeIn(200)
-  const s2 = useFadeIn(400)
-  const s3 = useFadeIn(600)
-  const s4 = useFadeIn(800)
+  const blobs   = useReveal(0,    { duration: 1000 })
+  const eyebrow = useReveal(300)
+  const head    = useReveal(500,  { scale: true })
+  const line    = useReveal(700)
+  const sub     = useReveal(900)
+  const btns    = useReveal(1100)
+  const card1   = useReveal(1300)
+  const card2   = useReveal(1450)
+  const card3   = useReveal(1600)
 
   return (
     <section style={{
       position: 'relative',
       minHeight: '100vh',
-      backgroundColor: '#0A0A0A',
+      backgroundColor: '#000000',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -73,55 +69,84 @@ export default function Hero() {
       paddingRight: 24,
     }}>
 
-      {/* Subtle radial glow behind headline */}
-      <div style={{
-        position: 'absolute',
-        top: '35%', left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 680, height: 480,
-        background: 'radial-gradient(ellipse at center, rgba(74,142,255,0.04) 0%, transparent 65%)',
-        pointerEvents: 'none',
-        zIndex: 0,
-      }} />
+      {/* Breathing gradient blobs */}
+      <div style={{ ...blobs, position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute',
+          top: '-15%', left: '-10%',
+          width: 720, height: 720,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, #3B0764 0%, transparent 70%)',
+          opacity: 0.4,
+          filter: 'blur(40px)',
+          animation: 'heroBlobA 15s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: '-20%', right: '-10%',
+          width: 760, height: 760,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, #0C1A4E 0%, transparent 70%)',
+          opacity: 0.4,
+          filter: 'blur(40px)',
+          animation: 'heroBlobB 15s ease-in-out infinite',
+        }} />
+      </div>
 
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 820 }}>
 
         {/* Eyebrow */}
         <p style={{
-          ...s0,
-          fontSize: 14,
+          ...eyebrow,
+          fontSize: 13,
           fontWeight: 500,
-          letterSpacing: '0.02em',
-          color: '#6e6e73',
-          marginBottom: 20,
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          color: '#888888',
+          marginBottom: 24,
         }}>
           AI automation for restaurants
         </p>
 
         {/* Headline */}
         <h1 style={{
-          ...s1,
-          fontSize: 'clamp(48px, 7.5vw, 80px)',
-          fontWeight: 700,
-          lineHeight: 1.05,
-          letterSpacing: '-0.025em',
-          color: '#F0EEE9',
-          marginBottom: 24,
+          ...head,
+          fontSize: 'clamp(48px, 9vw, 88px)',
+          fontWeight: 800,
+          lineHeight: 1.0,
+          letterSpacing: '-0.03em',
+          color: '#FFFFFF',
+          marginBottom: 28,
         }}>
           Your restaurant
           <br />
           runs itself.
         </h1>
 
+        {/* Glowing gradient line */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          <div style={{
+            height: 2,
+            width: 120,
+            borderRadius: 2,
+            background: 'linear-gradient(90deg, #3B82F6, #8B5CF6, #EC4899)',
+            boxShadow: '0 0 12px rgba(139,92,246,0.7)',
+            transformOrigin: 'left center',
+            opacity: line.opacity,
+            transform: line.opacity ? 'scaleX(1)' : 'scaleX(0)',
+            transition: `opacity 700ms ${EASE}, transform 900ms ${EASE}`,
+          }} />
+        </div>
+
         {/* Subheadline */}
         <p style={{
-          ...s2,
-          fontSize: 21,
+          ...sub,
+          fontSize: 19,
           lineHeight: 1.55,
-          color: '#6e6e73',
-          maxWidth: 560,
-          margin: '0 auto 42px',
+          color: '#888888',
+          maxWidth: 500,
+          margin: '0 auto 40px',
         }}>
           AutoPilot handles Google reviews, social posts, and customer
           follow-ups — automatically.
@@ -129,9 +154,9 @@ export default function Hero() {
 
         {/* Buttons */}
         <div style={{
-          ...s3,
+          ...btns,
           display: 'flex',
-          gap: 12,
+          gap: 14,
           justifyContent: 'center',
           flexWrap: 'wrap',
         }}>
@@ -140,14 +165,14 @@ export default function Hero() {
             onClick={e => { e.preventDefault(); smoothScrollTo('waitlist') }}
             style={{
               display: 'inline-block',
-              backgroundColor: '#F0EEE9',
-              color: '#0A0A0A',
+              backgroundColor: '#FFFFFF',
+              color: '#000000',
               borderRadius: 980,
-              padding: '12px 28px',
+              padding: '13px 30px',
               fontSize: 17,
               fontWeight: 600,
               textDecoration: 'none',
-              transition: 'opacity 0.15s',
+              transition: 'opacity 0.15s, transform 0.15s',
             }}
             onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
             onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
@@ -159,23 +184,25 @@ export default function Hero() {
             onClick={e => { e.preventDefault(); smoothScrollTo('features') }}
             style={{
               display: 'inline-block',
-              backgroundColor: 'transparent',
-              color: '#4A8EFF',
-              border: '1px solid rgba(74,142,255,0.5)',
+              background: 'rgba(255,255,255,0.05)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255,255,255,0.2)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
               borderRadius: 980,
-              padding: '12px 28px',
+              padding: '13px 30px',
               fontSize: 17,
               fontWeight: 500,
               textDecoration: 'none',
               transition: 'border-color 0.15s, background-color 0.15s',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.borderColor = '#4A8EFF'
-              e.currentTarget.style.backgroundColor = 'rgba(74,142,255,0.08)'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'
+              e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'rgba(74,142,255,0.5)'
-              e.currentTarget.style.backgroundColor = 'transparent'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
+              e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
             }}
           >
             See how it works
@@ -183,46 +210,47 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Floating notification cards — fade in at 800ms, bob at different phases */}
-      <div style={{ ...s4, position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
+      {/* Floating notification cards */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
 
-        {/* Card 1 — bottom-left */}
-        <Card style={{
-          bottom: '22%', left: 'max(28px, 7%)',
-          animation: 'cardBob 4s ease-in-out infinite',
-          animationDelay: '0s',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Dot pulse={false} />
-            <span style={{ fontWeight: 500 }}>Review replied</span>
-            <span style={{ color: '#6e6e73', marginLeft: 2 }}>· 2s ago</span>
-          </div>
-        </Card>
+        {/* Card 1 — left */}
+        <div style={{ ...card1, position: 'absolute', top: '52%', left: 'max(28px, 7%)' }}>
+          <Card style={{ animation: 'cardBob 4s ease-in-out infinite' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%',
+                backgroundColor: '#22C55E', flexShrink: 0,
+              }} />
+              <span style={{ fontWeight: 500 }}>Review replied</span>
+              <span style={{ color: '#888888' }}>· 2s ago</span>
+            </div>
+          </Card>
+        </div>
 
-        {/* Card 2 — top-right */}
-        <Card style={{
-          top: '24%', right: 'max(28px, 7%)',
-          animation: 'cardBob 4s ease-in-out infinite',
-          animationDelay: '1.4s',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ color: '#4A8EFF', fontSize: 14, lineHeight: 1 }}>★</span>
-            <span style={{ fontWeight: 500 }}>4.9</span>
-            <span style={{ color: '#6e6e73' }}>avg rating this month</span>
-          </div>
-        </Card>
+        {/* Card 2 — right */}
+        <div style={{ ...card2, position: 'absolute', top: '28%', right: 'max(28px, 7%)' }}>
+          <Card style={{ animation: 'cardBob 5s ease-in-out infinite' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <span style={{ color: '#3B82F6', fontSize: 14, lineHeight: 1 }}>★</span>
+              <span style={{ fontWeight: 500 }}>4.9</span>
+              <span style={{ color: '#888888' }}>avg rating this month</span>
+            </div>
+          </Card>
+        </div>
 
-        {/* Card 3 — bottom-right */}
-        <Card style={{
-          bottom: '26%', right: 'max(28px, 7%)',
-          animation: 'cardBob 4s ease-in-out infinite',
-          animationDelay: '2.7s',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Dot pulse={true} />
-            <span style={{ fontWeight: 500 }}>AutoPilot is running</span>
-          </div>
-        </Card>
+        {/* Card 3 — bottom */}
+        <div style={{ ...card3, position: 'absolute', bottom: '20%', left: '50%', marginLeft: -130 }}>
+          <Card style={{ animation: 'cardBob 6s ease-in-out infinite' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <span className="pulse-dot" style={{
+                width: 8, height: 8, borderRadius: '50%',
+                backgroundColor: '#22C55E', flexShrink: 0,
+              }} />
+              <span style={{ fontWeight: 500 }}>AutoPilot is running</span>
+              <span style={{ color: '#888888' }}>· 47 tasks today</span>
+            </div>
+          </Card>
+        </div>
 
       </div>
     </section>

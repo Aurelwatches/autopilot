@@ -43,9 +43,21 @@
 .chat-scroll-light:hover { scrollbar-color: #CCCCCC transparent; }
 .chat-scroll-light:hover::-webkit-scrollbar-thumb { background-color: #CCCCCC; }
 
+/* ─── Hero breathing gradient blobs ─────────────────────────────────────────── */
+
+@keyframes heroBlobA {
+  0%, 100% { transform: translate(0, 0)        scale(1);    }
+  50%      { transform: translate(60px, 40px)  scale(1.15); }
+}
+
+@keyframes heroBlobB {
+  0%, 100% { transform: translate(0, 0)         scale(1);    }
+  50%      { transform: translate(-50px, -40px) scale(1.12); }
+}
+
 /* ─── Hero floating card animations ─────────────────────────────────────────── */
 
-/* Gentle bob — different delays so the 3 cards never sync */
+/* Gentle bob — different durations so the 3 cards never sync */
 @keyframes cardBob {
   0%, 100% { transform: translateY(0px); }
   50%       { transform: translateY(-10px); }
