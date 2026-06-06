@@ -321,11 +321,13 @@ export default function SocialPosts() {
     }).select().single()
 
     // Log a post_scheduled activity so the Overview "Posts Scheduled" stat counts it.
-    if (!error && status === 'scheduled') {
+    // Store post_id so we can remove this row again if the post is deleted.
+    if (!error && status === 'scheduled' && data) {
       const { error: actErr } = await supabase.from('activity_feed').insert({
         type:        'post_scheduled',
         description: content.slice(0, 50),
         user_id:     userId,
+        post_id:     data.id,
         created_at:  new Date().toISOString(),
       })
       if (actErr) console.error('[SocialPosts] activity_feed insert:', actErr.message)
@@ -346,6 +348,9 @@ export default function SocialPosts() {
   async function handleDelete(id) {
     setPosts(prev => prev.filter(p => p.id !== id))
     if (supabase) {
+      // Remove the linked post_scheduled activity row first, then the post.
+      // (The FK's ON DELETE CASCADE is a backstop if this is ever skipped.)
+      await supabase.from('activity_feed').delete().eq('post_id', id)
       const { error } = await supabase.from('posts').delete().eq('id', id)
       if (error) fetchPosts() // re-sync if the delete didn't persist
     }
