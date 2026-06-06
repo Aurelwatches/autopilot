@@ -4,6 +4,9 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Admin from './pages/Admin'
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
+import CookieConsent from './components/CookieConsent'
 import DashboardLayout from './dashboard/DashboardLayout'
 import Overview from './dashboard/pages/Overview'
 import Reviews from './dashboard/pages/Reviews'
@@ -19,6 +22,8 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/admin" element={<Admin />} />
 
           <Route path="/dashboard" element={<DashboardLayout />}>
@@ -32,6 +37,7 @@ export default function App() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <CookieConsent />
       </BrowserRouter>
     </AuthProvider>
   )

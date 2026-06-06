@@ -211,11 +211,14 @@ export default function SocialPosts() {
       scheduled_at = new Date().toISOString()
     }
 
+    // Sanitize before saving: strip HTML tags, trim, cap length
+    const content = text.replace(/<\/?[^>]*>/g, '').trim().slice(0, 5000)
+
     setSaving(true)
     const { data, error } = await supabase.from('posts').insert({
       user_id:  userId,
       platform,
-      content:  text.trim(),   // DB column is 'content', not 'text'
+      content,   // DB column is 'content', not 'text'
       status,
       scheduled_at,
     }).select().single()

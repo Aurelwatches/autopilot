@@ -130,6 +130,13 @@ export default function Signup() {
           >
             {loading ? 'Creating account…' : 'Create account'}
           </button>
+
+          <p className="text-xs text-center leading-relaxed" style={{ color: C.muted }}>
+            By signing up you agree to our{' '}
+            <Link to="/terms" style={{ color: C.secondary, textDecoration: 'underline' }}>Terms of Service</Link>
+            {' '}and{' '}
+            <Link to="/privacy" style={{ color: C.secondary, textDecoration: 'underline' }}>Privacy Policy</Link>.
+          </p>
         </form>
 
         <p className="text-xs text-center mt-6" style={{ color: C.muted }}>

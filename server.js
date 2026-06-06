@@ -5,11 +5,56 @@ import { createClient } from '@supabase/supabase-js'
 const app = express()
 const PORT = process.env.PORT || 3001
 
+// Behind Railway's proxy — trust the first proxy hop so req.ip is the real client IP
+// (needed for accurate rate limiting).
+app.set('trust proxy', 1)
+
 const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
   ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
   : null
 
-app.use(express.json())
+app.use(express.json({ limit: '100kb' }))
+
+// ── Security helpers ────────────────────────────────────────────────────────
+
+// Dependency-free in-memory rate limiter (per client IP, fixed window).
+// Fine for a single-instance deploy; swap for a shared store if scaling out.
+function rateLimit({ windowMs, max }) {
+  const hits = new Map() // ip -> { count, resetAt }
+  // Periodically drop expired buckets so the map doesn't grow unbounded.
+  setInterval(() => {
+    const now = Date.now()
+    for (const [ip, rec] of hits) if (now > rec.resetAt) hits.delete(ip)
+  }, windowMs).unref?.()
+
+  return (req, res, next) => {
+    const now = Date.now()
+    const ip = req.ip || 'unknown'
+    let rec = hits.get(ip)
+    if (!rec || now > rec.resetAt) { rec = { count: 0, resetAt: now + windowMs }; hits.set(ip, rec) }
+    rec.count++
+    if (rec.count > max) {
+      res.set('Retry-After', String(Math.ceil((rec.resetAt - now) / 1000)))
+      return res.status(429).json({ error: 'Too many requests. Please slow down.' })
+    }
+    next()
+  }
+}
+
+const webhookLimiter = rateLimit({ windowMs: 60_000, max: 100 }) // 100 requests / minute
+const replyLimiter   = rateLimit({ windowMs: 60_000, max: 100 })
+
+// Sanitize untrusted string input before persisting: drop null bytes, strip HTML
+// tags, trim, and cap length. React escapes on render, but we never want raw
+// markup or oversized payloads landing in the database.
+function clean(v, maxLen = 5000) {
+  if (v == null) return ''
+  return String(v)
+    .replace(/\u0000/g, '')
+    .replace(/<\/?[^>]*>/g, '')
+    .trim()
+    .slice(0, maxLen)
+}
 
 // Log every incoming request so we can diagnose routing issues in production
 app.use((req, _res, next) => {
@@ -68,8 +113,8 @@ async function resolveUserIds(req, restaurantName) {
   return [null]
 }
 
-// POST /api/webhook — called by Make.com
-app.post('/api/webhook', async (req, res) => {
+// POST /api/webhook — called by Make.com (rate limited: 100 req/min per IP)
+app.post('/api/webhook', webhookLimiter, async (req, res) => {
   console.log('Webhook received:', JSON.stringify(req.body, null, 2))
   console.log('Webhook fields present:', Object.keys(req.body))
 
@@ -85,16 +130,16 @@ app.post('/api/webhook', async (req, res) => {
   // Store every field that arrives — nothing is dropped
   const event = {
     id:           Date.now(),
-    type,
-    customerName: customerName ?? '',
-    details:      details      ?? '',
-    reviewText:   reviewText   ?? '',
-    aiReply:      aiReply      ?? '',
+    type:         clean(type, 80),
+    customerName: clean(customerName, 200),
+    details:      clean(details, 5000),
+    reviewText:   clean(reviewText, 5000),
+    aiReply:      clean(aiReply, 5000),
     timestamp:    timestamp    ?? new Date().toISOString(),
     receivedAt:   new Date().toISOString(),
-    ...(platform  != null && { platform }),
-    ...(phone     != null && { phone }),
-    ...(lastVisit != null && { lastVisit }),
+    ...(platform  != null && { platform: clean(platform, 80) }),
+    ...(phone     != null && { phone: clean(phone, 40) }),
+    ...(lastVisit != null && { lastVisit: clean(lastVisit, 80) }),
     ...(rating    != null && { rating: Number(rating) }),
   }
 
@@ -112,10 +157,10 @@ app.post('/api/webhook', async (req, res) => {
       resolveUserIds(req, webhookRestaurantName).then(userIds => {
         const rows = userIds.map(userId => ({
           user_id:       userId,
-          customer_name: customerName ?? '',
-          review_text:   reviewText ?? details ?? '',
-          ai_reply:      aiReply    ?? '',
-          rating:        rating != null ? Number(rating) : null,
+          customer_name: clean(customerName, 200),
+          review_text:   clean(reviewText ?? details, 5000),
+          ai_reply:      clean(aiReply, 5000),
+          rating:        rating != null && !Number.isNaN(Number(rating)) ? Number(rating) : null,
           status:        'replied',
           created_at:    timestamp  ?? new Date().toISOString(),
         }))
@@ -129,8 +174,8 @@ app.post('/api/webhook', async (req, res) => {
         const rows = userIds.map(userId => ({
           user_id:    userId,
           type:       'post_scheduled',
-          details:    details  ?? '',
-          platform:   platform ?? null,
+          details:    clean(details, 5000),
+          platform:   platform ? clean(platform, 80) : null,
           created_at: timestamp ?? new Date().toISOString(),
         }))
         supabase.from('activity_feed').insert(rows)
@@ -164,10 +209,11 @@ app.get('/api/events/stream', (req, res) => {
   req.on('close', () => sseClients.delete(clientId))
 })
 
-// POST /api/reply — called by Make.com to deliver a support reply
-app.post('/api/reply', async (req, res) => {
+// POST /api/reply — called by Make.com to deliver a support reply (rate limited)
+app.post('/api/reply', replyLimiter, async (req, res) => {
   const { id, reply } = req.body
-  if (!id || !reply?.trim()) {
+  const cleanReply = clean(reply, 4000)
+  if (!id || !cleanReply) {
     return res.status(400).json({ error: 'id and reply are required' })
   }
   if (!supabase) {
@@ -175,7 +221,7 @@ app.post('/api/reply', async (req, res) => {
   }
   const { error } = await supabase
     .from('messages')
-    .update({ reply: reply.trim(), replied_at: new Date().toISOString(), status: 'replied' })
+    .update({ reply: cleanReply, replied_at: new Date().toISOString(), status: 'replied' })
     .eq('id', id)
   if (error) return res.status(500).json({ error: error.message })
   res.json({ ok: true })

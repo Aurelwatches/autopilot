@@ -26,13 +26,12 @@ export default function Footer() {
         </p>
 
         <div className="flex gap-6">
-          {['Privacy', 'Terms'].map((label) => (
+          {[{ label: 'Privacy', to: '/privacy' }, { label: 'Terms', to: '/terms' }].map(({ label, to }) => (
             <a
               key={label}
-              href="#"
+              href={to}
               className="text-xs transition-colors"
               style={{ color: C.secondary }}
-              onClick={e => e.preventDefault()}
               onMouseEnter={e => e.target.style.color = C.primary}
               onMouseLeave={e => e.target.style.color = C.secondary}
             >
