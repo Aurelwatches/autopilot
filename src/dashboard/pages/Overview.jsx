@@ -127,7 +127,7 @@ export default function Overview() {
       return {
         type:   mapped.type,
         text:   mapped.text,
-        detail: [a.platform, a.details].filter(Boolean).join(' · ') || '—',
+        detail: a.description || '—',
         ts:     a.created_at,
       }
     }),

@@ -2,28 +2,126 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useApp } from '../AppContext'
 
-// Default the schedule picker to tomorrow 10am, formatted for <input type="datetime-local">
-// (which needs local 'YYYY-MM-DDTHH:mm', not an ISO/UTC string).
-function defaultScheduleLocal() {
+// Default the schedule picker to tomorrow at 10:00 AM.
+function defaultScheduleDate() {
   const d = new Date()
   d.setDate(d.getDate() + 1)
   d.setHours(10, 0, 0, 0)
-  const pad = n => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return d
 }
 
 const STATUS_LABEL = { draft: 'Draft', scheduled: 'Scheduled', published: 'Published' }
+const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December']
 
-function fmtDateTime(iso) {
-  return new Date(iso).toLocaleString('en-US',
-    { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+// M/DD/YYYY (month no leading zero, day padded) per spec.
+function fmtMDY(d) {
+  const dt = new Date(d)
+  return `${dt.getMonth() + 1}/${String(dt.getDate()).padStart(2, '0')}/${dt.getFullYear()}`
+}
+function fmtTime(d) {
+  return new Date(d).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 }
 
 function formatSchedule(row) {
-  if (row.status === 'scheduled' && row.scheduled_at) return `Scheduled · ${fmtDateTime(row.scheduled_at)}`
-  if (row.status === 'published') return `Published · ${fmtDateTime(row.scheduled_at || row.created_at)}`
+  if (row.status === 'scheduled' && row.scheduled_at) return `Scheduled · ${fmtMDY(row.scheduled_at)} · ${fmtTime(row.scheduled_at)}`
+  if (row.status === 'published') return `Published · ${fmtMDY(row.scheduled_at || row.created_at)}`
   if (row.status === 'draft')     return 'Draft'
-  return row.created_at ? fmtDateTime(row.created_at) : '—'
+  return row.created_at ? fmtMDY(row.created_at) : '—'
+}
+
+// Dark inline calendar + time dropdowns. `value` is a Date; `onChange(nextDate)`.
+function DateTimePicker({ value, onChange, C }) {
+  const [view, setView] = useState(() => new Date(value.getFullYear(), value.getMonth(), 1))
+  const year = view.getFullYear()
+  const month = view.getMonth()
+  const firstWeekday = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+  const cells = []
+  for (let i = 0; i < firstWeekday; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+
+  const isSelected = d => d != null &&
+    value.getFullYear() === year && value.getMonth() === month && value.getDate() === d
+
+  function pickDay(d) {
+    const next = new Date(value)
+    next.setFullYear(year, month, d)
+    onChange(next)
+  }
+
+  const h24 = value.getHours()
+  const h12 = ((h24 + 11) % 12) + 1
+  const ampm = h24 < 12 ? 'AM' : 'PM'
+  const minute = value.getMinutes()
+
+  function setTimeParts({ h = h12, m = minute, ap = ampm }) {
+    let hh = h % 12
+    if (ap === 'PM') hh += 12
+    const next = new Date(value)
+    next.setHours(hh, m, 0, 0)
+    onChange(next)
+  }
+
+  const navBtn = {
+    background: 'transparent', border: `1px solid ${C.border}`, color: C.secondary,
+    borderRadius: 6, width: 26, height: 26, cursor: 'pointer', fontSize: 14, lineHeight: 1,
+  }
+  const ddStyle = {
+    backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}`,
+    borderRadius: 6, padding: '6px 8px', fontSize: 13, outline: 'none', colorScheme: 'dark', cursor: 'pointer',
+  }
+
+  return (
+    <div style={{ backgroundColor: '#141414', border: `1px solid ${C.border}`, borderRadius: 10, padding: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <button type="button" onClick={() => setView(new Date(year, month - 1, 1))} style={navBtn} aria-label="Previous month">‹</button>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#F0EEE9' }}>{MONTHS[month]} {year}</span>
+        <button type="button" onClick={() => setView(new Date(year, month + 1, 1))} style={navBtn} aria-label="Next month">›</button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 4 }}>
+        {WEEKDAYS.map(w => (
+          <div key={w} style={{ textAlign: 'center', fontSize: 10, color: C.muted, padding: '2px 0' }}>{w}</div>
+        ))}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
+        {cells.map((d, i) => d === null ? <div key={i} /> : (
+          <button
+            key={i}
+            type="button"
+            onClick={() => pickDay(d)}
+            style={{
+              aspectRatio: '1 / 1', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12,
+              backgroundColor: isSelected(d) ? C.accent : 'transparent',
+              color: isSelected(d) ? '#fff' : '#F0EEE9',
+              fontWeight: isSelected(d) ? 600 : 400,
+            }}
+            onMouseEnter={e => { if (!isSelected(d)) e.currentTarget.style.backgroundColor = C.inputBg }}
+            onMouseLeave={e => { if (!isSelected(d)) e.currentTarget.style.backgroundColor = 'transparent' }}
+          >{d}</button>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.divider}` }}>
+        <span style={{ fontSize: 11, color: C.secondary, marginRight: 2 }}>Time</span>
+        <select value={h12} onChange={e => setTimeParts({ h: Number(e.target.value) })} style={ddStyle} aria-label="Hour">
+          {Array.from({ length: 12 }, (_, i) => i + 1).map(h => <option key={h} value={h}>{h}</option>)}
+        </select>
+        <span style={{ color: C.muted }}>:</span>
+        <select value={minute} onChange={e => setTimeParts({ m: Number(e.target.value) })} style={ddStyle} aria-label="Minute">
+          {Array.from({ length: 12 }, (_, i) => i * 5).map(m => <option key={m} value={m}>{String(m).padStart(2, '0')}</option>)}
+        </select>
+        <select value={ampm} onChange={e => setTimeParts({ ap: e.target.value })} style={ddStyle} aria-label="AM/PM">
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </select>
+      </div>
+    </div>
+  )
 }
 
 const LOADING_MSGS = [
@@ -139,7 +237,7 @@ export default function SocialPosts() {
   const [platform,   setPlatform]   = useState('Instagram')
   const [topic,      setTopic]      = useState('')
   const [text,       setText]       = useState('')
-  const [scheduledAt, setScheduledAt] = useState(defaultScheduleLocal())
+  const [scheduleDate, setScheduleDate] = useState(defaultScheduleDate)
   const [isLoading,  setIsLoading]  = useState(false)
   const [msgIdx,     setMsgIdx]     = useState(0)
   const [aiError,    setAiError]    = useState('')
@@ -205,8 +303,7 @@ export default function SocialPosts() {
     // Resolve scheduled_at by status: scheduled → picked time; published → now; draft → null
     let scheduled_at = null
     if (status === 'scheduled') {
-      if (!scheduledAt) { setAiError('Pick a date and time to schedule.'); return }
-      scheduled_at = new Date(scheduledAt).toISOString()
+      scheduled_at = scheduleDate.toISOString()
     } else if (status === 'published') {
       scheduled_at = new Date().toISOString()
     }
@@ -222,6 +319,18 @@ export default function SocialPosts() {
       status,
       scheduled_at,
     }).select().single()
+
+    // Log a post_scheduled activity so the Overview "Posts Scheduled" stat counts it.
+    if (!error && status === 'scheduled') {
+      const { error: actErr } = await supabase.from('activity_feed').insert({
+        type:        'post_scheduled',
+        description: content.slice(0, 50),
+        user_id:     userId,
+        created_at:  new Date().toISOString(),
+      })
+      if (actErr) console.error('[SocialPosts] activity_feed insert:', actErr.message)
+    }
+
     setSaving(false)
     if (error) { setAiError(error.message); return }
     setPosts(prev => [data, ...prev])
@@ -230,7 +339,7 @@ export default function SocialPosts() {
 
   function handleCloseForm() {
     setShowForm(false); setIsLoading(false); setAiError('')
-    setText(''); setTopic(''); setPlatform('Instagram'); setScheduledAt(defaultScheduleLocal())
+    setText(''); setTopic(''); setPlatform('Instagram'); setScheduleDate(defaultScheduleDate())
   }
 
   // Called by PostCard after its exit animation finishes
@@ -398,21 +507,13 @@ export default function SocialPosts() {
               <p className="text-xs mt-1 text-right" style={{ color: C.muted }}>{text.length}/280</p>
             </div>
 
-            {/* Schedule time picker */}
+            {/* Schedule date/time picker */}
             <div className="mb-4">
               <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
                 Schedule for
-                <span style={{ color: C.muted }}> (used when you click Schedule)</span>
+                <span style={{ color: C.muted }}> · {fmtMDY(scheduleDate)} at {fmtTime(scheduleDate)}</span>
               </label>
-              <input
-                type="datetime-local"
-                value={scheduledAt}
-                onChange={e => setScheduledAt(e.target.value)}
-                className="w-full text-sm px-4 py-2.5 rounded outline-none"
-                style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}`, colorScheme: 'dark' }}
-                onFocus={e => e.target.style.borderColor = C.secondary}
-                onBlur={e => e.target.style.borderColor = C.border}
-              />
+              <DateTimePicker value={scheduleDate} onChange={setScheduleDate} C={C} />
             </div>
 
             <div className="flex gap-2 justify-end">

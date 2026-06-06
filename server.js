@@ -172,11 +172,11 @@ app.post('/api/webhook', webhookLimiter, async (req, res) => {
     if (type === 'post_scheduled') {
       resolveUserIds(req, webhookRestaurantName).then(userIds => {
         const rows = userIds.map(userId => ({
-          user_id:    userId,
-          type:       'post_scheduled',
-          details:    clean(details, 5000),
-          platform:   platform ? clean(platform, 80) : null,
-          created_at: timestamp ?? new Date().toISOString(),
+          user_id:     userId,
+          type:        'post_scheduled',
+          // activity_feed column is 'description' (no 'details'/'platform' columns exist)
+          description: clean(platform ? `${platform}: ${details}` : details, 500),
+          created_at:  timestamp ?? new Date().toISOString(),
         }))
         supabase.from('activity_feed').insert(rows)
           .then(({ error: e }) => { if (e) console.error('Supabase activity insert:', e.message) })
