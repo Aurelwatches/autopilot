@@ -25,16 +25,16 @@ function Card({ style, children }) {
   return (
     <div style={{
       position: 'relative',
-      background: 'rgba(255,255,255,0.05)',
-      border: '1px solid rgba(255,255,255,0.1)',
-      borderRadius: 16,
+      background: 'rgba(255,255,255,0.03)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 20,
       padding: '12px 18px',
       fontSize: 13,
       color: '#F0EEE9',
       whiteSpace: 'nowrap',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
       ...style,
     }}>
       {children}
@@ -349,6 +349,17 @@ export default function Hero() {
           animation: 'heroBlobB 15s ease-in-out infinite',
         }} />
       </div>
+
+      {/* Fade overlay — blobs gradually dissolve into pure #000 toward the
+          bottom so the seam into the feature sections is seamless */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 1,
+        pointerEvents: 'none',
+        background: 'linear-gradient(180deg, transparent 0%, transparent 50%, #000000 100%)',
+      }} />
+
 
       {mountSkeleton && <HeroSkeleton hidden={showReal} />}
       {showReal && <HeroContent />}

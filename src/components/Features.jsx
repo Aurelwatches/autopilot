@@ -36,10 +36,10 @@ function Glass({ children }) {
     <div style={{
       background: 'rgba(255,255,255,0.03)',
       border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 16,
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+      borderRadius: 20,
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
       overflow: 'hidden',
     }}>
       {children}
@@ -286,7 +286,7 @@ function FeatureSection({ section }) {
 
 export default function Features() {
   return (
-    <section id="features" style={{ borderTop: '1px solid #1A1A1A' }}>
+    <section id="features" style={{ backgroundColor: '#000000' }}>
       <div style={{ maxWidth: 1120, margin: '0 auto', padding: '96px 24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 112 }}>
           {sections.map((s) => (

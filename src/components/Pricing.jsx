@@ -21,7 +21,7 @@ export default function Pricing() {
   return (
     <section
       id="pricing"
-      style={{ borderTop: '1px solid #1A1A1A', padding: '112px 24px', textAlign: 'center' }}
+      style={{ backgroundColor: '#000000', padding: '112px 24px', textAlign: 'center' }}
     >
       <div ref={ref} style={{ maxWidth: 640, margin: '0 auto', ...reveal }}>
         <p style={{

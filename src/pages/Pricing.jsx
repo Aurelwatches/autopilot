@@ -1,105 +1,148 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
-const C = {
-  primary:   '#F0EEE9',
-  secondary: '#888780',
-  muted:     '#3A3835',
-  card:      '#141414',
-  border:    '#2A2A2A',
-  divider:   '#222220',
-}
+const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
-const includes = [
-  'Unlimited Google review replies',
-  'Social media content & scheduling',
-  'Automated customer follow-up campaigns',
-  'Analytics and performance dashboard',
-  'Dedicated onboarding and setup',
-  'Email support',
+const features = [
+  'Google review replies',
+  'Social media posting',
+  'Customer follow-up texts',
+  'Analytics dashboard',
+  'Two-way support messaging',
+  'Unlimited automations',
 ]
 
-export default function Pricing() {
+function Check() {
   return (
-    <div className="bg-[#0A0A0A] min-h-screen" style={{ color: '#F0EEE9' }}>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }}>
+      <path d="M3 8.5L6 11.5L13 4.5" stroke="#4A8EFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export default function Pricing() {
+  const [shown, setShown] = useState(false)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShown(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: '#000000', color: '#F0EEE9' }}>
       <Navbar />
-      <main className="pt-32 pb-24 md:pb-32 px-6 text-center">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-xs font-medium uppercase tracking-widest mb-4" style={{ color: C.secondary }}>
-            Pricing
+
+      <main style={{
+        position: 'relative',
+        overflow: 'hidden',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '140px 24px 100px',
+      }}>
+        {/* Subtle gradient glow behind the card — hero style */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute',
+            top: '8%', left: '50%',
+            width: 640, height: 640,
+            transform: 'translateX(-50%)',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, #3B0764 0%, transparent 70%)',
+            opacity: 0.35,
+            filter: 'blur(50px)',
+            animation: 'heroBlobA 15s ease-in-out infinite',
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '2%', left: '50%',
+            width: 680, height: 680,
+            transform: 'translateX(-50%)',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, #0C1A4E 0%, transparent 70%)',
+            opacity: 0.35,
+            filter: 'blur(50px)',
+            animation: 'heroBlobB 15s ease-in-out infinite',
+          }} />
+        </div>
+
+        {/* Glass plan card */}
+        <div style={{
+          position: 'relative',
+          zIndex: 1,
+          width: '100%',
+          maxWidth: 480,
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 24,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+          padding: '40px 36px',
+          opacity: shown ? 1 : 0,
+          transform: shown ? 'scale(1)' : 'scale(0.97)',
+          transition: `opacity 600ms ${EASE}, transform 600ms ${EASE}`,
+        }}>
+          {/* Label */}
+          <p style={{ fontSize: 13, fontWeight: 500, color: '#888888', marginBottom: 20 }}>
+            AutoPilot
           </p>
-          <h1
-            className="text-4xl md:text-5xl font-bold tracking-[-0.03em] mb-16"
-            style={{ color: C.primary }}
-          >
-            One plan. Everything included.
-          </h1>
 
-          {/* Centered card — floating */}
-          <div
-            className="mx-auto rounded-lg px-10 py-12"
-            style={{
-              maxWidth: '480px',
-              backgroundColor: C.card,
-              border: `1px solid ${C.border}`,
-              animation: 'cardFloat 4s ease-in-out infinite',
-              boxShadow: '0 32px 72px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3)',
-            }}
-          >
-            <p className="text-xs font-medium uppercase tracking-widest mb-6" style={{ color: C.muted }}>
-              One plan. No surprises.
-            </p>
-
-            <div className="flex items-end justify-center gap-2 mb-2">
-              <span
-                className="font-bold leading-none tracking-[-0.05em]"
-                style={{ fontSize: '96px', color: C.primary }}
-              >
-                $200
-              </span>
-              <span className="text-base mb-3" style={{ color: C.secondary }}>/&nbsp;mo</span>
-            </div>
-
-            <p className="text-sm mb-10" style={{ color: C.secondary }}>
-              Less than one hour of labor. More than a full-time employee.
-            </p>
-
-            <div className="h-px mb-2" style={{ backgroundColor: C.divider }} />
-
-            <ul className="mb-2 text-left">
-              {includes.map((item, i) => (
-                <li
-                  key={item}
-                  className="py-3.5 text-sm"
-                  style={{
-                    color: C.secondary,
-                    borderBottom: i < includes.length - 1 ? `1px solid ${C.divider}` : 'none',
-                  }}
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            <div className="h-px mb-8" style={{ backgroundColor: C.divider }} />
-
-            <Link
-              to="/signup"
-              className="block w-full text-sm font-semibold py-3 rounded text-center transition-colors"
-              style={{ backgroundColor: '#F0EEE9', color: '#0A0A0A' }}
-              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e4e2dd'}
-              onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F0EEE9'}
-            >
-              Start free trial
-            </Link>
-
-            <p className="text-xs mt-4" style={{ color: C.muted }}>
-              14 days free — no credit card required.
-            </p>
+          {/* Price */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 96, fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em', color: '#FFFFFF' }}>
+              $200
+            </span>
+            <span style={{ fontSize: 18, color: '#888888', marginBottom: 14 }}>/month</span>
           </div>
+
+          <p style={{ fontSize: 15, lineHeight: 1.5, color: '#888888', marginBottom: 28 }}>
+            Less than one hour of labor. Works 24/7.
+          </p>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 24 }} />
+
+          {/* Feature list */}
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: 32 }}>
+            {features.map((f) => (
+              <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '8px 0', fontSize: 15, color: '#F0EEE9' }}>
+                <Check />
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* CTA */}
+          <Link
+            to="/signup"
+            style={{
+              display: 'block',
+              width: '100%',
+              textAlign: 'center',
+              backgroundColor: '#FFFFFF',
+              color: '#000000',
+              borderRadius: 980,
+              padding: '14px 0',
+              fontSize: 16,
+              fontWeight: 600,
+              textDecoration: 'none',
+              transition: 'opacity 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+          >
+            Start free trial
+          </Link>
+
+          <p style={{ fontSize: 12, color: '#888888', textAlign: 'center', marginTop: 16 }}>
+            14 days free · No credit card required
+          </p>
         </div>
       </main>
+
       <Footer />
     </div>
   )
