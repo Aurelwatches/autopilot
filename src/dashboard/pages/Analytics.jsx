@@ -163,8 +163,7 @@ export default function Analytics() {
           '| null/0 rating:', revs.filter(x => !(Number(x.rating) > 0)).length)
         console.log('  replied:', revs.filter(x => x.status === 'replied').length)
         console.log('activity_feed:', acts.length, acts)
-        console.log('  post_scheduled:', acts.filter(x => x.type === 'post_scheduled').length,
-          '| follow_up_sent:', acts.filter(x => x.type === 'follow_up_sent').length)
+        console.log('  post_scheduled:', acts.filter(x => x.type === 'post_scheduled').length)
         console.groupEnd()
         setReviews(r.data ?? [])
         setActivities(a.data ?? [])

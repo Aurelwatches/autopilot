@@ -12,12 +12,11 @@ const hour     = new Date().getHours()
 const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
 const TYPE_MAP = {
-  review_replied: { type: 'review',   text: 'Review replied' },
-  post_scheduled: { type: 'post',     text: 'Post scheduled' },
-  follow_up_sent: { type: 'followup', text: 'Follow-up sent' },
+  review_replied: { type: 'review', text: 'Review replied' },
+  post_scheduled: { type: 'post',   text: 'Post scheduled' },
 }
-const typeColor = { review: '#4A90D9', post: '#a78bfa', followup: '#4ade80' }
-const typeLabel = { review: 'R', post: 'P', followup: 'F' }
+const typeColor = { review: '#4A90D9', post: '#a78bfa' }
+const typeLabel = { review: 'R', post: 'P' }
 
 function relativeTime(iso) {
   const secs = (Date.now() - new Date(iso)) / 1000
@@ -71,8 +70,6 @@ export default function Overview() {
       console.log('activity_feed:', actRes.error ? `ERROR ${actRes.error.message}` : `${actRes.data?.length ?? 0} rows`, actRes.data)
       const acts = actRes.data ?? []
       console.log('activity_feed types:', acts.reduce((m, a) => { m[a.type ?? '(null)'] = (m[a.type ?? '(null)'] || 0) + 1; return m }, {}))
-      console.log('post_scheduled:', acts.filter(a => a.type === 'post_scheduled').length,
-        '| follow_up_sent:', acts.filter(a => a.type === 'follow_up_sent').length)
       console.groupEnd()
 
       if (revRes.error) throw revRes.error
@@ -103,7 +100,6 @@ export default function Overview() {
 
   const repliedCount   = reviews.filter(r => (r.status || 'replied') === 'replied').length
   const postsScheduled = activity.filter(a => a.type === 'post_scheduled').length
-  const textsSent      = activity.filter(a => a.type === 'follow_up_sent').length
 
   const ratedReviews = reviews.filter(r => reviewRating(r) > 0)
   const avgRating = ratedReviews.length
@@ -113,7 +109,6 @@ export default function Overview() {
   const statCards = [
     { label: 'Reviews Replied', value: repliedCount,   path: '/dashboard/reviews'   },
     { label: 'Posts Scheduled', value: postsScheduled, path: '/dashboard/posts'     },
-    { label: 'Texts Sent',      value: textsSent,      path: null                   }, // no follow-ups page
     { label: 'Avg Rating',      value: avgRating,      path: '/dashboard/analytics' },
   ]
 
@@ -191,7 +186,7 @@ export default function Overview() {
       )}
 
       {/* Stat cards — clickable */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {statCards.map((s, index) => (
           <button
             key={s.label}

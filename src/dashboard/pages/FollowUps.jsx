@@ -1,4 +1,3 @@
-import { useDashboard } from '../DashboardContext'
 import { useApp } from '../AppContext'
 
 function EmptyState({ C }) {
@@ -17,7 +16,6 @@ function EmptyState({ C }) {
 }
 
 export default function FollowUps() {
-  const { followUps, stats } = useDashboard()
   const { C } = useApp()
 
   return (
@@ -27,15 +25,11 @@ export default function FollowUps() {
           <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Follow-ups</h1>
           <p className="text-sm" style={{ color: C.secondary }}>Customer re-engagement texts sent by AutoPilot</p>
         </div>
-        <div className="flex gap-4 text-sm" style={{ color: C.secondary }}>
-          <span><strong style={{ color: C.primary }}>{stats.textsSent}</strong> sent this month</span>
-          <span><strong style={{ color: C.muted }}>—</strong> open rate</span>
-        </div>
       </div>
 
       <div className="rounded-lg overflow-hidden"
         style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}>
-        {followUps.length === 0 ? <EmptyState C={C} /> : (
+        {true ? <EmptyState C={C} /> : (
           <>
             <div
               className="grid text-xs font-medium uppercase tracking-wider px-5 py-3"

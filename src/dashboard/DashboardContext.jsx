@@ -80,17 +80,6 @@ export function DashboardProvider({ children }) {
       status:      'scheduled',
     }))
 
-  const followUps = events
-    .filter(e => e.type === 'follow_up_sent')
-    .map(e => ({
-      id:      e.id,
-      name:    e.customerName || '—',
-      phone:   e.phone        || '—',
-      visit:   e.lastVisit    || '—',
-      message: e.details      || '',
-      status:  'delivered',
-    }))
-
   const ratedReviews = reviews.filter(r => r.rating > 0)
   const avgRating = ratedReviews.length > 0
     ? (ratedReviews.reduce((s, r) => s + r.rating, 0) / ratedReviews.length).toFixed(1)
@@ -99,12 +88,11 @@ export function DashboardProvider({ children }) {
   const stats = {
     reviewsReplied: reviews.length,
     postsScheduled: posts.length,
-    textsSent:      followUps.length,
     avgRating,
   }
 
   return (
-    <DashboardContext.Provider value={{ events, reviews, posts, followUps, stats }}>
+    <DashboardContext.Provider value={{ events, reviews, posts, stats }}>
       {children}
     </DashboardContext.Provider>
   )

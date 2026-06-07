@@ -120,9 +120,9 @@ export default function DashboardSkeleton({ hidden }) {
         <Sk w={220} h={28} r={8} delay={0.05} style={{ marginBottom: 10 }} />
         <Sk w={140} h={14} r={4} delay={0.12} style={{ marginBottom: 32 }} />
 
-        {/* Stat cards — 4-column glass grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
-          {[0, 1, 2, 3].map(i => (
+        {/* Stat cards — 3-column glass grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
+          {[0, 1, 2].map(i => (
             <SkCard key={i} style={{ padding: '20px', position: 'relative' }}>
               <Sk w="45%" h={10} r={5} delay={i * 0.1} style={{ marginBottom: 14 }} />
               <Sk w="60%" h={28} r={5} delay={i * 0.1 + 0.1} style={{ marginBottom: 10 }} />

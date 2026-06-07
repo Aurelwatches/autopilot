@@ -8,7 +8,6 @@ const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 const features = [
   'Google review replies',
   'Social media posting',
-  'Customer follow-up texts',
   'Analytics dashboard',
   'Two-way support messaging',
   'Unlimited automations',

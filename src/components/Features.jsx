@@ -155,54 +155,6 @@ function SocialMockup() {
   )
 }
 
-function TextMessageMockup() {
-  return (
-    <Glass>
-      <GlassHeader
-        label="Follow-up text"
-        right={<span style={{ fontSize: 12, color: C.muted }}>Delivered</span>}
-      />
-      <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {/* Outgoing AutoPilot message */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{
-            maxWidth: '80%',
-            background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-            color: '#FFFFFF',
-            fontSize: 13,
-            lineHeight: 1.5,
-            padding: '10px 14px',
-            borderRadius: '16px 16px 4px 16px',
-          }}>
-            Hi Marcus! It's been a while — here's 15% off your next visit. We saved your
-            usual table. 🌮
-          </div>
-        </div>
-
-        {/* Incoming customer reply */}
-        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-          <div style={{
-            maxWidth: '80%',
-            background: 'rgba(255,255,255,0.06)',
-            color: C.primary,
-            fontSize: 13,
-            lineHeight: 1.5,
-            padding: '10px 14px',
-            borderRadius: '16px 16px 16px 4px',
-          }}>
-            Perfect timing — booking for Friday night!
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-          <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
-          <span style={{ fontSize: 11, color: C.muted }}>Booked a table · 12 min later</span>
-        </div>
-      </div>
-    </Glass>
-  )
-}
-
 /* ─── Feature section data ──────────────────────────────────────────────────── */
 
 const sections = [
@@ -221,14 +173,6 @@ const sections = [
     mockup: <SocialMockup />,
     textSide: 'right', // text right, mockup left
     stagger: true,
-  },
-  {
-    number: '03',
-    heading: 'Bring them back.',
-    body: 'Automated follow-up texts reach past guests with offers they\'ll actually use — sent at exactly the right moment. One-time visitors quietly become regulars.',
-    mockup: <TextMessageMockup />,
-    textSide: 'left',
-    stagger: false,
   },
 ]
 
