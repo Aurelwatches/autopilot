@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import { useAuth } from '../lib/auth'
 
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
@@ -99,19 +100,32 @@ const plans = [
 ]
 
 function PlanCard({ plan, yearly, priceVisible, shown, delay }) {
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const price  = yearly ? plan.yearly : plan.monthly
   const period = yearly ? 'yr' : 'mo'
+
+  function handleSelect() {
+    localStorage.setItem('ap_selected_plan', plan.id)
+    localStorage.setItem('ap_selected_interval', yearly ? 'yearly' : 'monthly')
+    if (user) {
+      navigate('/checkout')
+    } else {
+      navigate('/signup')
+    }
+  }
 
   const btnBase = {
     display: 'block', width: '100%', textAlign: 'center',
     borderRadius: 980, padding: '13px 0',
     fontSize: 15, fontWeight: 600, textDecoration: 'none',
+    border: 'none', cursor: 'pointer',
     transition: 'opacity 0.15s',
   }
   const btnStyles = {
     outlined: { ...btnBase, backgroundColor: 'transparent', color: '#888888', border: '1px solid rgba(255,255,255,0.14)' },
-    white:    { ...btnBase, backgroundColor: '#FFFFFF', color: '#000000', border: 'none' },
-    amber:    { ...btnBase, backgroundColor: '#E8A020', color: '#000000', border: 'none' },
+    white:    { ...btnBase, backgroundColor: '#FFFFFF', color: '#000000' },
+    amber:    { ...btnBase, backgroundColor: '#E8A020', color: '#000000' },
   }
 
   return (
@@ -215,14 +229,14 @@ function PlanCard({ plan, yearly, priceVisible, shown, delay }) {
       </ul>
 
       {/* CTA */}
-      <Link
-        to="/signup"
+      <button
+        onClick={handleSelect}
         style={btnStyles[plan.buttonStyle]}
         onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
         onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
       >
         {plan.buttonText}
-      </Link>
+      </button>
 
       {/* Social proof */}
       {plan.socialProof && (

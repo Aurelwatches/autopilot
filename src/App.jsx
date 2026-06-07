@@ -7,6 +7,7 @@ import Admin from './pages/Admin'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Pricing from './pages/Pricing'
+import Checkout from './pages/Checkout'
 import CookieConsent from './components/CookieConsent'
 import DashboardLayout from './dashboard/DashboardLayout'
 import Overview from './dashboard/pages/Overview'
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/admin" element={<Admin />} />
 
           <Route path="/dashboard" element={<DashboardLayout />}>

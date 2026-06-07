@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/auth'
 
-const ADMIN_PASSWORD = 'autopilot-admin'
-const WEBHOOK_URL    = import.meta.env.VITE_WEBHOOK_URL ?? '/api/webhook'
+const ADMIN_EMAIL = 'bray.200913@gmail.com'
+const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL ?? '/api/webhook'
 
 const C = {
   bg: '#0A0A0A', card: '#141414', border: '#2A2A2A', divider: '#1E1E1E',
@@ -57,91 +59,38 @@ function CopyBtn({ value }) {
   )
 }
 
-// ── Password gate ─────────────────────────────────────────────────────────────
-
-function PasswordGate({ onAuth }) {
-  const [pw, setPw]     = useState('')
-  const [err, setErr]   = useState('')
-  const [shake, setShake] = useState(false)
-
-  function handleSubmit(e) {
-    e.preventDefault()
-    if (pw === ADMIN_PASSWORD) {
-      onAuth()
-    } else {
-      setErr('Access denied')
-      setShake(true)
-      setTimeout(() => { setErr(''); setShake(false) }, 1800)
-    }
-  }
-
-  return (
-    <div style={{
-      minHeight: '100vh', backgroundColor: C.bg,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      <div style={{
-        width: 340, backgroundColor: C.card, border: `1px solid ${C.border}`,
-        borderRadius: 12, padding: 32,
-        animation: shake ? 'shake 0.4s ease' : 'none',
-      }}>
-        <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>
-          AutoPilot
-        </p>
-        <h1 style={{ fontSize: 20, fontWeight: 600, color: C.primary, marginBottom: 24 }}>Admin access</h1>
-
-        <form onSubmit={handleSubmit}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: C.secondary, marginBottom: 6 }}>
-            Password
-          </label>
-          <input
-            type="password"
-            value={pw}
-            onChange={e => setPw(e.target.value)}
-            autoFocus
-            placeholder="••••••••••••"
-            style={{
-              width: '100%', fontSize: 13, padding: '10px 12px', borderRadius: 7, marginBottom: 6,
-              backgroundColor: C.inputBg, color: C.primary,
-              border: `1px solid ${err ? 'rgba(239,68,68,0.5)' : C.border}`, outline: 'none',
-            }}
-          />
-          {err && <p style={{ fontSize: 11, color: '#f87171', marginBottom: 12 }}>{err}</p>}
-          {!err && <div style={{ height: 12 }} />}
-          <button type="submit" style={{
-            width: '100%', padding: '10px 0', borderRadius: 7, border: 'none',
-            backgroundColor: C.primary, color: '#0A0A0A',
-            fontSize: 13, fontWeight: 600, cursor: 'pointer',
-          }}>
-            Sign in
-          </button>
-        </form>
-      </div>
-
-      <style>{`
-        @keyframes shake {
-          0%,100% { transform: translateX(0); }
-          20%      { transform: translateX(-8px); }
-          40%      { transform: translateX(8px); }
-          60%      { transform: translateX(-5px); }
-          80%      { transform: translateX(5px); }
-        }
-      `}</style>
-    </div>
-  )
-}
-
 // ── Main admin view ───────────────────────────────────────────────────────────
 
 export default function Admin() {
-  const [authed,    setAuthed]    = useState(false)
+  const navigate = useNavigate()
+  const { user, loading } = useAuth()
   const [query,     setQuery]     = useState('')
   const [searching, setSearching] = useState(false)
   const [result,    setResult]    = useState(null)
   const [notFound,  setNotFound]  = useState(false)
   const [searchErr, setSearchErr] = useState('')
 
-  if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />
+  useEffect(() => {
+    if (!loading && user?.email !== ADMIN_EMAIL) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [user, loading, navigate])
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontSize: 13, color: C.muted }}>Loading…</p>
+      </div>
+    )
+  }
+
+  if (user?.email !== ADMIN_EMAIL) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontSize: 13, color: '#f87171' }}>Access denied</p>
+      </div>
+    )
+  }
 
   async function handleSearch(e) {
     e.preventDefault()

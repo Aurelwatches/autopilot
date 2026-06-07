@@ -39,7 +39,8 @@ export default function Signup() {
       return
     }
 
-    navigate('/dashboard')
+    const selectedPlan = localStorage.getItem('ap_selected_plan')
+    navigate(selectedPlan ? '/checkout' : '/dashboard')
   }
 
   return (

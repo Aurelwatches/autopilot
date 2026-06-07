@@ -1,6 +1,7 @@
 import express from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import Stripe from 'stripe'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -12,6 +13,57 @@ app.set('trust proxy', 1)
 const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
   ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
   : null
+
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null
+
+// CORS — allow Netlify frontend to call Railway API
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, stripe-signature')
+  if (req.method === 'OPTIONS') return res.status(200).end()
+  next()
+})
+
+// ── Stripe webhook — raw body required for signature verification ──────────────
+// Must be registered BEFORE express.json() so the body isn't pre-parsed.
+app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe) return res.status(500).json({ error: 'Stripe not configured' })
+
+  const sig = req.headers['stripe-signature']
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+
+  let event
+  try {
+    event = webhookSecret
+      ? stripe.webhooks.constructEvent(req.body, sig, webhookSecret)
+      : JSON.parse(req.body)
+  } catch (err) {
+    console.error('Stripe webhook signature error:', err.message)
+    return res.status(400).json({ error: `Webhook error: ${err.message}` })
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object
+    const userId = session.client_reference_id || session.metadata?.userId
+
+    if (userId && supabase) {
+      const { error } = await supabase.from('profiles').update({
+        plan: session.metadata?.plan,
+        plan_interval: session.metadata?.interval,
+        subscribed_at: new Date().toISOString(),
+        subscription_status: 'active',
+      }).eq('id', userId)
+
+      if (error) console.error('Supabase profile update error:', error.message)
+      else console.log(`Activated subscription for user ${userId}, plan: ${session.metadata?.plan}`)
+    }
+  }
+
+  res.json({ received: true })
+})
 
 app.use(express.json({ limit: '100kb' }))
 
@@ -258,6 +310,53 @@ app.post('/api/generate-post', async (req, res) => {
   } catch (err) {
     console.error('Anthropic error:', err.message)
     res.status(500).json({ error: err.message ?? 'AI generation failed.' })
+  }
+})
+
+// POST /api/create-checkout-session — create a Stripe hosted checkout session
+app.post('/api/create-checkout-session', async (req, res) => {
+  if (!stripe) return res.status(500).json({ error: 'Stripe not configured' })
+
+  const { plan, interval, userId } = req.body
+  if (!plan || !interval) return res.status(400).json({ error: 'plan and interval are required' })
+
+  const prices = {
+    starter: { monthly: 9900,  yearly: 99900  },
+    growth:  { monthly: 20000, yearly: 200000 },
+    pro:     { monthly: 35000, yearly: 350000 },
+  }
+  const labels = { starter: 'Starter', growth: 'Growth', pro: 'AutoPilot Pro' }
+
+  const priceKey = interval === 'yearly' ? 'yearly' : 'monthly'
+  const amount = prices[plan]?.[priceKey]
+  if (!amount) return res.status(400).json({ error: 'Invalid plan or interval' })
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `AutoPilot ${labels[plan]}`,
+            description: `${interval === 'yearly' ? 'Annual' : 'Monthly'} subscription`,
+          },
+          recurring: { interval: interval === 'yearly' ? 'year' : 'month' },
+          unit_amount: amount,
+        },
+        quantity: 1,
+      }],
+      success_url: 'https://tryautopilot.netlify.app/dashboard',
+      cancel_url: 'https://tryautopilot.netlify.app/pricing',
+      client_reference_id: userId ?? undefined,
+      metadata: { plan, interval, userId: userId ?? '' },
+    })
+
+    res.json({ url: session.url })
+  } catch (err) {
+    console.error('Stripe checkout error:', err.message)
+    res.status(500).json({ error: err.message })
   }
 })
 

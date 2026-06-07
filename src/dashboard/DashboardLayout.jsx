@@ -5,8 +5,11 @@ import SupportChat from './SupportChat'
 import { DashboardProvider } from './DashboardContext'
 import { AppProvider, useApp } from './AppContext'
 import { useAuth } from '../lib/auth'
+import { supabase } from '../lib/supabase'
 import DashboardSkeleton from './DashboardSkeleton'
 import RevealCtx from './revealContext'
+
+const ADMIN_EMAIL = 'bray.200913@gmail.com'
 
 const SKELETON_MS = 1500
 
@@ -90,9 +93,32 @@ function DashboardContent() {
 
 export default function DashboardLayout() {
   const { user, loading } = useAuth()
+  const [subStatus, setSubStatus] = useState(null) // null = checking
+  const [subChecked, setSubChecked] = useState(false)
 
-  if (loading) return <LoadingScreen />
-  if (!user)   return <Navigate to="/login" replace />
+  useEffect(() => {
+    if (!user) { setSubChecked(true); return }
+    if (user.email === ADMIN_EMAIL) { setSubStatus('active'); setSubChecked(true); return }
+
+    supabase
+      .from('profiles')
+      .select('subscription_status')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        setSubStatus(data?.subscription_status ?? null)
+        setSubChecked(true)
+      })
+      .catch(() => {
+        // On error allow access rather than locking users out
+        setSubStatus('active')
+        setSubChecked(true)
+      })
+  }, [user])
+
+  if (loading || !subChecked) return <LoadingScreen />
+  if (!user) return <Navigate to="/login" replace />
+  if (subStatus !== 'active') return <Navigate to="/pricing?message=subscribe" replace />
 
   return (
     <AppProvider>
