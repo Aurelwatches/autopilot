@@ -187,14 +187,16 @@ export default function Pricing() {
             {/* Price row */}
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 8 }}>
               <span style={{ fontSize: 96, fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.04em', color: '#FFFFFF' }}>
-                {yearly ? '$167' : '$200'}
+                {yearly ? '$2,000' : '$200'}
               </span>
-              <span style={{ fontSize: 18, color: '#888888', marginBottom: 14 }}>/month</span>
+              <span style={{ fontSize: 18, color: '#888888', marginBottom: 14 }}>
+                {yearly ? '/ year' : '/ month'}
+              </span>
             </div>
 
             {/* Billing line */}
             <p style={{ fontSize: 14, color: '#888888', marginBottom: yearly ? 16 : 0 }}>
-              {yearly ? 'Billed as $2,000/year' : 'Billed monthly, cancel anytime'}
+              {yearly ? 'Billed once annually' : 'Billed monthly, cancel anytime'}
             </p>
 
             {/* Yearly savings badges */}
@@ -213,7 +215,7 @@ export default function Pricing() {
                   <span style={{ fontSize: 14, color: '#4A8EFF', fontWeight: 500 }}>2 months free</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 22 }}>
-                  <span style={{ fontSize: 13, color: '#888888' }}>That's 16% off</span>
+                  <span style={{ fontSize: 13, color: '#888888' }}>16% off</span>
                 </div>
               </div>
             )}
