@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 
-// Cinematic post-login transition: a detailed airplane arcs from the
-// bottom-left up toward the top-right over 1.2s, trailing a dotted contrail,
-// then the pure-black overlay fades out as it exits and the dashboard takes over.
+// Cinematic post-login transition — opening-of-a-luxury-commercial energy.
+// A massive commercial jet sweeps diagonally across a pure-black screen
+// (bottom-left → top-right) over 1.4s, banked ~15deg with twin contrails,
+// then the black veil fades out and the dashboard takes over (~2s total).
 export default function LoginPlane({ onDone }) {
   const [fading, setFading] = useState(false)
 
   useEffect(() => {
-    // Begin fading the black veil as the plane nears the top-right exit…
-    const fadeT = setTimeout(() => setFading(true), 1000)
-    // …then hand off to the dashboard once the 1.2s arc completes.
-    const doneT = setTimeout(() => onDone?.(), 1200)
+    // As the plane clears the top-right edge, fade the veil over 400ms…
+    const fadeT = setTimeout(() => setFading(true), 1450)
+    // …then hand off to the dashboard underneath.
+    const doneT = setTimeout(() => onDone?.(), 1900)
     return () => { clearTimeout(fadeT); clearTimeout(doneT) }
   }, [onDone])
 
@@ -20,70 +21,116 @@ export default function LoginPlane({ onDone }) {
         position: 'fixed', inset: 0, zIndex: 9999,
         background: '#000000',
         overflow: 'hidden',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
         opacity: fading ? 0 : 1,
-        transition: 'opacity 320ms cubic-bezier(0.16, 1, 0.3, 1)',
+        transition: 'opacity 400ms cubic-bezier(0.4, 0, 0.2, 1)',
         pointerEvents: 'none',
       }}
     >
-      <div
+      {/* Subtle wordmark behind the plane */}
+      <span
         style={{
-          position: 'absolute', left: '50%', top: '50%',
-          width: 0, height: 0,
-          animation: 'loginPlaneArc 1.2s cubic-bezier(0.45, 0.05, 0.35, 1) forwards',
-          willChange: 'transform',
+          position: 'absolute',
+          fontSize: 'clamp(20px, 3vw, 38px)',
+          fontWeight: 600, letterSpacing: '0.28em',
+          textTransform: 'uppercase', color: '#FFFFFF',
+          animation: 'loginTitleFade 1.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards',
+          paddingLeft: '0.28em',
         }}
       >
-        {/* SVG sits to the LEFT of the wrapper origin so the trail extends backwards.
-            Plane nose at the right end; dotted contrail fades out toward the tail. */}
-        <svg
-          width="220" height="80" viewBox="0 0 220 80"
-          style={{ position: 'absolute', right: -18, top: -40, overflow: 'visible' }}
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient id="apTrailFade" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%"   stopColor="#4A8EFF" stopOpacity="0" />
-              <stop offset="100%" stopColor="#4A8EFF" stopOpacity="0.9" />
-            </linearGradient>
-            <linearGradient id="apPlaneBody" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%"   stopColor="#FFFFFF" />
-              <stop offset="100%" stopColor="#BFD4FF" />
-            </linearGradient>
-          </defs>
+        AutoPilot
+      </span>
 
-          {/* Dotted contrail */}
-          <line
-            x1="6" y1="40" x2="176" y2="40"
-            stroke="url(#apTrailFade)" strokeWidth="3"
-            strokeLinecap="round" strokeDasharray="2 12"
-          />
+      {/* The aircraft — centered by flex, then flown by the keyframe transform.
+          ~46vw wide so it reads as a jet passing close to the camera. */}
+      <svg
+        viewBox="0 0 1000 520"
+        style={{
+          width: '46vw', height: 'auto', overflow: 'visible',
+          animation: 'loginPlaneArc 1.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards',
+          willChange: 'transform',
+          filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.6))',
+        }}
+        aria-hidden="true"
+      >
+        <defs>
+          {/* Twin contrails — opaque at the engines, fading to nothing far behind */}
+          <linearGradient id="apTrail" gradientUnits="userSpaceOnUse" x1="-1400" y1="0" x2="430" y2="0">
+            <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0" />
+            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.7" />
+          </linearGradient>
+          {/* Fuselage: bright white with a faint top-light gradient */}
+          <linearGradient id="apFuse" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#FFFFFF" />
+            <stop offset="55%"  stopColor="#FBFCFE" />
+            <stop offset="100%" stopColor="#E4E8EF" />
+          </linearGradient>
+          {/* Wings: subtle gray shading */}
+          <linearGradient id="apWing" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#EDEFF4" />
+            <stop offset="100%" stopColor="#C5CCD8" />
+          </linearGradient>
+          <linearGradient id="apWingLower" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#C5CCD8" />
+            <stop offset="100%" stopColor="#AEB6C6" />
+          </linearGradient>
+        </defs>
 
-          {/* Detailed airplane — fuselage, swept wings, tail fin */}
-          <g transform="translate(150 40) rotate(-2)">
-            {/* glow */}
-            <ellipse cx="14" cy="0" rx="34" ry="14" fill="#4A8EFF" opacity="0.18" />
-            {/* upper swept wing */}
-            <path d="M2 -2 L-22 -26 L-12 -26 L18 -4 Z" fill="#9CC0FF" />
-            {/* lower swept wing */}
-            <path d="M2 2 L-22 26 L-12 26 L18 4 Z" fill="#7FA9F5" />
-            {/* tail fin */}
-            <path d="M-26 0 L-40 -12 L-34 -1 L-40 10 Z" fill="#BFD4FF" />
-            {/* fuselage */}
-            <path
-              d="M-34 0 C-20 -7, 8 -8, 36 0 C8 8, -20 7, -34 0 Z"
-              fill="url(#apPlaneBody)" stroke="#E6EEFF" strokeWidth="0.5"
-            />
-            {/* cockpit window */}
-            <circle cx="24" cy="0" r="2.4" fill="#2A3A66" />
-            {/* cabin windows */}
-            <g fill="#3A5599">
-              <circle cx="14" cy="0" r="1.3" />
-              <circle cx="7"  cy="0" r="1.3" />
-              <circle cx="0"  cy="0" r="1.3" />
-            </g>
-          </g>
-        </svg>
-      </div>
+        {/* ── Twin dotted contrails streaming back from the engines ── */}
+        <g stroke="url(#apTrail)" strokeWidth="13" strokeLinecap="round" strokeDasharray="1 46">
+          <line x1="-1380" y1="196" x2="440" y2="196" />
+          <line x1="-1380" y1="324" x2="440" y2="324" />
+        </g>
+
+        {/* ── Aircraft, nose pointing right ── */}
+        {/* Horizontal stabilizers (tail wings) */}
+        <path d="M250 260 L150 150 L120 158 L210 260 Z" fill="url(#apWingLower)" />
+        <path d="M250 260 L150 370 L120 362 L210 260 Z" fill="url(#apWingLower)" />
+
+        {/* Vertical stabilizer (top-down: slim fin off the tail) */}
+        <path d="M235 260 L120 238 L150 260 L120 282 Z" fill="#D2D8E2" />
+
+        {/* Main wings — wide and swept back */}
+        <path d="M560 244 L300 70 L250 78 L470 250 Z" fill="url(#apWing)" />
+        <path d="M560 276 L300 450 L250 442 L470 270 Z" fill="url(#apWingLower)" />
+
+        {/* Engines slung under each wing */}
+        <g>
+          <ellipse cx="452" cy="196" rx="58" ry="20" fill="#9AA3B4" />
+          <ellipse cx="470" cy="196" rx="40" ry="16" fill="#C9D0DC" />
+          <ellipse cx="408" cy="196" rx="9"  ry="18" fill="#5B647A" />
+        </g>
+        <g>
+          <ellipse cx="452" cy="324" rx="58" ry="20" fill="#8A93A6" />
+          <ellipse cx="470" cy="324" rx="40" ry="16" fill="#BAC2D0" />
+          <ellipse cx="408" cy="324" rx="9"  ry="18" fill="#4E576C" />
+        </g>
+
+        {/* Fuselage — long body, pointed nose at the right */}
+        <path
+          d="M150 260
+             C 150 236, 200 224, 320 222
+             C 520 219, 720 226, 858 248
+             C 892 253, 900 257, 900 260
+             C 900 263, 892 267, 858 272
+             C 720 294, 520 301, 320 298
+             C 200 296, 150 284, 150 260 Z"
+          fill="url(#apFuse)" stroke="#D7DCE6" strokeWidth="1.5"
+        />
+
+        {/* Wing roots blended onto the fuselage */}
+        <ellipse cx="500" cy="260" rx="80" ry="30" fill="#EEF1F6" opacity="0.6" />
+
+        {/* Cockpit windows near the nose */}
+        <path d="M812 250 q26 0 40 10 q-16 6 -40 6 Z" fill="#28324A" />
+
+        {/* Cabin window line */}
+        <g fill="#A9B2C2">
+          {Array.from({ length: 22 }).map((_, i) => (
+            <rect key={i} x={250 + i * 25} y={256} width="11" height="3.4" rx="1.6" />
+          ))}
+        </g>
+      </svg>
     </div>
   )
 }
