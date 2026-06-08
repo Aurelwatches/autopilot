@@ -57,6 +57,10 @@ function DashboardContent() {
     document.body.style.color = 'var(--ap-text)'
   }, [theme])
 
+  useEffect(() => {
+    console.log('[AutoPilot] DashboardContent — theme:', theme, '| isDark:', isDark, '| light blobs in DOM:', !isDark)
+  }, [isDark])
+
   return (
     <RevealCtx.Provider value={revealed}>
       <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: C.bg, position: 'relative' }}>
@@ -87,14 +91,14 @@ function DashboardContent() {
             <div style={{
               position: 'absolute', top: '-10%', left: '-5%',
               width: 700, height: 700, borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)',
               filter: 'blur(60px)',
               animation: 'heroBlobA 18s ease-in-out infinite',
             }} />
             <div style={{
               position: 'absolute', bottom: '-10%', right: '-5%',
               width: 740, height: 740, borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(59,130,246,0.10) 0%, transparent 70%)',
               filter: 'blur(60px)',
               animation: 'heroBlobB 18s ease-in-out infinite',
             }} />
