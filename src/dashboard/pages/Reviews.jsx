@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useDashboard } from '../DashboardContext'
 import { useApp } from '../AppContext'
 
 const filters = ['All', 'Replied', 'Pending', '5 Star', '1–2 Star']
+
+const MONTHLY_REVIEW_CAP = 100
 
 function formatDate(iso) {
   if (!iso) return ''
@@ -42,24 +45,27 @@ function EmptyState({ C }) {
 // Read from whichever columns are present.
 function rowToReview(row) {
   return {
-    id:     row.id,
-    name:   row.customer_name || row.reviewer_name || 'Unknown',
-    rating: row.rating || parseInt(row.star_rating) || null,  // null excluded from the average
-    date:   formatDate(row.created_at),
-    status: row.status || 'replied',
-    text:   row.review_text || row.review || '',
-    reply:  row.ai_reply || row.response || '',
+    id:         row.id,
+    name:       row.customer_name || row.reviewer_name || 'Unknown',
+    rating:     row.rating || parseInt(row.star_rating) || null,  // null excluded from the average
+    date:       formatDate(row.created_at),
+    created_at: row.created_at,
+    status:     row.status || 'replied',
+    text:       row.review_text || row.review || '',
+    reply:      row.ai_reply || row.response || '',
   }
 }
 
 export default function Reviews() {
-  const { C, userId } = useApp()
+  const { C, userId, plan } = useApp()
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
   const [active,  setActive]  = useState('All')
 
   const { events } = useDashboard()
+
+  const isStarter = plan === 'starter'
 
   async function fetchReviews() {
     if (!supabase) { setError('Supabase is not configured.'); setLoading(false); return }
@@ -93,6 +99,14 @@ export default function Reviews() {
 
   const repliedCount = reviews.filter(r => r.status === 'replied').length
 
+  // This month's review count — used for Starter plan cap display
+  const now = new Date()
+  const thisMonthCount = reviews.filter(r => {
+    if (!r.created_at) return false
+    const d = new Date(r.created_at)
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+  }).length
+
   // Count matching reviews for a given filter — drives the per-tab badges
   // (the star-rating breakdown) and reuses the same predicate as filtering.
   function matchesFilter(r, f) {
@@ -111,6 +125,8 @@ export default function Reviews() {
   const avgRating = ratedReviews.length
     ? (ratedReviews.reduce((s, r) => s + Number(r.rating), 0) / ratedReviews.length).toFixed(1)
     : null
+
+  const capExceeded = thisMonthCount >= MONTHLY_REVIEW_CAP
 
   return (
     <div className="px-8 py-8" style={{ maxWidth: 900 }}>
@@ -141,6 +157,28 @@ export default function Reviews() {
           )}
         </div>
       </div>
+
+      {/* Starter plan: monthly review cap indicator */}
+      {isStarter && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 16px', borderRadius: 10, marginBottom: 20,
+          backgroundColor: capExceeded ? 'rgba(251,191,36,0.08)' : 'rgba(74,144,217,0.06)',
+          border: `1px solid ${capExceeded ? 'rgba(251,191,36,0.22)' : 'rgba(74,144,217,0.15)'}`,
+        }}>
+          <span style={{ fontSize: 12, color: C.secondary }}>
+            {capExceeded
+              ? `⚠️ You've reached your 100-review limit for this month — upgrade to process more`
+              : `You've used ${thisMonthCount} of ${MONTHLY_REVIEW_CAP} reviews this month`}
+          </span>
+          <Link
+            to="/pricing"
+            style={{ fontSize: 12, fontWeight: 600, color: C.accent, textDecoration: 'none', flexShrink: 0, marginLeft: 12 }}
+          >
+            Upgrade →
+          </Link>
+        </div>
+      )}
 
       {/* Filters — label + live count (star-rating breakdown) */}
       <div className="flex gap-1 mb-6">

@@ -16,7 +16,7 @@ function rowToEvents(row) {
 }
 
 export default function SupportChat() {
-  const { C, theme, restaurantName, userId } = useApp()
+  const { C, theme, restaurantName, userId, plan } = useApp()
   const [open, setOpen]         = useState(false)
   const [rows, setRows]         = useState([])
   const [inputText, setInputText] = useState('')
@@ -25,6 +25,8 @@ export default function SupportChat() {
   const [error, setError]       = useState('')
   const bottomRef               = useRef(null)
   const didInitialScroll        = useRef(false)
+
+  const isPro = plan === 'pro'
 
   const chatEvents = rows
     .flatMap(rowToEvents)
@@ -81,11 +83,13 @@ export default function SupportChat() {
 
       const webhookUrl = import.meta.env.VITE_DISCORD_WEBHOOK_URL
       if (webhookUrl) {
+        // Pro users get a priority tag in Discord so staff can identify them quickly
+        const prefix = isPro ? '⭐ **[PRO PRIORITY]** ' : ''
         await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            content: `📨 New message from ${restaurantName}\n${text}\n\nReply ID: ${data.id}`,
+            content: `${prefix}📨 New message from ${restaurantName}\n${text}\n\nReply ID: ${data.id}`,
           }),
         })
       }
@@ -126,8 +130,17 @@ export default function SupportChat() {
                 boxShadow: '0 0 0 2px rgba(74,222,128,0.18)',
               }} />
               <span style={{ fontSize: 12.5, fontWeight: 600, color: C.primary }}>
-                AutoPilot Support
+                {isPro ? '⚡ Priority Support' : 'AutoPilot Support'}
               </span>
+              {isPro && (
+                <span style={{
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
+                  padding: '1px 5px', borderRadius: 4,
+                  backgroundColor: 'rgba(245,158,11,0.14)',
+                  color: '#F59E0B',
+                  border: '1px solid rgba(245,158,11,0.28)',
+                }}>PRO</span>
+              )}
             </div>
             <button
               onClick={handleClose}

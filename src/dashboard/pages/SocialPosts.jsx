@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useApp } from '../AppContext'
 
@@ -138,6 +139,14 @@ const statusStyle = {
   draft:      { bg: 'rgba(136,135,128,0.08)', color: '#888780', border: 'rgba(136,135,128,0.2)' },
 }
 
+// Growth upsell banner: dismissed timestamp in localStorage, reappears after 7 days
+const GROWTH_BANNER_KEY = 'ap_growth_banner_dismissed_at'
+function shouldShowGrowthBanner() {
+  const ts = localStorage.getItem(GROWTH_BANNER_KEY)
+  if (!ts) return true
+  return Date.now() - parseInt(ts, 10) > 7 * 24 * 60 * 60 * 1000
+}
+
 function EmptyState({ C }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-8">
@@ -231,7 +240,10 @@ function PostCard({ p, onDelete, C }) {
 }
 
 export default function SocialPosts() {
-  const { C, userId } = useApp()
+  const { C, theme, userId, plan } = useApp()
+
+  const isStarter = plan === 'starter'
+  const isGrowth  = plan === 'growth'
 
   const [posts,      setPosts]      = useState([])
   const [loading,    setLoading]    = useState(true)
@@ -245,6 +257,13 @@ export default function SocialPosts() {
   const [msgIdx,     setMsgIdx]     = useState(0)
   const [aiError,    setAiError]    = useState('')
   const [postTone,   setPostTone]   = useState('friendly')
+
+  // Growth upsell banner — dismissible, returns every 7 days
+  const [showBanner, setShowBanner] = useState(() => isGrowth && shouldShowGrowthBanner())
+  function dismissBanner() {
+    localStorage.setItem(GROWTH_BANNER_KEY, String(Date.now()))
+    setShowBanner(false)
+  }
 
   // Fetch the user's post_tone preference so AI Assist matches their style
   useEffect(() => {
@@ -385,6 +404,34 @@ export default function SocialPosts() {
 
   return (
     <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
+
+      {/* Growth upsell banner — shown to Growth plan users, dismissible for 7 days */}
+      {isGrowth && showBanner && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+          padding: '10px 16px', borderRadius: 10, marginBottom: 20,
+          backgroundColor: 'rgba(245,158,11,0.08)',
+          border: '1px solid rgba(245,158,11,0.22)',
+        }}>
+          <span style={{ fontSize: 12, color: '#D97706' }}>
+            ⚡ AutoPilot Pro unlocks AI phone answering and custom brand voice
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            <Link
+              to="/pricing"
+              style={{ fontSize: 12, fontWeight: 700, color: '#D97706', textDecoration: 'none' }}
+            >
+              Upgrade →
+            </Link>
+            <button
+              onClick={dismissBanner}
+              style={{ fontSize: 16, lineHeight: 1, color: C.muted, cursor: 'pointer', padding: '0 2px' }}
+              title="Dismiss"
+            >×</button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Social Posts</h1>
@@ -588,6 +635,45 @@ export default function SocialPosts() {
                 onMouseLeave={e => { if (text.trim() && !saving) e.currentTarget.style.opacity = '1' }}
               >{saving ? 'Saving…' : 'Schedule'}</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Starter plan: frosted glass overlay blocking social posting */}
+      {isStarter && (
+        <div style={{
+          position: 'fixed',
+          top: 0, bottom: 0, left: 240, right: 0,
+          zIndex: 40,
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.55)' : 'rgba(245,244,240,0.7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            textAlign: 'center',
+            backgroundColor: C.card, border: `1px solid ${C.border}`,
+            borderRadius: 20, padding: '36px 44px',
+            boxShadow: 'var(--ap-popup-shadow)', maxWidth: 400,
+          }}>
+            <p style={{ fontSize: 30, marginBottom: 14 }}>✦</p>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: C.primary, marginBottom: 8 }}>
+              Social posting is a Growth feature
+            </h3>
+            <p style={{ fontSize: 13, color: C.secondary, marginBottom: 24, lineHeight: 1.65 }}>
+              Upgrade to Growth to unlock AI-powered social posts, multi-platform scheduling, and automated publishing.
+            </p>
+            <Link
+              to="/pricing"
+              style={{
+                display: 'inline-block', padding: '12px 28px',
+                backgroundColor: C.primary, color: 'var(--ap-bg)',
+                borderRadius: 980, fontWeight: 700, fontSize: 14,
+                textDecoration: 'none',
+              }}
+            >
+              Upgrade to Growth →
+            </Link>
           </div>
         </div>
       )}

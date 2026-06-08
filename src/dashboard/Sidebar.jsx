@@ -89,9 +89,11 @@ function MoonIcon() {
 
 export default function Sidebar() {
   const navigate = useNavigate()
-  const { C, theme, toggleTheme, restaurantName } = useApp()
+  const { C, theme, toggleTheme, restaurantName, plan } = useApp()
   const { signOut, user } = useAuth()
   const revealed = useDashboardReveal()
+
+  const isPro = plan === 'pro'
 
   async function handleLogout() {
     await signOut()
@@ -119,9 +121,18 @@ export default function Sidebar() {
         <div className="flex items-center gap-2.5">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
-              stroke={C.primary} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              stroke={isPro ? '#F59E0B' : C.primary}
+              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="text-sm font-semibold tracking-tight" style={{ color: C.primary }}>AutoPilot</span>
+          <span className="text-sm font-semibold tracking-tight" style={{ color: C.primary }}>
+            AutoPilot
+            {isPro && (
+              <span style={{
+                color: '#F59E0B',
+                textShadow: '0 0 14px rgba(245,158,11,0.5)',
+              }}> Pro</span>
+            )}
+          </span>
         </div>
         <button
           onClick={toggleTheme}
@@ -163,16 +174,28 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Bottom: restaurant name + email + logout */}
+      {/* Bottom: restaurant name + Pro badge + email + logout */}
       <div className="px-5 py-4" style={{
         borderTop: `1px solid ${C.divider}`,
         opacity: revealed ? 1 : 0,
         transition: `opacity 400ms ${EASE}`,
         transitionDelay: revealed ? '280ms' : '0ms',
       }}>
-        <p className="text-xs font-semibold truncate" style={{ color: C.primary }}>
-          {restaurantName}
-        </p>
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <p className="text-xs font-semibold truncate" style={{ color: C.primary }}>
+            {restaurantName}
+          </p>
+          {isPro && (
+            <span style={{
+              flexShrink: 0,
+              fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
+              padding: '1px 5px', borderRadius: 4,
+              backgroundColor: 'rgba(245,158,11,0.14)',
+              color: '#F59E0B',
+              border: '1px solid rgba(245,158,11,0.28)',
+            }}>PRO</span>
+          )}
+        </div>
         {user?.email && (
           <p className="text-[10px] truncate mt-0.5 mb-1" style={{ color: C.muted }}>
             {user.email}

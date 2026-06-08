@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -136,11 +137,13 @@ const RANGE_OPTIONS = [
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function Analytics() {
-  const { C, userId } = useApp()
+  const { C, theme, userId, plan } = useApp()
   const [reviews,    setReviews]    = useState([])
   const [activities, setActivities] = useState([])
   const [loading,    setLoading]    = useState(true)
   const [range,      setRange]      = useState('30d')
+
+  const isStarter = plan === 'starter'
 
   useEffect(() => {
     if (!supabase) { setLoading(false); return }
@@ -374,6 +377,45 @@ export default function Analytics() {
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
+
+      {/* Starter plan: frosted glass overlay blocking analytics */}
+      {isStarter && (
+        <div style={{
+          position: 'fixed',
+          top: 0, bottom: 0, left: 240, right: 0,
+          zIndex: 40,
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.55)' : 'rgba(245,244,240,0.7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            textAlign: 'center',
+            backgroundColor: C.card, border: `1px solid ${C.border}`,
+            borderRadius: 20, padding: '36px 44px',
+            boxShadow: 'var(--ap-popup-shadow)', maxWidth: 400,
+          }}>
+            <p style={{ fontSize: 30, marginBottom: 14 }}>📊</p>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: C.primary, marginBottom: 8 }}>
+              Analytics is a Growth feature
+            </h3>
+            <p style={{ fontSize: 13, color: C.secondary, marginBottom: 24, lineHeight: 1.65 }}>
+              Upgrade to Growth to unlock detailed charts, performance trends, and rating history across all time ranges.
+            </p>
+            <Link
+              to="/pricing"
+              style={{
+                display: 'inline-block', padding: '12px 28px',
+                backgroundColor: C.primary, color: 'var(--ap-bg)',
+                borderRadius: 980, fontWeight: 700, fontSize: 14,
+                textDecoration: 'none',
+              }}
+            >
+              Upgrade to Growth →
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -29,7 +29,9 @@ export const THEMES = { dark: C_VARS, light: C_VARS }
 
 const AppContext = createContext(null)
 
-export function AppProvider({ children }) {
+// initialPlan is resolved by DashboardLayout before AppProvider mounts,
+// so we never need to fetch it again inside the dashboard.
+export function AppProvider({ children, initialPlan = null }) {
   const { user } = useAuth()
 
   // Restaurant name: prefer Supabase user metadata, fallback to localStorage
@@ -60,6 +62,9 @@ export function AppProvider({ children }) {
 
   const C = C_VARS
   const userId = user?.id ?? null
+
+  // Plan is set once from DashboardLayout's subscription check — stable for session
+  const [plan] = useState(initialPlan)
 
   async function setRestaurantName(name) {
     const trimmed = name.trim() || 'Your Restaurant'
@@ -97,7 +102,7 @@ export function AppProvider({ children }) {
   }
 
   return (
-    <AppContext.Provider value={{ restaurantName, setRestaurantName, theme, toggleTheme, C, userId }}>
+    <AppContext.Provider value={{ restaurantName, setRestaurantName, theme, toggleTheme, C, userId, plan }}>
       {children}
     </AppContext.Provider>
   )
