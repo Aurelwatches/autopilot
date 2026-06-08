@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useApp } from '../AppContext'
 import { supabase } from '../../lib/supabase'
 
@@ -117,7 +118,10 @@ function Field({ label, value, onChange, type = 'text', C }) {
 }
 
 export default function Settings() {
-  const { C, theme, toggleTheme, restaurantName, setRestaurantName, userId } = useApp()
+  const navigate = useNavigate()
+  const { C, theme, toggleTheme, restaurantName, setRestaurantName, userId, plan } = useApp()
+
+  const PLAN_LABELS = { starter: 'Starter', growth: 'Growth', pro: 'Pro' }
 
   // Personal webhook URL — includes this restaurant's user_id so Make.com data
   // lands on the right account. Points at the deployed Railway backend.
@@ -219,6 +223,32 @@ export default function Settings() {
             {saved && <span className="text-xs" style={{ color: '#4ade80' }}>✓ Saved</span>}
           </div>
         </form>
+      </Card>
+
+      {/* Billing / subscription */}
+      <Card title="Billing" C={C}>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium" style={{ color: C.primary }}>
+              {PLAN_LABELS[plan] || 'Your'} plan
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: C.secondary }}>
+              View your plan, billing interval and next payment — or cancel anytime.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/dashboard/subscription')}
+            className="shrink-0 text-sm font-semibold px-5 py-2 rounded transition-colors"
+            style={{
+              backgroundColor: C.inputBg, color: C.primary,
+              border: `1px solid ${C.border}`, cursor: 'pointer',
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = C.secondary}
+            onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
+          >
+            Manage subscription
+          </button>
+        </div>
       </Card>
 
       {/* Appearance */}

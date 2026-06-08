@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import EyeToggle from '../components/EyeToggle'
+import LoginPlane from '../components/LoginPlane'
 
 // All colours come from CSS variables (index.css), which switch automatically
 // when [data-theme="light"] is set on <html> by the anti-FOUC script / AppContext.
@@ -21,8 +23,10 @@ export default function Login() {
 
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
+  const [showPw,   setShowPw]   = useState(false)
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
+  const [flying,   setFlying]   = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -39,7 +43,8 @@ export default function Login() {
       return
     }
 
-    navigate('/dashboard')
+    // Cinematic airplane takeoff before entering the dashboard
+    setFlying(true)
   }
 
   return (
@@ -86,17 +91,20 @@ export default function Login() {
 
           <div>
             <label className="text-xs font-medium" style={{ color: V.text2 }}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => { setPassword(e.target.value); setError('') }}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              className="w-full text-sm px-4 py-2.5 rounded-lg outline-none mt-1.5"
-              style={{ backgroundColor: V.input, color: V.text, border: `1px solid ${V.border}` }}
-              onFocus={e => e.target.style.borderColor = 'var(--ap-accent)'}
-              onBlur={e => e.target.style.borderColor = V.border}
-            />
+            <div className="relative mt-1.5">
+              <input
+                type={showPw ? 'text' : 'password'}
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError('') }}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                className="w-full text-sm pl-4 pr-11 py-2.5 rounded-lg outline-none"
+                style={{ backgroundColor: V.input, color: V.text, border: `1px solid ${V.border}` }}
+                onFocus={e => e.target.style.borderColor = 'var(--ap-accent)'}
+                onBlur={e => e.target.style.borderColor = V.border}
+              />
+              <EyeToggle visible={showPw} onClick={() => setShowPw(s => !s)} color={V.text2} />
+            </div>
           </div>
 
           {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
@@ -127,6 +135,8 @@ export default function Login() {
       <p className="text-xs mt-6" style={{ color: V.text3 }}>
         <Link to="/" style={{ color: V.text2 }}>← Back to homepage</Link>
       </p>
+
+      {flying && <LoginPlane onDone={() => navigate('/dashboard')} />}
     </div>
   )
 }

@@ -15,6 +15,7 @@ import Reviews from './dashboard/pages/Reviews'
 import SocialPosts from './dashboard/pages/SocialPosts'
 import Analytics from './dashboard/pages/Analytics'
 import Settings from './dashboard/pages/Settings'
+import Subscription from './dashboard/pages/Subscription'
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="posts"     element={<SocialPosts />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings"  element={<Settings />} />
+            <Route path="subscription" element={<Subscription />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

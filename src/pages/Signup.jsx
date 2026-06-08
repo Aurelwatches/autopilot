@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import EyeToggle from '../components/EyeToggle'
 
 const V = {
   bg:     'var(--ap-bg)',
@@ -20,6 +21,7 @@ export default function Signup() {
   const [restaurantName, setRestaurantName] = useState('')
   const [email,          setEmail]          = useState('')
   const [password,       setPassword]       = useState('')
+  const [showPw,         setShowPw]         = useState(false)
   const [error,          setError]          = useState('')
   const [loading,        setLoading]        = useState(false)
 
@@ -117,17 +119,20 @@ export default function Signup() {
               Password
               <span style={{ color: V.text3, fontWeight: 400, marginLeft: 6 }}>min. 6 characters</span>
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => { setPassword(e.target.value); setError('') }}
-              placeholder="••••••••"
-              autoComplete="new-password"
-              className="w-full text-sm px-4 py-2.5 rounded-lg outline-none"
-              style={inputStyle}
-              onFocus={e => e.target.style.borderColor = 'var(--ap-accent)'}
-              onBlur={e => e.target.style.borderColor = V.border}
-            />
+            <div className="relative">
+              <input
+                type={showPw ? 'text' : 'password'}
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError('') }}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                className="w-full text-sm pl-4 pr-11 py-2.5 rounded-lg outline-none"
+                style={inputStyle}
+                onFocus={e => e.target.style.borderColor = 'var(--ap-accent)'}
+                onBlur={e => e.target.style.borderColor = V.border}
+              />
+              <EyeToggle visible={showPw} onClick={() => setShowPw(s => !s)} color={V.text2} />
+            </div>
           </div>
 
           {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}

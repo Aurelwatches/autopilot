@@ -248,3 +248,21 @@
   opacity: 0;
   animation: apTrailDot 2s linear infinite;
 }
+
+/* ─── Login success: cinematic airplane arc (bottom-left → top-right) ────────── */
+
+@keyframes loginPlaneArc {
+  0% {
+    transform: translate(-58vw, 44vh) scale(0.5) rotate(-30deg);
+    opacity: 0;
+  }
+  12% { opacity: 1; }
+  55% {
+    transform: translate(6vw, 14vh) scale(0.9) rotate(-36deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(64vw, -58vh) scale(1.35) rotate(-46deg);
+    opacity: 1;
+  }
+}

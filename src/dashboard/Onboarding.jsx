@@ -23,7 +23,7 @@ const steps = [
   {
     target: null,
     title: "You're all set",
-    body: 'That’s the whole tour. Your dashboard is ready — let’s get your restaurant on AutoPilot.',
+    body: 'That’s the whole tour. Your dashboard is ready and your restaurant is on AutoPilot.',
     final: true,
   },
 ]
@@ -256,7 +256,7 @@ export default function Onboarding() {
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
             >
-              Start your free trial
+              Let’s go →
             </button>
           ) : (
             <button
