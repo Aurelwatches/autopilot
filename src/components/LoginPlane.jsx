@@ -3,15 +3,15 @@ import { useEffect, useState } from 'react'
 // Cinematic post-login transition — opening-of-a-luxury-commercial energy.
 // A massive commercial jet sweeps diagonally across a pure-black screen
 // (bottom-left → top-right) over 1.4s, banked ~15deg with twin contrails,
-// then the black veil fades out and the dashboard takes over (~2s total).
+// then it transitions straight to the dashboard the moment the plane exits.
 export default function LoginPlane({ onDone }) {
   const [fading, setFading] = useState(false)
 
   useEffect(() => {
-    // As the plane clears the top-right edge, fade the veil over 400ms…
-    const fadeT = setTimeout(() => setFading(true), 1450)
-    // …then hand off to the dashboard underneath.
-    const doneT = setTimeout(() => onDone?.(), 1900)
+    // A quick veil blend right as the plane clears the edge…
+    const fadeT = setTimeout(() => setFading(true), 1250)
+    // …then hand straight off to the dashboard the moment the plane exits.
+    const doneT = setTimeout(() => onDone?.(), 1400)
     return () => { clearTimeout(fadeT); clearTimeout(doneT) }
   }, [onDone])
 
@@ -23,7 +23,7 @@ export default function LoginPlane({ onDone }) {
         overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         opacity: fading ? 0 : 1,
-        transition: 'opacity 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'opacity 180ms cubic-bezier(0.4, 0, 0.2, 1)',
         pointerEvents: 'none',
       }}
     >
