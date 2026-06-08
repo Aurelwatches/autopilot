@@ -7,6 +7,7 @@ import { AppProvider, useApp } from './AppContext'
 import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
 import DashboardSkeleton from './DashboardSkeleton'
+import Onboarding from './Onboarding'
 import RevealCtx from './revealContext'
 
 const ADMIN_EMAIL = 'bray.200913@gmail.com'
@@ -90,15 +91,15 @@ function DashboardContent() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
             <div style={{
               position: 'absolute', top: '-10%', left: '-5%',
-              width: 700, height: 700, borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)',
+              width: 800, height: 800, borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)',
               filter: 'blur(60px)',
               animation: 'heroBlobA 18s ease-in-out infinite',
             }} />
             <div style={{
               position: 'absolute', bottom: '-10%', right: '-5%',
-              width: 740, height: 740, borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(59,130,246,0.10) 0%, transparent 70%)',
+              width: 800, height: 800, borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)',
               filter: 'blur(60px)',
               animation: 'heroBlobB 18s ease-in-out infinite',
             }} />
@@ -110,6 +111,7 @@ function DashboardContent() {
           <Outlet />
         </main>
         <SupportChat />
+        <Onboarding />
 
         {mountSkeleton && <DashboardSkeleton hidden={!showSkeleton} />}
       </div>

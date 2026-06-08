@@ -21,6 +21,7 @@ const navItems = [
   {
     path: '/dashboard/reviews',
     label: 'Reviews',
+    tour: 'reviews',
     icon: (
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
         <path d="M8 1l1.854 3.756L14 5.528l-3 2.924.708 4.128L8 10.5l-3.708 2.08L5 8.452 2 5.528l4.146-.772L8 1z"/>
@@ -30,6 +31,7 @@ const navItems = [
   {
     path: '/dashboard/posts',
     label: 'Social Posts',
+    tour: 'posts',
     icon: (
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <circle cx="12.5" cy="3.5" r="1.5"/>
@@ -102,6 +104,7 @@ export default function Sidebar() {
 
   return (
     <aside
+      data-tour="sidebar"
       className="fixed top-0 left-0 bottom-0 flex flex-col z-40"
       style={{
         width: 240,
@@ -153,10 +156,11 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ path, label, icon }, index) => (
+        {navItems.map(({ path, label, icon, tour }, index) => (
           <NavLink
             key={path}
             to={path}
+            data-tour={tour}
             className="flex items-center gap-3 px-3 py-2 rounded text-sm"
             style={({ isActive }) => ({
               color: isActive ? C.primary : C.secondary,
