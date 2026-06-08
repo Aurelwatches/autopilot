@@ -85,11 +85,14 @@ export function AppProvider({ children }) {
       delete document.documentElement.dataset.theme
     }
 
-    // 3. Update React state + localStorage
+    // 3. Log so you can verify in DevTools that the attribute is switching
+    console.log('[AutoPilot] theme →', next, '| data-theme:', document.documentElement.getAttribute('data-theme'))
+
+    // 4. Update React state + localStorage
     setThemeState(next)
     localStorage.setItem('ap_theme', next)
 
-    // 4. Remove the transition class once the animation is done
+    // 5. Remove the transition class once the animation is done
     setTimeout(() => document.documentElement.classList.remove('theme-transition'), 350)
   }
 

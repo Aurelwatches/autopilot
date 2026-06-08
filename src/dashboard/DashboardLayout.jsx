@@ -14,17 +14,18 @@ const ADMIN_EMAIL = 'bray.200913@gmail.com'
 const SKELETON_MS = 1500
 
 function LoadingScreen() {
+  // Renders before AppProvider mounts — use CSS vars directly (they're global on <html>)
   return (
     <div style={{
-      minHeight: '100vh', backgroundColor: '#000000',
+      minHeight: '100vh', backgroundColor: 'var(--ap-bg)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div style={{ textAlign: 'center' }}>
         <svg width="20" height="20" viewBox="0 0 18 18" fill="none" style={{ margin: '0 auto 12px', display: 'block' }}>
           <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
-            stroke="#3A3835" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            stroke="var(--ap-text2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <p style={{ fontSize: 12, color: '#3A3835' }}>Loading…</p>
+        <p style={{ fontSize: 12, color: 'var(--ap-text2)' }}>Loading…</p>
       </div>
     </div>
   )
