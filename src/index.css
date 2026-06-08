@@ -2,6 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design-token CSS variables ───────────────────────────────────────────── */
+/* :root = dark (app default). [data-theme="light"] overrides every token.     */
+
+:root {
+  color-scheme: dark;
+
+  --ap-bg:             #000000;
+  --ap-bg2:            #0A0A0A;
+  --ap-card:           rgba(255,255,255,0.03);
+  --ap-card-solid:     #141414;
+  --ap-input:          rgba(255,255,255,0.04);
+  --ap-input-solid:    #0F0F0F;
+  --ap-border:         rgba(255,255,255,0.08);
+  --ap-border-solid:   #2A2A2A;
+  --ap-divider:        rgba(255,255,255,0.05);
+  --ap-text:           #F0EEE9;
+  --ap-text2:          #888780;
+  --ap-text3:          #555550;
+  --ap-text3b:         #3A3835;
+  --ap-accent:         #4A8EFF;
+  --ap-shadow:         0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  --ap-blur:           blur(20px);
+  --ap-sidebar:        rgba(255,255,255,0.02);
+  --ap-sidebar-border: rgba(255,255,255,0.06);
+  --ap-sidebar-active: rgba(255,255,255,0.06);
+  --ap-sidebar-shadow: none;
+  --ap-bubble:         rgba(255,255,255,0.06);
+  --ap-popup-shadow:   0 12px 48px rgba(0,0,0,0.5);
+  --ap-float-shadow:   0 4px 20px rgba(0,0,0,0.4);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --ap-bg:             #F5F4F0;
+  --ap-bg2:            #EEECE8;
+  --ap-card:           #FFFFFF;
+  --ap-card-solid:     #FFFFFF;
+  --ap-input:          #FFFFFF;
+  --ap-input-solid:    #FFFFFF;
+  --ap-border:         #D8D5CF;
+  --ap-border-solid:   #D8D5CF;
+  --ap-divider:        #E4E1DC;
+  --ap-text:           #0A0A0A;
+  --ap-text2:          #6B6966;
+  --ap-text3:          #9B9894;
+  --ap-text3b:         #9B9894;
+  --ap-accent:         #4A8EFF;
+  --ap-shadow:         0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+  --ap-blur:           blur(12px);
+  --ap-sidebar:        #EFEEE9;
+  --ap-sidebar-border: #D8D5CF;
+  --ap-sidebar-active: #E8E6E1;
+  --ap-sidebar-shadow: 2px 0 12px rgba(0,0,0,0.06);
+  --ap-bubble:         #E8E6E1;
+  --ap-popup-shadow:   0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05);
+  --ap-float-shadow:   0 4px 16px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+}
+
+/* ─── Smooth theme transition (applied only during the toggle) ──────────────── */
+/* Added/removed by AppContext.toggleTheme() — lasts 320ms then removed.        */
+
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition:
+    background-color 300ms ease,
+    border-color     300ms ease,
+    color            300ms ease,
+    box-shadow       300ms ease,
+    fill             300ms ease,
+    stroke           300ms ease !important;
+}
+
 @layer base {
   *, *::before, *::after {
     box-sizing: border-box;
@@ -16,8 +91,8 @@
   }
 
   body {
-    background-color: #0A0A0A;
-    color: #F0EEE9;
+    background-color: var(--ap-bg);
+    color: var(--ap-text);
     font-family: 'Inter', system-ui, sans-serif;
     overflow-x: hidden;
   }

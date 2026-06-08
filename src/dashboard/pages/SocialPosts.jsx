@@ -71,14 +71,14 @@ function DateTimePicker({ value, onChange, C }) {
   }
   const ddStyle = {
     backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}`,
-    borderRadius: 6, padding: '6px 8px', fontSize: 13, outline: 'none', colorScheme: 'dark', cursor: 'pointer',
+    borderRadius: 6, padding: '6px 8px', fontSize: 13, outline: 'none', cursor: 'pointer',
   }
 
   return (
     <div style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 10, padding: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <button type="button" onClick={() => setView(new Date(year, month - 1, 1))} style={navBtn} aria-label="Previous month">‹</button>
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#F0EEE9' }}>{MONTHS[month]} {year}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: C.primary }}>{MONTHS[month]} {year}</span>
         <button type="button" onClick={() => setView(new Date(year, month + 1, 1))} style={navBtn} aria-label="Next month">›</button>
       </div>
 
@@ -97,7 +97,7 @@ function DateTimePicker({ value, onChange, C }) {
             style={{
               aspectRatio: '1 / 1', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12,
               backgroundColor: isSelected(d) ? C.accent : 'transparent',
-              color: isSelected(d) ? '#fff' : '#F0EEE9',
+              color: isSelected(d) ? '#fff' : C.primary,
               fontWeight: isSelected(d) ? 600 : 400,
             }}
             onMouseEnter={e => { if (!isSelected(d)) e.currentTarget.style.backgroundColor = C.inputBg }}

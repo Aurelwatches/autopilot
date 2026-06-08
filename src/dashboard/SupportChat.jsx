@@ -109,7 +109,7 @@ export default function SupportChat() {
           position: 'fixed', bottom: 80, right: 24, width: 360, height: 500,
           zIndex: 50, display: 'flex', flexDirection: 'column',
           backgroundColor: C.card, border: `1px solid ${C.border}`,
-          borderRadius: 14, boxShadow: '0 12px 48px rgba(0,0,0,0.4)',
+          borderRadius: 14, boxShadow: 'var(--ap-popup-shadow)',
           animation: 'chatPopIn 0.16s ease-out',
         }}>
 
@@ -245,7 +245,7 @@ export default function SupportChat() {
           backgroundColor: C.card, border: `1px solid ${C.border}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+          boxShadow: 'var(--ap-float-shadow)',
           transition: 'border-color 0.15s, transform 0.15s',
         }}
         onMouseEnter={e => {

@@ -51,9 +51,10 @@ function DashboardContent() {
   }, [])
 
   useEffect(() => {
-    document.body.style.backgroundColor = C.bg
-    document.body.style.color = C.primary
-  }, [C])
+    // Body background/color inherit from CSS vars — just reset any stale inline values
+    document.body.style.backgroundColor = 'var(--ap-bg)'
+    document.body.style.color = 'var(--ap-text)'
+  }, [theme])
 
   return (
     <RevealCtx.Provider value={revealed}>

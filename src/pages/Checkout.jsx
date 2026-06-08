@@ -11,9 +11,14 @@ const PLAN_PRICES  = {
   pro:     { monthly: 350, yearly: 3500 },
 }
 
-const C = {
-  bg: '#0A0A0A', card: '#111111', border: '#2A2A2A',
-  primary: '#F0EEE9', secondary: '#888780', muted: '#3A3835',
+const V = {
+  bg:     'var(--ap-bg)',
+  card:   'var(--ap-card-solid)',
+  border: 'var(--ap-border-solid)',
+  text:   'var(--ap-text)',
+  text2:  'var(--ap-text2)',
+  text3:  'var(--ap-text3b)',
+  shadow: 'var(--ap-shadow)',
 }
 
 export default function Checkout() {
@@ -58,9 +63,9 @@ export default function Checkout() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ backgroundColor: C.bg }}
+      style={{ backgroundColor: V.bg }}
     >
-      <Link to="/" className="flex items-center gap-2 mb-10" style={{ color: C.primary }}>
+      <Link to="/" className="flex items-center gap-2 mb-10" style={{ color: V.text }}>
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
             stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -71,35 +76,35 @@ export default function Checkout() {
       <div
         style={{
           width: '100%', maxWidth: 420,
-          background: 'rgba(255,255,255,0.03)',
-          border: `1px solid ${C.border}`,
+          backgroundColor: V.card,
+          border: `1px solid ${V.border}`,
           borderRadius: 20,
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+          backdropFilter: 'var(--ap-blur)',
+          WebkitBackdropFilter: 'var(--ap-blur)',
+          boxShadow: V.shadow,
           padding: '36px 32px',
         }}
       >
         {/* Plan summary */}
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.secondary, marginBottom: 8 }}>
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: V.text2, marginBottom: 8 }}>
           Your plan
         </p>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: C.primary, marginBottom: 4 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: V.text, marginBottom: 4 }}>
           AutoPilot {label}
         </h1>
-        <p style={{ fontSize: 13, color: C.secondary, marginBottom: 28 }}>
+        <p style={{ fontSize: 13, color: V.text2, marginBottom: 28 }}>
           {interval === 'yearly' ? 'Billed annually' : 'Billed monthly'}
         </p>
 
         {/* Divider */}
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', marginBottom: 24 }} />
+        <div style={{ height: 1, backgroundColor: 'var(--ap-divider)', marginBottom: 24 }} />
 
         {/* Price */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 52, fontWeight: 800, lineHeight: 0.9, letterSpacing: '-0.03em', color: '#FFFFFF' }}>
+          <span style={{ fontSize: 52, fontWeight: 800, lineHeight: 0.9, letterSpacing: '-0.03em', color: V.text }}>
             ${price.toLocaleString()}
           </span>
-          <span style={{ fontSize: 15, color: C.secondary, marginBottom: 8 }}>/{period}</span>
+          <span style={{ fontSize: 15, color: V.text2, marginBottom: 8 }}>/{period}</span>
         </div>
 
         {interval === 'yearly' && PLAN_PRICES[plan] && (
@@ -124,8 +129,8 @@ export default function Checkout() {
           style={{
             display: 'block', width: '100%', padding: '14px 0',
             borderRadius: 980, border: 'none',
-            backgroundColor: loading ? 'rgba(240,238,233,0.5)' : '#F0EEE9',
-            color: '#0A0A0A',
+            backgroundColor: loading ? 'rgba(10,10,10,0.4)' : V.text,
+            color: V.bg,
             fontSize: 15, fontWeight: 700,
             cursor: loading ? 'default' : 'pointer',
             transition: 'opacity 0.15s',
@@ -136,13 +141,13 @@ export default function Checkout() {
           {loading ? 'Redirecting to payment…' : 'Complete payment'}
         </button>
 
-        <p style={{ fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 16, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 12, color: V.text3, textAlign: 'center', marginTop: 16, lineHeight: 1.5 }}>
           Secured by Stripe. Cancel anytime.
         </p>
       </div>
 
-      <p className="text-xs mt-6" style={{ color: C.muted }}>
-        <Link to="/pricing" style={{ color: C.secondary }}>← Change plan</Link>
+      <p className="text-xs mt-6" style={{ color: V.text3 }}>
+        <Link to="/pricing" style={{ color: V.text2 }}>← Change plan</Link>
       </p>
     </div>
   )

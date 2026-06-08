@@ -26,7 +26,7 @@ function SelectField({ label, value, onChange, options, C }) {
         className="w-full text-sm px-4 py-2.5 rounded outline-none"
         style={{
           backgroundColor: C.inputBg, color: C.primary,
-          border: `1px solid ${C.border}`, colorScheme: 'dark', cursor: 'pointer',
+          border: `1px solid ${C.border}`, cursor: 'pointer',
         }}
         onFocus={e => e.target.style.borderColor = C.secondary}
         onBlur={e => e.target.style.borderColor = C.border}
@@ -210,7 +210,7 @@ export default function Settings() {
             <button
               type="submit"
               className="text-sm font-semibold px-5 py-2 rounded transition-colors"
-              style={{ backgroundColor: C.primary, color: theme === 'dark' ? C.bg : '#FFFFFF', cursor: 'pointer' }}
+              style={{ backgroundColor: C.primary, color: 'var(--ap-bg)', cursor: 'pointer' }}
               onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
               onMouseLeave={e => e.currentTarget.style.opacity = '1'}
             >
@@ -465,7 +465,7 @@ export default function Settings() {
               className="text-sm font-semibold px-5 py-2 rounded transition-colors"
               style={{
                 backgroundColor: C.primary,
-                color: theme === 'dark' ? '#0A0A0A' : '#FFFFFF',
+                color: 'var(--ap-bg)',
                 cursor: prefsLoading ? 'default' : 'pointer',
                 opacity: prefsLoading ? 0.6 : 1,
               }}

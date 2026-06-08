@@ -105,6 +105,7 @@ export default function Sidebar() {
         width: 240,
         backgroundColor: C.sidebarBg,
         borderRight: `1px solid ${C.sidebarBorder}`,
+        boxShadow: 'var(--ap-sidebar-shadow)',
         backdropFilter: C.glassFilter,
         WebkitBackdropFilter: C.glassFilter,
       }}
