@@ -1,27 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../AppContext'
-
-const PLAN_META = {
-  starter: {
-    label: 'Starter',
-    blurb: 'For restaurants just getting started',
-    monthly: 99,  yearly: 999,
-    badgeBg: 'rgba(136,135,128,0.14)', badgeColor: 'var(--ap-text2)', badgeBorder: 'rgba(136,135,128,0.28)',
-  },
-  growth: {
-    label: 'Growth',
-    blurb: 'For restaurants ready to automate',
-    monthly: 200, yearly: 2000,
-    badgeBg: 'rgba(74,142,255,0.14)', badgeColor: '#4A8EFF', badgeBorder: 'rgba(74,142,255,0.30)',
-  },
-  pro: {
-    label: 'Pro',
-    blurb: 'For restaurants that want everything',
-    monthly: 350, yearly: 3500,
-    badgeBg: 'rgba(245,158,11,0.14)', badgeColor: '#F59E0B', badgeBorder: 'rgba(245,158,11,0.30)',
-  },
-}
+import { getPlanMeta, getBillingInterval, planPrice } from '../planMeta'
 
 // Next billing date: anchored once in localStorage, then advanced by the
 // billing interval until it lands in the future. Stable across renders.
@@ -70,11 +50,11 @@ export default function Subscription() {
   const navigate = useNavigate()
   const { C, plan } = useApp()
 
-  const planKey  = PLAN_META[plan] ? plan : 'starter'
-  const meta     = PLAN_META[planKey]
-  const interval = localStorage.getItem('ap_selected_interval') || 'monthly'
+  const meta     = getPlanMeta(plan)
+  const planKey  = meta.key
+  const interval = getBillingInterval()
   const isYearly = interval === 'yearly'
-  const price    = isYearly ? meta.yearly : meta.monthly
+  const price    = planPrice(meta, interval)
   const yearlySavings = meta.monthly * 12 - meta.yearly
 
   const [showCancel, setShowCancel] = useState(false)
@@ -100,29 +80,39 @@ export default function Subscription() {
         backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
         boxShadow: C.cardShadow,
       }}>
-        <div className="px-6 py-5" style={{ borderBottom: `1px solid ${C.divider}` }}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold" style={{ color: C.primary }}>
-                {meta.label}
-              </h2>
-              <span style={{
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                padding: '3px 10px', borderRadius: 980,
-                background: meta.badgeBg, color: meta.badgeColor,
-                border: `1px solid ${meta.badgeBorder}`,
-              }}>
-                {canceled ? 'CANCELING' : 'ACTIVE'}
-              </span>
+        <div className="px-6 py-6" style={{ borderBottom: `1px solid ${C.divider}` }}>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              {/* Large plan name in its accent color */}
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <h2 style={{
+                  fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em',
+                  color: meta.color, lineHeight: 1,
+                }}>
+                  {meta.emoji ? `${meta.emoji} ` : ''}{meta.label}
+                </h2>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                  padding: '3px 10px', borderRadius: 980,
+                  background: canceled ? 'rgba(245,158,11,0.14)' : 'rgba(34,197,94,0.14)',
+                  color: canceled ? '#F59E0B' : '#22C55E',
+                  border: `1px solid ${canceled ? 'rgba(245,158,11,0.30)' : 'rgba(34,197,94,0.30)'}`,
+                }}>
+                  {canceled ? 'CANCELING' : 'ACTIVE'}
+                </span>
+              </div>
+              <p className="text-sm font-medium" style={{ color: C.primary }}>
+                You’re on the {meta.label} plan
+              </p>
+              <p className="text-sm mt-0.5" style={{ color: C.secondary }}>{meta.blurb}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em', color: C.primary }}>
+              <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', color: C.primary }}>
                 ${price.toLocaleString()}
               </span>
-              <span className="text-sm" style={{ color: C.secondary }}>/{isYearly ? 'yr' : 'mo'}</span>
+              <span className="text-sm" style={{ color: C.secondary }}>/{isYearly ? 'year' : 'month'}</span>
             </div>
           </div>
-          <p className="text-sm mt-1" style={{ color: C.secondary }}>{meta.blurb}</p>
         </div>
 
         <div className="px-6 py-1">

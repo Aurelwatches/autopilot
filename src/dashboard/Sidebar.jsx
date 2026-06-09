@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useApp } from './AppContext'
 import { useAuth } from '../lib/auth'
 import { useDashboardReveal } from './revealContext'
+import { getPlanMeta, getBillingInterval, planPrice } from './planMeta'
 
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
@@ -96,6 +97,14 @@ export default function Sidebar() {
   const revealed = useDashboardReveal()
 
   const isPro = plan === 'pro'
+
+  // Current plan label shown under the restaurant name
+  const planMeta   = getPlanMeta(plan)
+  const isYearly   = getBillingInterval() === 'yearly'
+  const planPriceN = planPrice(planMeta, isYearly ? 'yearly' : 'monthly')
+  let planLabel = `${planMeta.label} plan`
+  if (planMeta.key === 'pro') planLabel += ` · $${planPriceN.toLocaleString()}/${isYearly ? 'yr' : 'mo'}`
+  if (isYearly) planLabel += ' · billed yearly'
 
   async function handleLogout() {
     await signOut()
@@ -200,6 +209,9 @@ export default function Sidebar() {
             }}>PRO</span>
           )}
         </div>
+        <p className="text-[10px] font-medium mb-0.5 truncate" style={{ color: planMeta.color }}>
+          {planLabel}
+        </p>
         {user?.email && (
           <p className="text-[10px] truncate mt-0.5 mb-1" style={{ color: C.muted }}>
             {user.email}

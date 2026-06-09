@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../AppContext'
 import { supabase } from '../../lib/supabase'
+import { getPlanMeta } from '../planMeta'
 
 const REPLY_SPEED_OPTIONS = [
   { value: 'instant',    label: 'Instant',        desc: 'replies as soon as a review comes in' },
@@ -121,7 +122,7 @@ export default function Settings() {
   const navigate = useNavigate()
   const { C, theme, toggleTheme, restaurantName, setRestaurantName, userId, plan } = useApp()
 
-  const PLAN_LABELS = { starter: 'Starter', growth: 'Growth', pro: 'Pro' }
+  const planMeta = getPlanMeta(plan)
 
   // Personal webhook URL — includes this restaurant's user_id so Make.com data
   // lands on the right account. Points at the deployed Railway backend.
@@ -229,12 +230,18 @@ export default function Settings() {
       <Card title="Billing" C={C}>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium" style={{ color: C.primary }}>
-              {PLAN_LABELS[plan] || 'Your'} plan
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: C.secondary }}>
-              View your plan, billing interval and next payment — or cancel anytime.
-            </p>
+            <p className="text-xs font-medium mb-1" style={{ color: C.secondary }}>Current plan</p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold" style={{ color: planMeta.color }}>
+                {planMeta.emoji ? `${planMeta.emoji} ` : ''}{planMeta.label} plan
+              </span>
+              <span style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+                padding: '1px 7px', borderRadius: 980,
+                background: 'rgba(34,197,94,0.14)', color: '#22C55E',
+                border: '1px solid rgba(34,197,94,0.30)',
+              }}>ACTIVE</span>
+            </div>
           </div>
           <button
             onClick={() => navigate('/dashboard/subscription')}
@@ -246,7 +253,7 @@ export default function Settings() {
             onMouseEnter={e => e.currentTarget.style.borderColor = C.secondary}
             onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
           >
-            Manage subscription
+            Manage
           </button>
         </div>
       </Card>

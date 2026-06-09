@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useDashboard } from '../DashboardContext'
 import { useApp } from '../AppContext'
 import { useDashboardReveal } from '../revealContext'
+import { getPlanMeta } from '../planMeta'
 
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
@@ -43,9 +44,12 @@ function EmptyFeed({ C }) {
 
 export default function Overview() {
   const { events } = useDashboard()
-  const { C, restaurantName, userId } = useApp()
+  const { C, restaurantName, userId, plan } = useApp()
   const navigate = useNavigate()
   const revealed = useDashboardReveal()
+
+  const planMeta  = getPlanMeta(plan)
+  const planPillLabel = planMeta.key === 'pro' ? 'AutoPilot Pro' : `${planMeta.label} Plan`
 
   const [reviews,  setReviews]  = useState([])
   const [activity, setActivity] = useState([])
@@ -165,15 +169,34 @@ export default function Overview() {
       </div>
 
       {/* Header */}
-      <div className="mb-8" style={{
+      <div className="mb-8 flex items-start justify-between gap-4" style={{
         opacity: revealed ? 1 : 0,
         transition: `opacity 500ms ${EASE}`,
         transitionDelay: revealed ? '50ms' : '0ms',
       }}>
-        <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>
-          {greeting}, {restaurantName}
-        </h1>
-        <p className="text-sm" style={{ color: C.secondary }}>{today}</p>
+        <div>
+          <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>
+            {greeting}, {restaurantName}
+          </h1>
+          <p className="text-sm" style={{ color: C.secondary }}>{today}</p>
+        </div>
+        <button
+          onClick={() => navigate('/dashboard/subscription')}
+          className="shrink-0 flex items-center gap-1.5 text-xs font-semibold rounded-full transition-opacity"
+          style={{
+            padding: '6px 13px',
+            background: planMeta.pillBg,
+            color: planMeta.color,
+            border: `1px solid ${planMeta.pillBorder}`,
+            cursor: 'pointer',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+          title="Manage subscription"
+        >
+          {planMeta.emoji && <span>{planMeta.emoji}</span>}
+          {planPillLabel}
+        </button>
       </div>
 
       {error && (
