@@ -313,6 +313,22 @@ app.post('/api/generate-post', async (req, res) => {
   }
 })
 
+// Map plan + interval → configured Stripe Price ID
+const PRICE_IDS = {
+  starter: {
+    monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_STARTER_YEARLY
+  },
+  growth: {
+    monthly: process.env.STRIPE_PRICE_GROWTH_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_GROWTH_YEARLY
+  },
+  pro: {
+    monthly: process.env.STRIPE_PRICE_PRO_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_PRO_YEARLY
+  }
+};
+
 // POST /api/create-checkout-session — create a Stripe hosted checkout session
 app.post('/api/create-checkout-session', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured' })
@@ -320,31 +336,16 @@ app.post('/api/create-checkout-session', async (req, res) => {
   const { plan, interval, userId } = req.body
   if (!plan || !interval) return res.status(400).json({ error: 'plan and interval are required' })
 
-  const prices = {
-    starter: { monthly: 9900,  yearly: 99900  },
-    growth:  { monthly: 20000, yearly: 200000 },
-    pro:     { monthly: 35000, yearly: 350000 },
-  }
-  const labels = { starter: 'Starter', growth: 'Growth', pro: 'AutoPilot Pro' }
-
   const priceKey = interval === 'yearly' ? 'yearly' : 'monthly'
-  const amount = prices[plan]?.[priceKey]
-  if (!amount) return res.status(400).json({ error: 'Invalid plan or interval' })
+  const priceId = PRICE_IDS[plan]?.[priceKey]
+  if (!priceId) return res.status(400).json({ error: 'Invalid plan or interval, or price not configured' })
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: `AutoPilot ${labels[plan]}`,
-            description: `${interval === 'yearly' ? 'Annual' : 'Monthly'} subscription`,
-          },
-          recurring: { interval: interval === 'yearly' ? 'year' : 'month' },
-          unit_amount: amount,
-        },
+        price: priceId,
         quantity: 1,
       }],
       success_url: 'https://autopilot-pink.vercel.app/dashboard',
