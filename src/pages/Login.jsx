@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import EyeToggle from '../components/EyeToggle'
 import LoginPlane from '../components/LoginPlane'
@@ -19,7 +19,11 @@ const V = {
 
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { signIn } = useAuth()
+
+  // Message shown when arriving from the pricing page ("Sign in to continue…")
+  const notice = location.state?.message
 
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
@@ -43,8 +47,13 @@ export default function Login() {
       return
     }
 
-    // Cinematic airplane takeoff before entering the dashboard
-    setFlying(true)
+    // If a plan was chosen on /pricing, head straight to checkout.
+    // Otherwise, play the cinematic airplane takeoff into the dashboard.
+    if (localStorage.getItem('ap_selected_plan')) {
+      navigate('/checkout')
+    } else {
+      setFlying(true)
+    }
   }
 
   return (
@@ -72,6 +81,19 @@ export default function Login() {
       >
         <h1 className="text-xl font-semibold mb-1" style={{ color: V.text }}>Welcome back</h1>
         <p className="text-sm mb-8" style={{ color: V.text2 }}>Sign in to your AutoPilot account.</p>
+
+        {notice && (
+          <div
+            className="text-sm mb-6 px-4 py-3 rounded-lg"
+            style={{
+              backgroundColor: 'rgba(74,142,255,0.10)',
+              border: '1px solid rgba(74,142,255,0.25)',
+              color: 'var(--ap-accent)',
+            }}
+          >
+            {notice}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

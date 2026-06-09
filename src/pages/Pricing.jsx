@@ -111,7 +111,7 @@ function PlanCard({ plan, yearly, priceVisible, shown, delay }) {
     if (user) {
       navigate('/checkout')
     } else {
-      navigate('/signup')
+      navigate('/login', { state: { message: 'Sign in to continue with your plan' } })
     }
   }
 
