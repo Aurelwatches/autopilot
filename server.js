@@ -347,8 +347,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
         },
         quantity: 1,
       }],
-      success_url: 'https://tryautopilot.netlify.app/dashboard',
-      cancel_url: 'https://tryautopilot.netlify.app/pricing',
+      success_url: 'https://autopilot-pink.vercel.app/dashboard',
+      cancel_url: 'https://autopilot-pink.vercel.app/pricing',
       client_reference_id: userId ?? undefined,
       metadata: { plan, interval, userId: userId ?? '' },
     })
