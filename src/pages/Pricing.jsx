@@ -108,6 +108,13 @@ function PlanCard({ plan, yearly, priceVisible, shown, delay }) {
   function handleSelect() {
     localStorage.setItem('ap_selected_plan', plan.id)
     localStorage.setItem('ap_selected_interval', yearly ? 'yearly' : 'monthly')
+    const destination = user ? '/checkout' : '/login'
+    console.log('[AutoPilot] Plan selected:', {
+      plan: plan.id,
+      interval: yearly ? 'yearly' : 'monthly',
+      loggedIn: !!user,
+      redirectingTo: destination,
+    })
     if (user) {
       navigate('/checkout')
     } else {
