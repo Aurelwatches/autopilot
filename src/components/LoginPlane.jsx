@@ -4,22 +4,26 @@ import { useEffect, useState } from 'react'
 // A massive commercial jet sweeps diagonally across a pure-black screen
 // (bottom-left → top-right) over 1.4s, banked ~15deg with twin contrails,
 // then it transitions straight to the dashboard the moment the plane exits.
-export default function LoginPlane({ onDone }) {
+// transparent=true overlays the plane on top of existing content (no black veil,
+// no wordmark, no auto-redirect) — used on the payment-success page. Default mode
+// is the full black login takeoff that calls onDone when the plane exits.
+export default function LoginPlane({ onDone, transparent = false }) {
   const [fading, setFading] = useState(false)
 
   useEffect(() => {
+    if (transparent) return
     // A quick veil blend right as the plane clears the edge…
     const fadeT = setTimeout(() => setFading(true), 1250)
     // …then hand straight off to the dashboard the moment the plane exits.
     const doneT = setTimeout(() => onDone?.(), 1400)
     return () => { clearTimeout(fadeT); clearTimeout(doneT) }
-  }, [onDone])
+  }, [onDone, transparent])
 
   return (
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
-        background: '#000000',
+        background: transparent ? 'transparent' : '#000000',
         overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         opacity: fading ? 0 : 1,
@@ -27,19 +31,21 @@ export default function LoginPlane({ onDone }) {
         pointerEvents: 'none',
       }}
     >
-      {/* Subtle wordmark behind the plane */}
-      <span
-        style={{
-          position: 'absolute',
-          fontSize: 'clamp(20px, 3vw, 38px)',
-          fontWeight: 600, letterSpacing: '0.28em',
-          textTransform: 'uppercase', color: '#FFFFFF',
-          animation: 'loginTitleFade 1.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards',
-          paddingLeft: '0.28em',
-        }}
-      >
-        AutoPilot
-      </span>
+      {/* Subtle wordmark behind the plane (full takeoff mode only) */}
+      {!transparent && (
+        <span
+          style={{
+            position: 'absolute',
+            fontSize: 'clamp(20px, 3vw, 38px)',
+            fontWeight: 600, letterSpacing: '0.28em',
+            textTransform: 'uppercase', color: '#FFFFFF',
+            animation: 'loginTitleFade 1.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards',
+            paddingLeft: '0.28em',
+          }}
+        >
+          AutoPilot
+        </span>
+      )}
 
       {/* The aircraft — centered by flex, then flown by the keyframe transform.
           ~46vw wide so it reads as a jet passing close to the camera. */}

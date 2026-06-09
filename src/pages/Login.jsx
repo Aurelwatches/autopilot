@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import { supabase } from '../lib/supabase'
 import EyeToggle from '../components/EyeToggle'
 import LoginPlane from '../components/LoginPlane'
+
+const ADMIN_EMAIL = 'bray.200913@gmail.com'
 
 // All colours come from CSS variables (index.css), which switch automatically
 // when [data-theme="light"] is set on <html> by the anti-FOUC script / AppContext.
@@ -39,7 +42,7 @@ export default function Login() {
     setLoading(true)
     setError('')
 
-    const { error: authError } = await signIn(email, password)
+    const { user, error: authError } = await signIn(email, password)
 
     if (authError) {
       setError(authError.message)
@@ -47,9 +50,30 @@ export default function Login() {
       return
     }
 
-    // If a plan was chosen on /pricing, head straight to checkout.
-    // Otherwise, play the cinematic airplane takeoff into the dashboard.
-    if (localStorage.getItem('ap_selected_plan')) {
+    // Only divert to checkout when a plan was chosen on /pricing AND the user
+    // doesn't already have an active subscription. Existing subscribers (and the
+    // admin) go straight to the dashboard via the cinematic airplane takeoff.
+    const hasSelectedPlan = !!localStorage.getItem('ap_selected_plan')
+    let hasActiveSub = false
+
+    if (user) {
+      if (user.email === ADMIN_EMAIL) {
+        hasActiveSub = true
+      } else {
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('subscription_status')
+            .eq('id', user.id)
+            .single()
+          hasActiveSub = data?.subscription_status === 'active'
+        } catch {
+          hasActiveSub = false
+        }
+      }
+    }
+
+    if (hasSelectedPlan && !hasActiveSub) {
       navigate('/checkout')
     } else {
       setFlying(true)

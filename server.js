@@ -348,7 +348,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
         price: priceId,
         quantity: 1,
       }],
-      success_url: 'https://autopilot-pink.vercel.app/dashboard',
+      success_url: 'https://autopilot-pink.vercel.app/payment-success',
       cancel_url: 'https://autopilot-pink.vercel.app/pricing',
       client_reference_id: userId ?? undefined,
       metadata: { plan, interval, userId: userId ?? '' },

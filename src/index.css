@@ -265,3 +265,30 @@
   68%  { opacity: 0.5;  transform: translateY(0); }
   100% { opacity: 0;    transform: translateY(-10px); }
 }
+
+/* ─── Payment success: checkmark draw-in ────────────────────────────────────── */
+
+@keyframes apSuccessPop {
+  0%   { opacity: 0; transform: scale(0.7); }
+  60%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes apCheckCircle { to { stroke-dashoffset: 0; } }
+@keyframes apCheckMark   { to { stroke-dashoffset: 0; } }
+
+@keyframes apFadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ap-success-circle {
+  stroke-dasharray: 327;
+  stroke-dashoffset: 327;
+  animation: apCheckCircle 700ms cubic-bezier(0.65, 0, 0.45, 1) 150ms forwards;
+}
+.ap-success-check {
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  animation: apCheckMark 420ms cubic-bezier(0.65, 0, 0.45, 1) 700ms forwards;
+}

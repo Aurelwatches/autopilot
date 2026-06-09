@@ -8,6 +8,7 @@ import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Pricing from './pages/Pricing'
 import Checkout from './pages/Checkout'
+import PaymentSuccess from './pages/PaymentSuccess'
 import CookieConsent from './components/CookieConsent'
 import DashboardLayout from './dashboard/DashboardLayout'
 import Overview from './dashboard/pages/Overview'
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/admin" element={<Admin />} />
 
           <Route path="/dashboard" element={<DashboardLayout />}>
