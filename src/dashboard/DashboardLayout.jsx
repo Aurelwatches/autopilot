@@ -36,6 +36,16 @@ function DashboardContent() {
   const { C, theme } = useApp()
   const isDark = theme === 'dark'
 
+  // Mobile slide-in drawer (< 768px)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const closeNav = () => setMobileNavOpen(false)
+
+  // Lock body scroll while the drawer is open
+  useEffect(() => {
+    document.body.style.overflow = mobileNavOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [mobileNavOpen])
+
   // Skeleton only on first visit per session, dark mode only
   const [revealed,      setRevealed]      = useState(() => !isDark || !!sessionStorage.getItem('ap_dl'))
   const [showSkeleton,  setShowSkeleton]  = useState(() =>  isDark && !sessionStorage.getItem('ap_dl'))
@@ -106,8 +116,46 @@ function DashboardContent() {
           </div>
         )}
 
-        <Sidebar />
-        <main style={{ position: 'relative', zIndex: 1, marginLeft: 240, flex: 1, minHeight: '100vh', color: C.primary }}>
+        <Sidebar mobileOpen={mobileNavOpen} onClose={closeNav} />
+
+        {/* Dark overlay behind the drawer — mobile only (CSS hides on desktop) */}
+        {mobileNavOpen && (
+          <div
+            className="ap-mobile-overlay"
+            onClick={closeNav}
+            style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.5)' }}
+          />
+        )}
+
+        <main className="ap-main" style={{ position: 'relative', zIndex: 1, marginLeft: 240, flex: 1, minHeight: '100vh', color: C.primary }}>
+
+          {/* Mobile topbar with hamburger — hidden on desktop via CSS */}
+          <div
+            className="ap-topbar"
+            style={{
+              position: 'sticky', top: 0, zIndex: 45,
+              alignItems: 'center', gap: 12, height: 56, padding: '0 16px',
+              backgroundColor: C.bg,
+              borderBottom: `1px solid ${C.border}`,
+              backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
+            }}
+          >
+            <button
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open menu"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 44, height: 44, marginLeft: -8,
+                color: C.primary, background: 'transparent', border: 'none', cursor: 'pointer',
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
+            <span className="text-sm font-semibold tracking-tight" style={{ color: C.primary }}>AutoPilot</span>
+          </div>
+
           <Outlet />
         </main>
         <SupportChat />

@@ -90,7 +90,7 @@ function MoonIcon() {
   )
 }
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
   const navigate = useNavigate()
   const { C, theme, toggleTheme, restaurantName, plan } = useApp()
   const { signOut, user } = useAuth()
@@ -107,6 +107,7 @@ export default function Sidebar() {
   if (isYearly) planLabel += ' · billed yearly'
 
   async function handleLogout() {
+    onClose()
     await signOut()
     navigate('/login')
   }
@@ -114,7 +115,7 @@ export default function Sidebar() {
   return (
     <aside
       data-tour="sidebar"
-      className="fixed top-0 left-0 bottom-0 flex flex-col z-40"
+      className={`ap-sidebar fixed top-0 left-0 bottom-0 flex flex-col z-40${mobileOpen ? ' ap-sidebar--open' : ''}`}
       style={{
         width: 240,
         backgroundColor: C.sidebarBg,
@@ -146,21 +147,39 @@ export default function Sidebar() {
             )}
           </span>
         </div>
-        <button
-          onClick={toggleTheme}
-          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          style={{
-            color: C.muted, padding: 4, borderRadius: 6,
-            border: `1px solid ${C.border}`,
-            backgroundColor: 'transparent',
-            cursor: 'pointer', transition: 'color 0.15s, border-color 0.15s',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.color = C.secondary; e.currentTarget.style.borderColor = C.secondary }}
-          onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.borderColor = C.border }}
-        >
-          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            style={{
+              color: C.muted, padding: 4, borderRadius: 6,
+              border: `1px solid ${C.border}`,
+              backgroundColor: 'transparent',
+              cursor: 'pointer', transition: 'color 0.15s, border-color 0.15s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = C.secondary; e.currentTarget.style.borderColor = C.secondary }}
+            onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.borderColor = C.border }}
+          >
+            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </button>
+          {/* Close drawer — mobile only */}
+          <button
+            className="ap-sidebar-close"
+            onClick={onClose}
+            aria-label="Close menu"
+            style={{
+              color: C.muted, width: 32, height: 32, borderRadius: 6,
+              border: `1px solid ${C.border}`,
+              backgroundColor: 'transparent', cursor: 'pointer',
+              alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Nav */}
@@ -170,7 +189,8 @@ export default function Sidebar() {
             key={path}
             to={path}
             data-tour={tour}
-            className="flex items-center gap-3 px-3 py-2 rounded text-sm"
+            onClick={onClose}
+            className="ap-nav-link flex items-center gap-3 px-3 py-2 rounded text-sm"
             style={({ isActive }) => ({
               color: isActive ? C.primary : C.secondary,
               backgroundColor: isActive ? C.sidebarActiveBg : 'transparent',

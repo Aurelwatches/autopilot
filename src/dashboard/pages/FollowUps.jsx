@@ -19,7 +19,7 @@ export default function FollowUps() {
   const { C } = useApp()
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
+    <div className="ap-page px-8 py-8" style={{ maxWidth: 1100 }}>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Follow-ups</h1>

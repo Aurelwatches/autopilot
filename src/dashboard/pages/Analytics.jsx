@@ -272,7 +272,7 @@ export default function Analytics() {
   const ticks      = range === '1d' ? { interval: 5 } : range === '30d' ? { interval: 4 } : { interval: 2 }
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 1000 }}>
+    <div className="ap-page px-8 py-8" style={{ maxWidth: 1000 }}>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Analytics</h1>
@@ -380,7 +380,7 @@ export default function Analytics() {
 
       {/* Starter plan: frosted glass overlay blocking analytics */}
       {isStarter && (
-        <div style={{
+        <div className="ap-lock-overlay" style={{
           position: 'fixed',
           top: 0, bottom: 0, left: 240, right: 0,
           zIndex: 40,

@@ -129,7 +129,7 @@ export default function Reviews() {
   const capExceeded = thisMonthCount >= MONTHLY_REVIEW_CAP
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 900 }}>
+    <div className="ap-page px-8 py-8" style={{ maxWidth: 900 }}>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Reviews</h1>
@@ -181,7 +181,7 @@ export default function Reviews() {
       )}
 
       {/* Filters — label + live count (star-rating breakdown) */}
-      <div className="flex gap-1 mb-6">
+      <div className="ap-review-filters flex gap-1 mb-6">
         {filters.map(f => {
           const n = countFor(f)
           return (

@@ -107,13 +107,13 @@ function HeroSkeleton({ hidden }) {
       </div>
 
       {/* Card outlines in their positions */}
-      <div style={{ position: 'absolute', top: '52%', left: 'max(28px, 7%)' }}>
+      <div className="hero-card-sk" style={{ position: 'absolute', top: '52%', left: 'max(28px, 7%)' }}>
         <Sk w={170} h={44} r={16} delay={1.6} />
       </div>
-      <div style={{ position: 'absolute', top: '28%', right: 'max(28px, 7%)' }}>
+      <div className="hero-card-sk" style={{ position: 'absolute', top: '28%', right: 'max(28px, 7%)' }}>
         <Sk w={195} h={44} r={16} delay={1.8} />
       </div>
-      <div style={{ position: 'absolute', bottom: '20%', left: '50%', marginLeft: -130 }}>
+      <div className="hero-card-sk" style={{ position: 'absolute', bottom: '20%', left: '50%', marginLeft: -130 }}>
         <Sk w={235} h={44} r={16} delay={2.0} />
       </div>
     </div>
@@ -150,7 +150,7 @@ function HeroContent() {
         </p>
 
         {/* Headline */}
-        <h1 style={{
+        <h1 className="hero-headline" style={{
           ...head,
           fontSize: 'clamp(48px, 9vw, 88px)',
           fontWeight: 800,
@@ -180,7 +180,7 @@ function HeroContent() {
         </div>
 
         {/* Subheadline */}
-        <p style={{
+        <p className="hero-sub" style={{
           ...sub,
           fontSize: 19,
           lineHeight: 1.55,
@@ -193,7 +193,7 @@ function HeroContent() {
         </p>
 
         {/* Buttons */}
-        <div style={{
+        <div className="hero-btns" style={{
           ...btns,
           display: 'flex',
           gap: 14,
@@ -202,6 +202,7 @@ function HeroContent() {
         }}>
           <a
             href="/signup"
+            className="hero-btn"
             style={{
               display: 'inline-block',
               backgroundColor: '#FFFFFF',
@@ -220,6 +221,7 @@ function HeroContent() {
           </a>
           <a
             href="#features"
+            className="hero-btn"
             onClick={e => { e.preventDefault(); smoothScrollTo('features') }}
             style={{
               display: 'inline-block',
@@ -250,7 +252,7 @@ function HeroContent() {
       </div>
 
       {/* Floating notification cards */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
+      <div className="hero-cards" style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
 
         {/* Card 1 — left */}
         <div style={{ ...card1, position: 'absolute', top: '52%', left: 'max(28px, 7%)' }}>

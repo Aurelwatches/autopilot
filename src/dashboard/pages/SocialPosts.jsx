@@ -403,7 +403,7 @@ export default function SocialPosts() {
   }))
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
+    <div className="ap-page px-8 py-8" style={{ maxWidth: 1100 }}>
 
       {/* Growth upsell banner — shown to Growth plan users, dismissible for 7 days */}
       {isGrowth && showBanner && (
@@ -432,14 +432,14 @@ export default function SocialPosts() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-8">
+      <div className="ap-posts-header flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Social Posts</h1>
           <p className="text-sm" style={{ color: C.secondary }}>Scheduled and published content</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="text-sm font-semibold px-4 py-2 rounded transition-colors"
+          className="ap-posts-newbtn text-sm font-semibold px-4 py-2 rounded transition-colors"
           style={{ backgroundColor: C.primary, color: C.bg, cursor: 'pointer' }}
           onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
           onMouseLeave={e => e.currentTarget.style.opacity = '1'}
@@ -493,7 +493,7 @@ export default function SocialPosts() {
             {/* Platform */}
             <div className="mb-4">
               <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>Platform</label>
-              <div className="flex gap-2">
+              <div className="ap-platform-tabs flex gap-2">
                 {['Instagram', 'Facebook', 'Twitter'].map(pl => (
                   <button
                     key={pl}
@@ -641,7 +641,7 @@ export default function SocialPosts() {
 
       {/* Starter plan: frosted glass overlay blocking social posting */}
       {isStarter && (
-        <div style={{
+        <div className="ap-lock-overlay" style={{
           position: 'fixed',
           top: 0, bottom: 0, left: 240, right: 0,
           zIndex: 40,

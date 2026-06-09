@@ -292,3 +292,71 @@
   stroke-dashoffset: 80;
   animation: apCheckMark 420ms cubic-bezier(0.65, 0, 0.45, 1) 700ms forwards;
 }
+
+/* ─── Dashboard mobile drawer: base (desktop) state ─────────────────────────── */
+/* The mobile topbar and the slide-in sidebar behavior only apply under 768px;   */
+/* on desktop the topbar is hidden and the sidebar stays in its normal column.   */
+
+.ap-topbar         { display: none; }
+.ap-sidebar-close  { display: none; }
+.ap-mobile-overlay { display: none; }
+
+/* ─── Mobile responsiveness (< 768px) ───────────────────────────────────────── */
+
+@media (max-width: 767px) {
+
+  /* Landing-page hero */
+  .hero-cards    { display: none !important; }
+  .hero-card-sk  { display: none !important; }
+  .hero-headline { font-size: 42px !important; }
+  .hero-sub      { font-size: 16px !important; }
+  .hero-btns     { flex-direction: column !important; align-items: stretch !important; width: 100%; }
+  .hero-btn {
+    width: 100%;
+    min-height: 44px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Dashboard layout: collapse the fixed sidebar into a slide-in drawer */
+  .ap-main { margin-left: 0 !important; }
+
+  .ap-topbar { display: flex !important; }
+
+  .ap-sidebar {
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .ap-sidebar--open { transform: translateX(0); }
+
+  .ap-sidebar-close { display: flex !important; }
+
+  .ap-mobile-overlay { display: block; }
+
+  /* Every dashboard page: 16px horizontal padding */
+  .ap-page { padding-left: 16px !important; padding-right: 16px !important; }
+
+  /* Sidebar nav links: 44px touch targets */
+  .ap-nav-link { min-height: 44px; }
+
+  /* Social Posts header stacks; New post button goes full width */
+  .ap-posts-header { flex-direction: column !important; align-items: stretch !important; gap: 16px; }
+  .ap-posts-newbtn { width: 100%; min-height: 44px; }
+  .ap-platform-tabs { flex-wrap: wrap !important; }
+
+  /* Reviews filters scroll horizontally instead of wrapping */
+  .ap-review-filters {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .ap-review-filters::-webkit-scrollbar { display: none; }
+  .ap-review-filters > button { flex-shrink: 0; min-height: 44px; }
+
+  /* Plan-lock overlays span full width (no 240px sidebar offset) */
+  .ap-lock-overlay { left: 0 !important; }
+}

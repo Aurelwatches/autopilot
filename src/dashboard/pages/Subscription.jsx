@@ -67,7 +67,7 @@ export default function Subscription() {
   }
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 660 }}>
+    <div className="ap-page px-8 py-8" style={{ maxWidth: 660 }}>
       <div className="mb-8">
         <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Subscription</h1>
         <p className="text-sm" style={{ color: C.secondary }}>Manage your AutoPilot plan and billing</p>

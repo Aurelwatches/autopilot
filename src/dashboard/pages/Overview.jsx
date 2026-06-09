@@ -142,7 +142,7 @@ export default function Overview() {
   const totalTracked = reviews.length + activity.length
 
   return (
-    <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
+    <div className="ap-page px-8 py-8" style={{ maxWidth: 1100 }}>
 
       {/* Status bar */}
       <div className="flex items-center gap-3 px-4 py-3 mb-8 text-sm"
