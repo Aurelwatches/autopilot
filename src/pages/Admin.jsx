@@ -8,7 +8,7 @@ const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL ?? '/api/webhook'
 
 const C = {
   bg: '#05070D', card: '#0E1420', border: '#2E2A24', divider: '#211E19',
-  primary: '#EAF2FF', secondary: '#94A3B8', muted: '#5B6678',
+  primary: '#EAF2FF', secondary: '#94A3B8', muted: '#6E7A8F',
   accent: '#22D3EE', inputBg: '#131110',
 }
 

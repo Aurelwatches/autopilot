@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import Navbar from './Navbar'
 import Footer from './Footer'
 
-const C = { bg: '#05070D', primary: '#EAF2FF', secondary: '#94A3B8', muted: '#5B6678', border: '#2E2A24' }
+const C = { bg: '#05070D', primary: '#EAF2FF', secondary: '#94A3B8', muted: '#6E7A8F', border: '#2E2A24' }
 
 // Shared chrome for /privacy and /terms.
 export default function LegalLayout({ title, updated, children }) {

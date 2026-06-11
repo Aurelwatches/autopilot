@@ -20,7 +20,7 @@
   --ap-divider:        rgba(255,255,255,0.06);
   --ap-text:           #EAF2FF;
   --ap-text2:          #94A3B8;
-  --ap-text3:          #5B6678;
+  --ap-text3:          #6E7A8F;
   --ap-text3b:         #443E36;
 
   /* Brand + semantic accents — amber sells, emerald reassures */
@@ -131,7 +131,7 @@
   }
 
   ::selection {
-    background: rgba(251, 122, 30, 0.28);
+    background: rgba(34, 211, 238, 0.30);
   }
 }
 
@@ -219,9 +219,9 @@
 
 /* Amber pulse ring on status dot */
 @keyframes cardPulse {
-  0%   { box-shadow: 0 0 0 0   rgba(251, 122, 30, 0.55); }
-  60%  { box-shadow: 0 0 0 6px rgba(251, 122, 30, 0); }
-  100% { box-shadow: 0 0 0 0   rgba(251, 122, 30, 0); }
+  0%   { box-shadow: 0 0 0 0   rgba(34, 211, 238, 0.55); }
+  60%  { box-shadow: 0 0 0 6px rgba(34, 211, 238, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(34, 211, 238, 0); }
 }
 
 /* ─── Scroll offset for fixed navbar (h-14 = 56px + 16px breathing room) ────── */

@@ -4,7 +4,7 @@ import { Reveal } from './motion'
 const C = {
   primary:   '#EAF2FF',
   secondary: '#94A3B8',
-  muted:     '#5B6678',
+  muted:     '#6E7A8F',
 }
 
 export default function Footer() {

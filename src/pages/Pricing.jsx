@@ -22,8 +22,8 @@ function LockIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"
       style={{ flexShrink: 0, marginTop: 4 }}>
-      <rect x="3" y="7.5" width="10" height="7.5" rx="1.5" stroke="#5B6678" strokeWidth="1.5" />
-      <path d="M5.5 7.5V5a2.5 2.5 0 015 0v2.5" stroke="#5B6678" strokeWidth="1.5"
+      <rect x="3" y="7.5" width="10" height="7.5" rx="1.5" stroke="#6E7A8F" strokeWidth="1.5" />
+      <path d="M5.5 7.5V5a2.5 2.5 0 015 0v2.5" stroke="#6E7A8F" strokeWidth="1.5"
         strokeLinecap="round" />
     </svg>
   )
@@ -217,7 +217,7 @@ function PlanCard({ plan, yearly, priceVisible }) {
           <li key={f.text} style={{
             display: 'flex', alignItems: 'flex-start', gap: 10,
             padding: '5px 0', fontSize: 14,
-            color: f.locked ? '#5B6678' : '#DCE6F5',
+            color: f.locked ? '#6E7A8F' : '#DCE6F5',
           }}>
             {f.locked ? <LockIcon /> : <CheckIcon />}
             <span>
@@ -401,7 +401,7 @@ export default function Pricing() {
           <p style={{ fontSize: 14, color: '#CBD5E1', marginBottom: 8 }}>
             All plans include a 14-day free trial. No credit card required.
           </p>
-          <p style={{ fontSize: 13, color: '#5B6678' }}>
+          <p style={{ fontSize: 13, color: '#6E7A8F' }}>
             Join 200+ restaurants already on AutoPilot
           </p>
         </motion.div>
