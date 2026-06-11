@@ -60,7 +60,7 @@ export default function FollowUps() {
                 <span
                   className="text-xs px-2 py-0.5 rounded self-start mt-0.5"
                   style={c.status === 'opened'
-                    ? { backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }
+                    ? { backgroundColor: 'rgba(34,211,238,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.2)' }
                     : { backgroundColor: 'rgba(136,135,128,0.08)', color: C.secondary, border: '1px solid rgba(136,135,128,0.2)' }}
                 >
                   {c.status}

@@ -7,9 +7,9 @@ const ADMIN_EMAIL = 'bray.200913@gmail.com'
 const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL ?? '/api/webhook'
 
 const C = {
-  bg: '#0B0A09', card: '#1A1713', border: '#2E2A24', divider: '#211E19',
-  primary: '#F5F1E8', secondary: '#A39B8E', muted: '#6E665B',
-  accent: '#FB7A1E', inputBg: '#131110',
+  bg: '#05070D', card: '#0E1420', border: '#2E2A24', divider: '#211E19',
+  primary: '#EAF2FF', secondary: '#94A3B8', muted: '#5B6678',
+  accent: '#22D3EE', inputBg: '#131110',
 }
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
@@ -50,8 +50,8 @@ function CopyBtn({ value }) {
   return (
     <button onClick={doCopy} style={{
       fontSize: 11, padding: '3px 8px', borderRadius: 4, border: 'none',
-      backgroundColor: copied ? 'rgba(22,199,132,0.14)' : 'rgba(163,155,142,0.12)',
-      color: copied ? '#3FD99B' : C.secondary,
+      backgroundColor: copied ? 'rgba(34,211,238,0.14)' : 'rgba(163,155,142,0.12)',
+      color: copied ? '#67E8F9' : C.secondary,
       cursor: 'pointer', flexShrink: 0,
     }}>
       {copied ? 'Copied' : 'Copy'}
@@ -188,7 +188,7 @@ export default function Admin() {
               disabled={!query.trim() || searching}
               style={{
                 padding: '9px 22px', borderRadius: 7, border: 'none',
-                backgroundColor: C.accent, color: '#2A1606',
+                backgroundColor: C.accent, color: '#04141A',
                 fontSize: 13, fontWeight: 700, cursor: 'pointer',
                 opacity: (!query.trim() || searching) ? 0.5 : 1,
                 transition: 'opacity 0.15s',

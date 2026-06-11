@@ -132,7 +132,7 @@ export default function Checkout() {
             backgroundColor: 'var(--ap-accent)',
             color: 'var(--ap-on-accent)',
             opacity: loading ? 0.6 : 1,
-            boxShadow: loading ? 'none' : '0 8px 28px rgba(251,122,30,0.4)',
+            boxShadow: loading ? 'none' : '0 8px 28px rgba(34,211,238,0.4)',
             fontSize: 15, fontWeight: 700,
             cursor: loading ? 'default' : 'pointer',
             transition: 'opacity 0.15s, background-color 0.15s',

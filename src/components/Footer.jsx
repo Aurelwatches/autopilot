@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
+import { Reveal } from './motion'
 
 const C = {
-  primary:   '#F5F1E8',
-  secondary: '#A39B8E',
-  muted:     '#6E665B',
+  primary:   '#EAF2FF',
+  secondary: '#94A3B8',
+  muted:     '#5B6678',
 }
 
 export default function Footer() {
@@ -14,8 +15,8 @@ export default function Footer() {
   ]
 
   return (
-    <footer style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '32px 24px', backgroundColor: '#0B0A09' }}>
-      <div style={{
+    <footer style={{ position: 'relative', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '32px 24px' }}>
+      <Reveal amount={0.4} y={20} style={{
         maxWidth: 1120,
         margin: '0 auto',
         display: 'flex',
@@ -33,6 +34,7 @@ export default function Footer() {
             <Link
               key={label}
               to={to}
+              className="nav-underline"
               style={{ fontSize: 13, color: C.secondary, textDecoration: 'none', transition: 'color 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.color = C.primary)}
               onMouseLeave={e => (e.currentTarget.style.color = C.secondary)}
@@ -41,7 +43,7 @@ export default function Footer() {
             </Link>
           ))}
         </div>
-      </div>
+      </Reveal>
     </footer>
   )
 }

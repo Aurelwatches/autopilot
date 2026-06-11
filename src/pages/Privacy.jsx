@@ -6,7 +6,7 @@ const PRIVACY_EMAIL = 'privacy@useautopilot.com'
 export default function Privacy() {
   return (
     <LegalLayout title="Privacy Policy" updated="June 5, 2026">
-      <p className="text-sm leading-relaxed mb-8" style={{ color: '#A39B8E' }}>
+      <p className="text-sm leading-relaxed mb-8" style={{ color: '#94A3B8' }}>
         This Privacy Policy explains how AutoPilot ("AutoPilot", "we", "us", or "our") collects,
         uses, and protects information when you use our service. We are committed to handling your
         data responsibly and in compliance with the EU General Data Protection Regulation (GDPR) and

@@ -1,23 +1,23 @@
-import { useEffect, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { smoothScrollTo } from '../utils/smoothScroll'
+import {
+  EASE, ShimmerButton, Particles, useTypewriter,
+} from './motion'
+import WaveDivider from './WaveDivider'
+import ElegantShapes from './ElegantShapes'
 
-const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
-const SKELETON_MS = 1200
+const HEAD = 'Your restaurant\nruns itself.'
+const GRAD_START = HEAD.indexOf('itself.')
 
-// ── Staggered reveal ─────────────────────────────────────────────────────────
-function useReveal(delayMs, { scale = false, duration = 900 } = {}) {
-  const [on, setOn] = useState(false)
-  useEffect(() => {
-    const id = setTimeout(() => setOn(true), delayMs)
-    return () => clearTimeout(id)
-  }, [delayMs])
-  const hidden = scale ? 'translateY(24px) scale(0.97)' : 'translateY(24px)'
-  const shown  = scale ? 'translateY(0) scale(1)'       : 'translateY(0)'
-  return {
-    opacity:    on ? 1 : 0,
-    transform:  on ? shown : hidden,
-    transition: `opacity ${duration}ms ${EASE}, transform ${duration}ms ${EASE}`,
-  }
+// Render a string with '\n' turned into <br/>.
+function withBreaks(str) {
+  const parts = str.split('\n')
+  return parts.map((p, i) => (
+    <span key={i}>
+      {p}
+      {i < parts.length - 1 && <br />}
+    </span>
+  ))
 }
 
 // ── Glass notification card ──────────────────────────────────────────────────
@@ -30,7 +30,7 @@ function Card({ style, children }) {
       borderRadius: 20,
       padding: '12px 18px',
       fontSize: 13,
-      color: '#F5F1E8',
+      color: '#EAF2FF',
       whiteSpace: 'nowrap',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
@@ -42,290 +42,34 @@ function Card({ style, children }) {
   )
 }
 
-// ── Skeleton shape with left-to-right shimmer sweep ──────────────────────────
-function Sk({ w, h, r = 4, delay = 0, style }) {
+// ── Floating mockup card: fades + slides up on load, then bobs forever ────────
+function FloatingCard({ delay, bob, position, children }) {
+  const reduce = useReducedMotion()
   return (
-    <div style={{
-      position: 'relative',
-      overflow: 'hidden',
-      width: w,
-      height: h,
-      borderRadius: r,
-      backgroundColor: '#ffffff0f',
-      ...style,
-    }}>
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%)',
-        animation: 'heroShimmer 1.8s linear infinite',
-        animationDelay: `${delay}s`,
-      }} />
-    </div>
-  )
-}
-
-// ── Skeleton placeholder layout ───────────────────────────────────────────────
-function HeroSkeleton({ hidden }) {
-  return (
-    <div style={{
-      position: 'absolute',
-      inset: 0,
-      zIndex: 3,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      pointerEvents: 'none',
-      opacity: hidden ? 0 : 1,
-      transition: 'opacity 300ms ease-out',
-    }}>
-      {/* Centered column mirrors the real content */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}>
-        {/* Eyebrow */}
-        <Sk w={120} h={12} r={6} delay={0} style={{ marginBottom: 28 }} />
-
-        {/* Headline lines */}
-        <Sk w="min(480px, 80vw)" h={72} r={12} delay={0.2} style={{ marginBottom: 14 }} />
-        <Sk w="min(380px, 66vw)" h={72} r={12} delay={0.4} style={{ marginBottom: 28 }} />
-
-        {/* Gradient line */}
-        <Sk w={120} h={2} r={2} delay={0.6} style={{ marginBottom: 32 }} />
-
-        {/* Subheadline lines */}
-        <Sk w="min(440px, 76vw)" h={16} r={8} delay={0.8} style={{ marginBottom: 12 }} />
-        <Sk w="min(320px, 60vw)" h={16} r={8} delay={1.0} style={{ marginBottom: 40 }} />
-
-        {/* Buttons */}
-        <div style={{ display: 'flex', gap: 14 }}>
-          <Sk w={160} h={48} r={980} delay={1.2} />
-          <Sk w={160} h={48} r={980} delay={1.4} />
-        </div>
-      </div>
-
-      {/* Card outlines in their positions */}
-      <div className="hero-card-sk" style={{ position: 'absolute', top: '52%', left: 'max(28px, 7%)' }}>
-        <Sk w={170} h={44} r={16} delay={1.6} />
-      </div>
-      <div className="hero-card-sk" style={{ position: 'absolute', top: '28%', right: 'max(28px, 7%)' }}>
-        <Sk w={195} h={44} r={16} delay={1.8} />
-      </div>
-      <div className="hero-card-sk" style={{ position: 'absolute', bottom: '20%', left: '50%', marginLeft: -130 }}>
-        <Sk w={235} h={44} r={16} delay={2.0} />
-      </div>
-    </div>
-  )
-}
-
-// ── Real hero content (mounts after skeleton, runs staggered reveals) ─────────
-function HeroContent() {
-  const eyebrow = useReveal(300)
-  const head    = useReveal(500,  { scale: true })
-  const line    = useReveal(700)
-  const sub     = useReveal(900)
-  const btns    = useReveal(1100)
-  const card1   = useReveal(1300)
-  const card2   = useReveal(1450)
-  const card3   = useReveal(1600)
-
-  return (
-    <>
-      {/* Content */}
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 820 }}>
-
-        {/* Eyebrow */}
-        <p style={{
-          ...eyebrow,
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 12,
-          fontWeight: 500,
-          textTransform: 'uppercase',
-          letterSpacing: '0.18em',
-          color: '#FB7A1E',
-          marginBottom: 24,
-        }}>
-          AI automation for restaurants
-        </p>
-
-        {/* Headline */}
-        <h1 className="hero-headline" style={{
-          ...head,
-          fontFamily: "'Bricolage Grotesque', sans-serif",
-          fontSize: 'clamp(48px, 9vw, 92px)',
-          fontWeight: 800,
-          lineHeight: 0.98,
-          letterSpacing: '-0.03em',
-          color: '#FBF9F4',
-          marginBottom: 28,
-        }}>
-          Your restaurant
-          <br />
-          runs{' '}
-          <span style={{
-            background: 'linear-gradient(90deg, #FB7A1E, #FF5E4D)',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>itself.</span>
-        </h1>
-
-        {/* Glowing gradient line */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
-          <div style={{
-            height: 3,
-            width: 120,
-            borderRadius: 2,
-            background: 'linear-gradient(90deg, #FB7A1E, #FF5E4D)',
-            boxShadow: '0 0 16px rgba(251,122,30,0.7)',
-            transformOrigin: 'left center',
-            opacity: line.opacity,
-            transform: line.opacity ? 'scaleX(1)' : 'scaleX(0)',
-            transition: `opacity 700ms ${EASE}, transform 900ms ${EASE}`,
-          }} />
-        </div>
-
-        {/* Subheadline */}
-        <p className="hero-sub" style={{
-          ...sub,
-          fontSize: 19,
-          lineHeight: 1.55,
-          color: '#A39B8E',
-          maxWidth: 500,
-          margin: '0 auto 40px',
-        }}>
-          AutoPilot handles Google reviews, social posts, and customer
-          follow-ups — automatically.
-        </p>
-
-        {/* Buttons */}
-        <div className="hero-btns" style={{
-          ...btns,
-          display: 'flex',
-          gap: 14,
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-        }}>
-          <a
-            href="/signup"
-            className="hero-btn"
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#FB7A1E',
-              color: '#2A1606',
-              borderRadius: 980,
-              padding: '13px 30px',
-              fontSize: 17,
-              fontWeight: 700,
-              textDecoration: 'none',
-              boxShadow: '0 8px 30px rgba(251,122,30,0.4)',
-              transition: 'background-color 0.15s, box-shadow 0.15s, transform 0.15s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#FF8C3A'; e.currentTarget.style.boxShadow = '0 10px 38px rgba(251,122,30,0.6)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#FB7A1E'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(251,122,30,0.4)'; e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            Start free trial
-          </a>
-          <a
-            href="#features"
-            className="hero-btn"
-            onClick={e => { e.preventDefault(); smoothScrollTo('features') }}
-            style={{
-              display: 'inline-block',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#F5F1E8',
-              border: '1px solid rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              borderRadius: 980,
-              padding: '13px 30px',
-              fontSize: 17,
-              fontWeight: 500,
-              textDecoration: 'none',
-              transition: 'border-color 0.15s, background-color 0.15s',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.borderColor = 'rgba(251,122,30,0.5)'
-              e.currentTarget.style.background = 'rgba(251,122,30,0.1)'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
-              e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
-            }}
-          >
-            See how it works
-          </a>
-        </div>
-      </div>
-
-      {/* Floating notification cards */}
-      <div className="hero-cards" style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
-
-        {/* Card 1 — left */}
-        <div style={{ ...card1, position: 'absolute', top: '52%', left: 'max(28px, 7%)' }}>
-          <Card style={{ animation: 'cardBob 4s ease-in-out infinite' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <span style={{
-                width: 8, height: 8, borderRadius: '50%',
-                backgroundColor: '#16C784', flexShrink: 0,
-              }} />
-              <span style={{ fontWeight: 500 }}>Review replied</span>
-              <span style={{ color: '#A39B8E' }}>· 2s ago</span>
-            </div>
-          </Card>
-        </div>
-
-        {/* Card 2 — right */}
-        <div style={{ ...card2, position: 'absolute', top: '28%', right: 'max(28px, 7%)' }}>
-          <Card style={{ animation: 'cardBob 5s ease-in-out infinite' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span style={{ color: '#FB7A1E', fontSize: 14, lineHeight: 1 }}>★</span>
-              <span style={{ fontWeight: 500 }}>4.9</span>
-              <span style={{ color: '#A39B8E' }}>avg rating this month</span>
-            </div>
-          </Card>
-        </div>
-
-        {/* Card 3 — bottom */}
-        <div style={{ ...card3, position: 'absolute', bottom: 'calc(20% - 40px)', left: '50%', marginLeft: -130 }}>
-          <Card style={{ animation: 'cardBob 6s ease-in-out infinite' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <span className="pulse-dot" style={{
-                width: 8, height: 8, borderRadius: '50%',
-                backgroundColor: '#16C784', flexShrink: 0,
-              }} />
-              <span style={{ fontWeight: 500 }}>AutoPilot is running</span>
-              <span style={{ color: '#A39B8E' }}>· 47 tasks today</span>
-            </div>
-          </Card>
-        </div>
-
-      </div>
-    </>
+    <motion.div
+      style={{ position: 'absolute', ...position }}
+      initial={{ opacity: 0, y: 28, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.9, ease: EASE, delay }}
+    >
+      <Card style={reduce ? undefined : { animation: `cardBob ${bob}s ease-in-out infinite` }}>
+        {children}
+      </Card>
+    </motion.div>
   )
 }
 
 // ── Hero ─────────────────────────────────────────────────────────────────────
 export default function Hero() {
-  const blobs = useReveal(0, { duration: 1000 })
-  const [showReal, setShowReal] = useState(false)
-  const [mountSkeleton, setMountSkeleton] = useState(true)
-
-  useEffect(() => {
-    // At 1.2s: reveal real content + start the 300ms skeleton fade-out
-    const t1 = setTimeout(() => setShowReal(true), SKELETON_MS)
-    // After the fade completes, drop the skeleton from the tree
-    const t2 = setTimeout(() => setMountSkeleton(false), SKELETON_MS + 350)
-    return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [])
+  const { typed, done } = useTypewriter(HEAD, { speed: 52, startDelay: 350 })
+  const shown = HEAD.slice(0, typed)
+  const plain = shown.slice(0, Math.min(typed, GRAD_START))
+  const grad  = typed > GRAD_START ? shown.slice(GRAD_START) : ''
 
   return (
     <section style={{
       position: 'relative',
       minHeight: '100vh',
-      backgroundColor: '#0B0A09',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -337,43 +81,157 @@ export default function Hero() {
       paddingRight: 24,
     }}>
 
-      {/* Breathing gradient blobs — visible behind both skeleton and content */}
-      <div style={{ ...blobs, position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        <div style={{
-          position: 'absolute',
-          top: '-15%', left: '-10%',
-          width: 720, height: 720,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, #7A2E00 0%, transparent 70%)',
-          opacity: 0.5,
-          filter: 'blur(40px)',
-          animation: 'heroBlobA 15s ease-in-out infinite',
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: '-20%', right: '-10%',
-          width: 760, height: 760,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, #0A3D2B 0%, transparent 70%)',
-          opacity: 0.45,
-          filter: 'blur(40px)',
-          animation: 'heroBlobB 15s ease-in-out infinite',
-        }} />
-      </div>
-
-      {/* Fade overlay — blobs gradually dissolve into pure #000 toward the
-          bottom so the seam into the feature sections is seamless */}
+      {/* Soft ambient glow — quiet depth behind the elegant shapes */}
       <div style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: 1,
-        pointerEvents: 'none',
-        background: 'linear-gradient(180deg, transparent 0%, transparent 50%, #0B0A09 100%)',
+        position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 70% 55% at 50% 40%, rgba(11,58,107,0.45) 0%, transparent 70%)',
       }} />
 
+      {/* Elegant floating 3D shapes (21st.dev) */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        <ElegantShapes />
+      </div>
 
-      {mountSkeleton && <HeroSkeleton hidden={showReal} />}
-      {showReal && <HeroContent />}
+      {/* Subtle particle field */}
+      <Particles count={16} color="rgba(34,211,238,0.4)" />
+
+      {/* Subtle grid overlay */}
+      <div className="ap-grid-overlay" style={{ zIndex: 0 }} />
+
+      {/* Bottom fade — blobs dissolve toward the seam with the next section */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+        background: 'linear-gradient(180deg, transparent 0%, transparent 64%, rgba(5,7,13,0.82) 100%)',
+      }} />
+
+      {/* Flowing wave seam into the content below */}
+      <WaveDivider />
+
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', maxWidth: 820 }}>
+
+        {/* Eyebrow */}
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE, delay: 0.1 }}
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 12, fontWeight: 500, textTransform: 'uppercase',
+            letterSpacing: '0.18em', color: '#22D3EE', marginBottom: 24,
+          }}
+        >
+          AI automation for restaurants
+        </motion.p>
+
+        {/* Headline — types itself in */}
+        <h1 className="hero-headline" style={{
+          fontFamily: "'Bricolage Grotesque', sans-serif",
+          fontSize: 'clamp(48px, 9vw, 92px)',
+          fontWeight: 800,
+          lineHeight: 0.98,
+          letterSpacing: '-0.03em',
+          color: '#FFFFFF',
+          marginBottom: 28,
+          minHeight: '1.96em',
+        }}>
+          {withBreaks(plain)}
+          {grad && <span className="ap-flow-text">{grad}</span>}
+          {!done && <span className="ap-caret" style={{ background: '#22D3EE' }} />}
+        </h1>
+
+        {/* Glowing gradient line */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          <motion.div
+            className="ap-flow-line"
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            transition={{ duration: 0.9, ease: EASE, delay: 1.0 }}
+            style={{
+              height: 3, width: 120, borderRadius: 2, transformOrigin: 'left center',
+              boxShadow: '0 0 16px rgba(34,211,238,0.7)',
+            }}
+          />
+        </div>
+
+        {/* Subheadline */}
+        <motion.p
+          className="hero-sub"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: EASE, delay: 1.15 }}
+          style={{
+            fontSize: 19, lineHeight: 1.55, color: '#94A3B8',
+            maxWidth: 500, margin: '0 auto 40px',
+          }}
+        >
+          AutoPilot handles Google reviews, social posts, and customer
+          follow-ups — automatically.
+        </motion.p>
+
+        {/* Buttons */}
+        <motion.div
+          className="hero-btns"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: EASE, delay: 1.35 }}
+          style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}
+        >
+          <ShimmerButton
+            to="/signup"
+            className="hero-btn"
+            style={{
+              backgroundColor: '#22D3EE', color: '#04141A', borderRadius: 980,
+              padding: '13px 30px', fontSize: 17, fontWeight: 700,
+              textDecoration: 'none', boxShadow: '0 8px 30px rgba(34,211,238,0.4)',
+            }}
+          >
+            Start free trial
+          </ShimmerButton>
+          <ShimmerButton
+            to="/how-it-works"
+            className="hero-btn"
+            style={{
+              background: 'rgba(255,255,255,0.05)', color: '#EAF2FF',
+              border: '1px solid rgba(255,255,255,0.2)',
+              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+              borderRadius: 980, padding: '13px 30px', fontSize: 17, fontWeight: 500,
+              textDecoration: 'none',
+            }}
+          >
+            See how it works
+          </ShimmerButton>
+        </motion.div>
+      </div>
+
+      {/* Floating notification cards (the "dashboard mockup" pieces) */}
+      <div className="hero-cards" style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
+
+        <FloatingCard delay={1.5} bob={4} position={{ top: '52%', left: 'max(28px, 7%)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22D3EE', flexShrink: 0 }} />
+            <span style={{ fontWeight: 500 }}>Review replied</span>
+            <span style={{ color: '#94A3B8' }}>· 2s ago</span>
+          </div>
+        </FloatingCard>
+
+        <FloatingCard delay={1.65} bob={5} position={{ top: '28%', right: 'max(28px, 7%)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ color: '#22D3EE', fontSize: 14, lineHeight: 1 }}>★</span>
+            <span style={{ fontWeight: 500 }}>4.9</span>
+            <span style={{ color: '#94A3B8' }}>avg rating this month</span>
+          </div>
+        </FloatingCard>
+
+        <FloatingCard delay={1.8} bob={6} position={{ bottom: 'calc(20% - 40px)', left: '50%', marginLeft: -130 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22D3EE', flexShrink: 0 }} />
+            <span style={{ fontWeight: 500 }}>AutoPilot is running</span>
+            <span style={{ color: '#94A3B8' }}>· 47 tasks today</span>
+          </div>
+        </FloatingCard>
+
+      </div>
     </section>
   )
 }

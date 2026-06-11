@@ -45,7 +45,7 @@ export default function CookieConsent() {
         style={{
           fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 8,
           backgroundColor: 'var(--ap-accent)', color: 'var(--ap-on-accent)', border: 'none', cursor: 'pointer',
-          whiteSpace: 'nowrap', boxShadow: '0 4px 16px rgba(251,122,30,0.28)',
+          whiteSpace: 'nowrap', boxShadow: '0 4px 16px rgba(34,211,238,0.28)',
         }}
         onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--ap-accent-hover)')}
         onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--ap-accent)')}

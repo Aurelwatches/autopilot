@@ -127,7 +127,7 @@ export default function SupportChat() {
               <div style={{
                 width: 7, height: 7, borderRadius: '50%',
                 backgroundColor: 'var(--ap-success)',
-                boxShadow: '0 0 0 2px rgba(22,199,132,0.2)',
+                boxShadow: '0 0 0 2px rgba(34,211,238,0.2)',
               }} />
               <span style={{ fontSize: 12.5, fontWeight: 600, color: C.primary }}>
                 {isPro ? '⚡ Priority Support' : 'AutoPilot Support'}
@@ -136,9 +136,9 @@ export default function SupportChat() {
                 <span style={{
                   fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
                   padding: '1px 5px', borderRadius: 4,
-                  backgroundColor: 'rgba(245,180,60,0.14)',
-                  color: '#F5B43C',
-                  border: '1px solid rgba(245,180,60,0.3)',
+                  backgroundColor: 'rgba(59,130,246,0.14)',
+                  color: '#3B82F6',
+                  border: '1px solid rgba(59,130,246,0.3)',
                 }}>PRO</span>
               )}
             </div>
@@ -183,7 +183,7 @@ export default function SupportChat() {
                         backgroundColor: isSent ? C.sentBubble : 'var(--ap-accent-soft)',
                         border: isSent
                           ? `1px solid ${C.border}`
-                          : '1px solid rgba(251,122,30,0.28)',
+                          : '1px solid rgba(34,211,238,0.28)',
                       }}>
                         <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: C.primary }}>
                           {evt.text}

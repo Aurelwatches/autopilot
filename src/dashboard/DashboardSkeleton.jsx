@@ -55,14 +55,14 @@ export default function DashboardSkeleton({ hidden }) {
         <div style={{
           position: 'absolute', top: '-15%', right: '-5%',
           width: 600, height: 600, borderRadius: '50%',
-          background: 'radial-gradient(circle, #7A2E00 0%, transparent 70%)',
+          background: 'radial-gradient(circle, #0B3A6B 0%, transparent 70%)',
           opacity: 0.3, filter: 'blur(50px)',
           animation: 'heroBlobA 15s ease-in-out infinite',
         }} />
         <div style={{
           position: 'absolute', bottom: '-15%', left: '-5%',
           width: 640, height: 640, borderRadius: '50%',
-          background: 'radial-gradient(circle, #0A3D2B 0%, transparent 70%)',
+          background: 'radial-gradient(circle, #073B46 0%, transparent 70%)',
           opacity: 0.3, filter: 'blur(50px)',
           animation: 'heroBlobB 15s ease-in-out infinite',
         }} />
@@ -111,7 +111,7 @@ export default function DashboardSkeleton({ hidden }) {
 
         {/* Status bar */}
         <SkCard style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', marginBottom: 32, borderRadius: 12 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(22,199,132,0.3)', flexShrink: 0 }} />
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(34,211,238,0.3)', flexShrink: 0 }} />
           <Sk w={130} h={12} r={6} delay={0.05} />
           <Sk w={90} h={12} r={6} delay={0.12} />
         </SkCard>

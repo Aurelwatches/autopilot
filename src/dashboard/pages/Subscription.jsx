@@ -36,12 +36,12 @@ function Row({ label, children, C, last }) {
 function SadFace() {
   return (
     <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
-      <circle cx="28" cy="28" r="25" stroke="#F5B43C" strokeWidth="2.5" opacity="0.5" />
-      <circle cx="20" cy="24" r="2.6" fill="#F5B43C" />
-      <circle cx="36" cy="24" r="2.6" fill="#F5B43C" />
-      <path d="M19 39c2.4-4 6-6 9-6s6.6 2 9 6" stroke="#F5B43C" strokeWidth="2.6"
+      <circle cx="28" cy="28" r="25" stroke="#3B82F6" strokeWidth="2.5" opacity="0.5" />
+      <circle cx="20" cy="24" r="2.6" fill="#3B82F6" />
+      <circle cx="36" cy="24" r="2.6" fill="#3B82F6" />
+      <path d="M19 39c2.4-4 6-6 9-6s6.6 2 9 6" stroke="#3B82F6" strokeWidth="2.6"
         strokeLinecap="round" fill="none" />
-      <path d="M40 17l3 1.5" stroke="#F5B43C" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M40 17l3 1.5" stroke="#3B82F6" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
   )
 }
@@ -95,9 +95,9 @@ export default function Subscription() {
                 <span style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
                   padding: '3px 10px', borderRadius: 980,
-                  background: canceled ? 'rgba(245,180,60,0.14)' : 'rgba(22,199,132,0.14)',
-                  color: canceled ? '#F5B43C' : '#16C784',
-                  border: `1px solid ${canceled ? 'rgba(245,180,60,0.30)' : 'rgba(22,199,132,0.30)'}`,
+                  background: canceled ? 'rgba(59,130,246,0.14)' : 'rgba(34,211,238,0.14)',
+                  color: canceled ? '#3B82F6' : '#22D3EE',
+                  border: `1px solid ${canceled ? 'rgba(59,130,246,0.30)' : 'rgba(34,211,238,0.30)'}`,
                 }}>
                   {canceled ? 'CANCELING' : 'ACTIVE'}
                 </span>
@@ -128,10 +128,10 @@ export default function Subscription() {
 
       {canceled && (
         <div style={{
-          background: 'rgba(245,180,60,0.08)', border: '1px solid rgba(245,180,60,0.25)',
+          background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)',
           borderRadius: 12, padding: '14px 18px', marginBottom: 24,
         }}>
-          <p className="text-sm font-medium" style={{ color: '#F5B43C' }}>
+          <p className="text-sm font-medium" style={{ color: '#3B82F6' }}>
             Your subscription is set to cancel
           </p>
           <p className="text-xs mt-1" style={{ color: C.secondary }}>
@@ -191,11 +191,11 @@ export default function Subscription() {
                   onClick={changeToYearly}
                   className="shrink-0 text-sm font-semibold px-5 py-2 rounded transition-colors"
                   style={{
-                    backgroundColor: 'rgba(22,199,132,0.12)', color: 'var(--ap-success)',
-                    border: '1px solid rgba(22,199,132,0.30)', cursor: 'pointer',
+                    backgroundColor: 'rgba(34,211,238,0.12)', color: 'var(--ap-success)',
+                    border: '1px solid rgba(34,211,238,0.30)', cursor: 'pointer',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(22,199,132,0.2)'}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(22,199,132,0.12)'}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(34,211,238,0.2)'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(34,211,238,0.12)'}
                 >
                   Change to yearly
                 </button>

@@ -16,7 +16,7 @@ const TYPE_MAP = {
   review_replied: { type: 'review', text: 'Review replied' },
   post_scheduled: { type: 'post',   text: 'Post scheduled' },
 }
-const typeColor = { review: '#FB7A1E', post: '#a78bfa' }
+const typeColor = { review: '#22D3EE', post: '#a78bfa' }
 const typeLabel = { review: 'R', post: 'P' }
 
 function relativeTime(iso) {
@@ -277,7 +277,7 @@ export default function Overview() {
                 className="flex items-start gap-4 px-5 py-3.5"
                 style={{
                   borderBottom: i < feed.length - 1 ? `1px solid ${C.divider}` : 'none',
-                  backgroundColor: item.newest ? 'rgba(22,199,132,0.06)' : 'transparent',
+                  backgroundColor: item.newest ? 'rgba(34,211,238,0.06)' : 'transparent',
                   opacity: revealed ? 1 : 0,
                   transform: revealed ? 'translateY(0)' : 'translateY(10px)',
                   transition: `opacity 500ms ${EASE}, transform 500ms ${EASE}`,

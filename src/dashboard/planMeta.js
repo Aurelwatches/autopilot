@@ -19,8 +19,8 @@ export const PLAN_META = {
     key: 'pro', label: 'Pro', emoji: '🚀',
     blurb: 'For restaurants that want everything',
     monthly: 350, yearly: 3500,
-    color: '#F5B43C',
-    pillBg: 'rgba(245,180,60,0.14)', pillBorder: 'rgba(245,180,60,0.32)',
+    color: '#3B82F6',
+    pillBg: 'rgba(59,130,246,0.14)', pillBorder: 'rgba(59,130,246,0.32)',
   },
 }
 

@@ -52,9 +52,9 @@ function CopyButton({ value, C }) {
       onClick={handleCopy}
       className="shrink-0 text-xs px-2 py-0.5 rounded transition-colors"
       style={{
-        backgroundColor: copied ? 'rgba(22,199,132,0.12)' : 'rgba(136,135,128,0.1)',
+        backgroundColor: copied ? 'rgba(34,211,238,0.12)' : 'rgba(136,135,128,0.1)',
         color: copied ? 'var(--ap-success)' : C.secondary,
-        border: `1px solid ${copied ? 'rgba(22,199,132,0.22)' : 'rgba(136,135,128,0.2)'}`,
+        border: `1px solid ${copied ? 'rgba(34,211,238,0.22)' : 'rgba(136,135,128,0.2)'}`,
         cursor: 'pointer',
       }}
     >
@@ -238,8 +238,8 @@ export default function Settings() {
               <span style={{
                 fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
                 padding: '1px 7px', borderRadius: 980,
-                background: 'rgba(22,199,132,0.14)', color: 'var(--ap-success)',
-                border: '1px solid rgba(22,199,132,0.30)',
+                background: 'rgba(34,211,238,0.14)', color: 'var(--ap-success)',
+                border: '1px solid rgba(34,211,238,0.30)',
               }}>ACTIVE</span>
             </div>
           </div>
@@ -319,7 +319,7 @@ export default function Settings() {
             {connections.google ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs px-2.5 py-1 rounded"
-                  style={{ backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }}>
+                  style={{ backgroundColor: 'rgba(34,211,238,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.2)' }}>
                   ✓ Connected
                 </span>
                 <button
@@ -382,7 +382,7 @@ export default function Settings() {
             {connections.instagram ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs px-2.5 py-1 rounded"
-                  style={{ backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }}>
+                  style={{ backgroundColor: 'rgba(34,211,238,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.2)' }}>
                   ✓ Connected
                 </span>
                 <button
@@ -417,7 +417,7 @@ export default function Settings() {
             {connections.facebook ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs px-2.5 py-1 rounded"
-                  style={{ backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }}>
+                  style={{ backgroundColor: 'rgba(34,211,238,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.2)' }}>
                   ✓ Connected
                 </span>
                 <button

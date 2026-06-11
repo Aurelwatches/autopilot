@@ -140,7 +140,7 @@ export default function Reviews() {
         <div className="flex items-center gap-5">
           {repliedCount > 0 && (
             <span className="text-sm px-3 py-1 rounded"
-              style={{ backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }}>
+              style={{ backgroundColor: 'rgba(34,211,238,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.2)' }}>
               {repliedCount} replied this month
             </span>
           )}
@@ -163,8 +163,8 @@ export default function Reviews() {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '10px 16px', borderRadius: 10, marginBottom: 20,
-          backgroundColor: capExceeded ? 'rgba(245,180,60,0.10)' : 'rgba(251,122,30,0.07)',
-          border: `1px solid ${capExceeded ? 'rgba(245,180,60,0.26)' : 'rgba(251,122,30,0.18)'}`,
+          backgroundColor: capExceeded ? 'rgba(59,130,246,0.10)' : 'rgba(34,211,238,0.07)',
+          border: `1px solid ${capExceeded ? 'rgba(59,130,246,0.26)' : 'rgba(34,211,238,0.18)'}`,
         }}>
           <span style={{ fontSize: 12, color: C.secondary }}>
             {capExceeded
@@ -243,7 +243,7 @@ export default function Reviews() {
                     </div>
                     <span className="text-xs px-2 py-0.5 rounded shrink-0"
                       style={r.status === 'replied'
-                        ? { backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }
+                        ? { backgroundColor: 'rgba(34,211,238,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.2)' }
                         : { backgroundColor: 'rgba(251,191,36,0.08)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.15)' }}
                     >
                       {r.status === 'replied' ? '✓ Replied' : '⏳ Pending'}

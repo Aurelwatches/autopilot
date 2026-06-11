@@ -6,7 +6,7 @@ const CONTACT_EMAIL = 'hello@useautopilot.com'
 export default function Terms() {
   return (
     <LegalLayout title="Terms of Service" updated="June 5, 2026">
-      <p className="text-sm leading-relaxed mb-8" style={{ color: '#A39B8E' }}>
+      <p className="text-sm leading-relaxed mb-8" style={{ color: '#94A3B8' }}>
         These Terms of Service ("Terms") govern your access to and use of AutoPilot. By creating an
         account or using the service, you agree to these Terms. If you do not agree, do not use the service.
       </p>

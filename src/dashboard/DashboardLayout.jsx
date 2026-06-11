@@ -82,14 +82,14 @@ function DashboardContent() {
             <div style={{
               position: 'absolute', top: '-15%', right: '-5%',
               width: 600, height: 600, borderRadius: '50%',
-              background: 'radial-gradient(circle, #7A2E00 0%, transparent 70%)',
+              background: 'radial-gradient(circle, #0B3A6B 0%, transparent 70%)',
               opacity: 0.22, filter: 'blur(50px)',
               animation: 'heroBlobA 15s ease-in-out infinite',
             }} />
             <div style={{
               position: 'absolute', bottom: '-15%', left: '-5%',
               width: 640, height: 640, borderRadius: '50%',
-              background: 'radial-gradient(circle, #0A3D2B 0%, transparent 70%)',
+              background: 'radial-gradient(circle, #073B46 0%, transparent 70%)',
               opacity: 0.2, filter: 'blur(50px)',
               animation: 'heroBlobB 15s ease-in-out infinite',
             }} />
@@ -102,14 +102,14 @@ function DashboardContent() {
             <div style={{
               position: 'absolute', top: '-10%', left: '-5%',
               width: 800, height: 800, borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(251,122,30,0.12) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(34,211,238,0.12) 0%, transparent 70%)',
               filter: 'blur(60px)',
               animation: 'heroBlobA 18s ease-in-out infinite',
             }} />
             <div style={{
               position: 'absolute', bottom: '-10%', right: '-5%',
               width: 800, height: 800, borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(22,199,132,0.10) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(34,211,238,0.10) 0%, transparent 70%)',
               filter: 'blur(60px)',
               animation: 'heroBlobB 18s ease-in-out infinite',
             }} />

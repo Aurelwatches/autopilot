@@ -1,51 +1,50 @@
-import { useInView } from '../utils/useInView'
-
-const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
+import { motion } from 'framer-motion'
+import { EASE, GlowCard, Stagger, StaggerItem } from './motion'
 
 const C = {
-  primary:   '#F5F1E8',
-  secondary: '#A39B8E',
-  muted:     '#6E665B',
-  accent:    '#FB7A1E',
-  success:   '#16C784',
+  primary:   '#EAF2FF',
+  secondary: '#94A3B8',
+  muted:     '#5B6678',
+  accent:    '#22D3EE',
+  success:   '#22D3EE',
 }
 
-/* ─── Slide-in wrapper ──────────────────────────────────────────────────────── */
+/* ─── Slide-in wrapper (scroll-triggered) ───────────────────────────────────── */
 /* dir: 'left' | 'right' — controls the start offset direction.                   */
 
-function Slide({ show, dir, delay = 0, children, style }) {
-  const offset = dir === 'left' ? '-60px' : '60px'
+function SlideIn({ dir, delay = 0, amount = 0.3, children, style }) {
+  const offset = dir === 'left' ? -60 : 60
   return (
-    <div
-      style={{
-        opacity: show ? 1 : 0,
-        transform: show ? 'translateX(0)' : `translateX(${offset})`,
-        transition: `opacity 700ms ${EASE}, transform 700ms ${EASE}`,
-        transitionDelay: `${delay}ms`,
-        willChange: 'opacity, transform',
-        ...style,
-      }}
+    <motion.div
+      style={style}
+      initial={{ opacity: 0, x: offset }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true, amount }}
+      transition={{ duration: 0.7, ease: EASE, delay }}
     >
       {children}
-    </div>
+    </motion.div>
   )
 }
 
-/* ─── Dark glass mockup shell ───────────────────────────────────────────────── */
+/* ─── Dark glass mockup shell (lifts + glows on hover) ───────────────────────── */
 
 function Glass({ children }) {
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.04)',
-      border: '1px solid rgba(255,255,255,0.09)',
-      borderRadius: 20,
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
-      overflow: 'hidden',
-    }}>
+    <GlowCard
+      glow="cyan"
+      style={{
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.09)',
+        borderRadius: 20,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+        overflow: 'hidden',
+      }}
+    >
       {children}
-    </div>
+    </GlowCard>
   )
 }
 
@@ -83,7 +82,7 @@ function ReviewMockup() {
       <div style={{ padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <span style={{ fontSize: 14, fontWeight: 500, color: C.primary }}>Sarah M.</span>
-          <span style={{ fontSize: 12, color: '#FFB400' }}>★★★★★</span>
+          <span style={{ fontSize: 12, color: '#7DD3FC' }}>★★★★★</span>
           <span style={{ fontSize: 12, color: C.muted }}>· 2h ago</span>
         </div>
         <p style={{ fontSize: 14, lineHeight: 1.6, color: C.secondary }}>
@@ -118,9 +117,9 @@ function SocialMockup() {
         label="Scheduled Posts"
         right={<span style={{ fontSize: 12, color: C.muted }}>3 queued</span>}
       />
-      <div>
+      <Stagger stagger={0.14} amount={0.4}>
         {posts.map((post, i) => (
-          <div
+          <StaggerItem
             key={i}
             style={{
               padding: '16px 20px',
@@ -145,14 +144,14 @@ function SocialMockup() {
               borderRadius: 6,
               flexShrink: 0,
               ...(post.status === 'scheduled'
-                ? { background: 'rgba(22,199,132,0.14)', color: '#3FD99B' }
+                ? { background: 'rgba(34,211,238,0.14)', color: '#67E8F9' }
                 : { background: 'rgba(255,255,255,0.06)', color: C.secondary }),
             }}>
               {post.status}
             </span>
-          </div>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     </Glass>
   )
 }
@@ -181,7 +180,6 @@ const sections = [
 /* ─── Single feature section ────────────────────────────────────────────────── */
 
 function FeatureSection({ section }) {
-  const [ref, inView] = useInView({ threshold: 0.2 })
   const textLeft = section.textSide === 'left'
 
   // Text slides from its own side; mockup from the opposite side.
@@ -189,12 +187,12 @@ function FeatureSection({ section }) {
   const mockupDir = textLeft ? 'right' : 'left'
 
   // Stagger only section 2 (mockup 150ms after text).
-  const mockupDelay = section.stagger ? 150 : 0
+  const mockupDelay = section.stagger ? 0.15 : 0
 
   // DOM order is always text-first (good mobile reading order); on desktop the
   // grid flips columns for textSide === 'right' via the --flip modifier.
   const text = (
-    <Slide show={inView} dir={textDir}>
+    <SlideIn dir={textDir}>
       <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.2em', color: C.accent }}>
         {section.number}
       </span>
@@ -212,17 +210,17 @@ function FeatureSection({ section }) {
       <p style={{ fontSize: 16, lineHeight: 1.7, color: C.secondary, maxWidth: 460 }}>
         {section.body}
       </p>
-    </Slide>
+    </SlideIn>
   )
 
   const mockup = (
-    <Slide show={inView} dir={mockupDir} delay={mockupDelay}>
+    <SlideIn dir={mockupDir} delay={mockupDelay}>
       {section.mockup}
-    </Slide>
+    </SlideIn>
   )
 
   return (
-    <div ref={ref} className={`feature-grid${textLeft ? '' : ' feature-grid--flip'}`}>
+    <div className={`feature-grid${textLeft ? '' : ' feature-grid--flip'}`}>
       {text}
       {mockup}
     </div>
@@ -233,7 +231,7 @@ function FeatureSection({ section }) {
 
 export default function Features() {
   return (
-    <section id="features" style={{ backgroundColor: '#0B0A09' }}>
+    <section id="features" style={{ position: 'relative' }}>
       <div style={{ maxWidth: 1120, margin: '0 auto', padding: '96px 24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 112 }}>
           {sections.map((s) => (

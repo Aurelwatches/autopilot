@@ -145,7 +145,7 @@ export default function Signup() {
               backgroundColor: 'var(--ap-accent)',
               color: 'var(--ap-on-accent)',
               opacity: loading ? 0.6 : 1,
-              boxShadow: loading ? 'none' : '0 6px 22px rgba(251,122,30,0.32)',
+              boxShadow: loading ? 'none' : '0 6px 22px rgba(34,211,238,0.32)',
               cursor: loading ? 'default' : 'pointer',
               transition: 'opacity 0.15s, background-color 0.15s',
             }}

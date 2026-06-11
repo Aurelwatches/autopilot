@@ -7,6 +7,7 @@ import Admin from './pages/Admin'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Pricing from './pages/Pricing'
+import HowItWorks from './pages/HowItWorks'
 import Checkout from './pages/Checkout'
 import PaymentSuccess from './pages/PaymentSuccess'
 import CookieConsent from './components/CookieConsent'
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/admin" element={<Admin />} />
