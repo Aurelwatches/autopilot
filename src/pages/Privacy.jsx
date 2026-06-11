@@ -6,7 +6,7 @@ const PRIVACY_EMAIL = 'privacy@useautopilot.com'
 export default function Privacy() {
   return (
     <LegalLayout title="Privacy Policy" updated="June 5, 2026">
-      <p className="text-sm leading-relaxed mb-8" style={{ color: '#888780' }}>
+      <p className="text-sm leading-relaxed mb-8" style={{ color: '#A39B8E' }}>
         This Privacy Policy explains how AutoPilot ("AutoPilot", "we", "us", or "our") collects,
         uses, and protects information when you use our service. We are committed to handling your
         data responsibly and in compliance with the EU General Data Protection Regulation (GDPR) and
@@ -51,7 +51,7 @@ export default function Privacy() {
         </p>
         <p>
           To exercise any of these rights, email us at{' '}
-          <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: '#4A90D9' }}>{PRIVACY_EMAIL}</a>.
+          <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--ap-accent)' }}>{PRIVACY_EMAIL}</a>.
           We will respond within the timeframes required by applicable law.
         </p>
       </LSection>
@@ -59,7 +59,7 @@ export default function Privacy() {
       <LSection n="5" title="How to Request Deletion">
         <p>
           You can request deletion of your account and associated data at any time by emailing{' '}
-          <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: '#4A90D9' }}>{PRIVACY_EMAIL}</a>{' '}
+          <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--ap-accent)' }}>{PRIVACY_EMAIL}</a>{' '}
           from the email address associated with your account. We will permanently delete your personal
           data, except where we are required to retain certain records to comply with legal obligations.
         </p>
@@ -98,9 +98,9 @@ export default function Privacy() {
       <LSection n="10" title="Contact Us">
         <p>
           Questions about this policy or your data? Email{' '}
-          <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: '#4A90D9' }}>{PRIVACY_EMAIL}</a>.
+          <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--ap-accent)' }}>{PRIVACY_EMAIL}</a>.
           See also our{' '}
-          <Link to="/terms" style={{ color: '#4A90D9' }}>Terms of Service</Link>.
+          <Link to="/terms" style={{ color: 'var(--ap-accent)' }}>Terms of Service</Link>.
         </p>
       </LSection>
     </LegalLayout>

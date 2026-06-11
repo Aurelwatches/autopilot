@@ -31,9 +31,9 @@ const steps = [
 function CheckCircle() {
   return (
     <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <circle cx="32" cy="32" r="30" stroke="#22C55E" strokeWidth="2.5" opacity="0.4" />
-      <circle cx="32" cy="32" r="22" fill="rgba(34,197,94,0.12)" />
-      <path d="M22 33l7 7 14-15" stroke="#22C55E" strokeWidth="3.5"
+      <circle cx="32" cy="32" r="30" stroke="#16C784" strokeWidth="2.5" opacity="0.4" />
+      <circle cx="32" cy="32" r="22" fill="rgba(22,199,132,0.12)" />
+      <path d="M22 33l7 7 14-15" stroke="#16C784" strokeWidth="3.5"
         strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
@@ -212,15 +212,17 @@ export default function Onboarding() {
         {!current.final && (
           <p style={{
             fontSize: 11, fontWeight: 600, letterSpacing: '0.08em',
-            textTransform: 'uppercase', color: '#4A8EFF', marginBottom: 8,
+            textTransform: 'uppercase', color: '#FB7A1E', marginBottom: 8,
+            fontFamily: 'var(--font-mono)',
           }}>
             Step {step + 1} of {steps.length - 1}
           </p>
         )}
 
         <h2 style={{
+          fontFamily: "'Bricolage Grotesque', sans-serif",
           fontSize: current.final ? 24 : 19, fontWeight: 700,
-          letterSpacing: '-0.02em', color: '#FFFFFF', marginBottom: 8,
+          letterSpacing: '-0.02em', color: '#FBF9F4', marginBottom: 8,
         }}>
           {current.title}
         </h2>
@@ -237,7 +239,7 @@ export default function Onboarding() {
                 key={i}
                 style={{
                   width: i === step ? 20 : 7, height: 7, borderRadius: 980,
-                  background: i === step ? '#4A8EFF' : 'rgba(255,255,255,0.18)',
+                  background: i === step ? '#FB7A1E' : 'rgba(255,255,255,0.18)',
                   transition: `all 250ms ${EASE}`,
                 }}
               />
@@ -248,9 +250,10 @@ export default function Onboarding() {
             <button
               onClick={finish}
               style={{
-                background: '#FFFFFF', color: '#000000',
+                background: '#FB7A1E', color: '#2A1606',
                 border: 'none', borderRadius: 980,
-                padding: '11px 22px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                padding: '11px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 6px 22px rgba(251,122,30,0.4)',
                 transition: 'opacity 0.15s',
               }}
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
@@ -262,9 +265,9 @@ export default function Onboarding() {
             <button
               onClick={next}
               style={{
-                background: '#4A8EFF', color: '#FFFFFF',
+                background: '#FB7A1E', color: '#2A1606',
                 border: 'none', borderRadius: 980,
-                padding: '9px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                padding: '9px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
                 transition: 'opacity 0.15s',
               }}
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}

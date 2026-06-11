@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import Navbar from './Navbar'
 import Footer from './Footer'
 
-const C = { bg: '#0A0A0A', primary: '#F0EEE9', secondary: '#888780', muted: '#3A3835', border: '#2A2A2A' }
+const C = { bg: '#0B0A09', primary: '#F5F1E8', secondary: '#A39B8E', muted: '#6E665B', border: '#2E2A24' }
 
 // Shared chrome for /privacy and /terms.
 export default function LegalLayout({ title, updated, children }) {
@@ -13,7 +13,7 @@ export default function LegalLayout({ title, updated, children }) {
     <div style={{ backgroundColor: C.bg, minHeight: '100vh', color: C.primary }}>
       <Navbar />
       <main className="max-w-3xl mx-auto px-6 pt-28 pb-20">
-        <h1 className="text-3xl font-semibold mb-2" style={{ color: C.primary }}>{title}</h1>
+        <h1 className="text-3xl font-bold mb-2" style={{ color: C.primary, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>{title}</h1>
         <p className="text-xs mb-10" style={{ color: C.muted }}>Last updated: {updated}</p>
         <div className="legal-body">{children}</div>
       </main>

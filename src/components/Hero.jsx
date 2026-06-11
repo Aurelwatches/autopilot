@@ -25,16 +25,16 @@ function Card({ style, children }) {
   return (
     <div style={{
       position: 'relative',
-      background: 'rgba(255,255,255,0.03)',
-      border: '1px solid rgba(255,255,255,0.08)',
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.09)',
       borderRadius: 20,
       padding: '12px 18px',
       fontSize: 13,
-      color: '#F0EEE9',
+      color: '#F5F1E8',
       whiteSpace: 'nowrap',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
       ...style,
     }}>
       {children}
@@ -139,11 +139,12 @@ function HeroContent() {
         {/* Eyebrow */}
         <p style={{
           ...eyebrow,
-          fontSize: 13,
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 12,
           fontWeight: 500,
           textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          color: '#888888',
+          letterSpacing: '0.18em',
+          color: '#FB7A1E',
           marginBottom: 24,
         }}>
           AI automation for restaurants
@@ -152,26 +153,33 @@ function HeroContent() {
         {/* Headline */}
         <h1 className="hero-headline" style={{
           ...head,
-          fontSize: 'clamp(48px, 9vw, 88px)',
+          fontFamily: "'Bricolage Grotesque', sans-serif",
+          fontSize: 'clamp(48px, 9vw, 92px)',
           fontWeight: 800,
-          lineHeight: 1.0,
+          lineHeight: 0.98,
           letterSpacing: '-0.03em',
-          color: '#FFFFFF',
+          color: '#FBF9F4',
           marginBottom: 28,
         }}>
           Your restaurant
           <br />
-          runs itself.
+          runs{' '}
+          <span style={{
+            background: 'linear-gradient(90deg, #FB7A1E, #FF5E4D)',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}>itself.</span>
         </h1>
 
         {/* Glowing gradient line */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
           <div style={{
-            height: 2,
+            height: 3,
             width: 120,
             borderRadius: 2,
-            background: 'linear-gradient(90deg, #3B82F6, #8B5CF6, #EC4899)',
-            boxShadow: '0 0 12px rgba(139,92,246,0.7)',
+            background: 'linear-gradient(90deg, #FB7A1E, #FF5E4D)',
+            boxShadow: '0 0 16px rgba(251,122,30,0.7)',
             transformOrigin: 'left center',
             opacity: line.opacity,
             transform: line.opacity ? 'scaleX(1)' : 'scaleX(0)',
@@ -184,7 +192,7 @@ function HeroContent() {
           ...sub,
           fontSize: 19,
           lineHeight: 1.55,
-          color: '#888888',
+          color: '#A39B8E',
           maxWidth: 500,
           margin: '0 auto 40px',
         }}>
@@ -205,17 +213,18 @@ function HeroContent() {
             className="hero-btn"
             style={{
               display: 'inline-block',
-              backgroundColor: '#FFFFFF',
-              color: '#000000',
+              backgroundColor: '#FB7A1E',
+              color: '#2A1606',
               borderRadius: 980,
               padding: '13px 30px',
               fontSize: 17,
-              fontWeight: 600,
+              fontWeight: 700,
               textDecoration: 'none',
-              transition: 'opacity 0.15s, transform 0.15s',
+              boxShadow: '0 8px 30px rgba(251,122,30,0.4)',
+              transition: 'background-color 0.15s, box-shadow 0.15s, transform 0.15s',
             }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#FF8C3A'; e.currentTarget.style.boxShadow = '0 10px 38px rgba(251,122,30,0.6)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#FB7A1E'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(251,122,30,0.4)'; e.currentTarget.style.transform = 'translateY(0)' }}
           >
             Start free trial
           </a>
@@ -226,7 +235,7 @@ function HeroContent() {
             style={{
               display: 'inline-block',
               background: 'rgba(255,255,255,0.05)',
-              color: '#FFFFFF',
+              color: '#F5F1E8',
               border: '1px solid rgba(255,255,255,0.2)',
               backdropFilter: 'blur(12px)',
               WebkitBackdropFilter: 'blur(12px)',
@@ -238,8 +247,8 @@ function HeroContent() {
               transition: 'border-color 0.15s, background-color 0.15s',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'
-              e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+              e.currentTarget.style.borderColor = 'rgba(251,122,30,0.5)'
+              e.currentTarget.style.background = 'rgba(251,122,30,0.1)'
             }}
             onMouseLeave={e => {
               e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
@@ -260,10 +269,10 @@ function HeroContent() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <span style={{
                 width: 8, height: 8, borderRadius: '50%',
-                backgroundColor: '#22C55E', flexShrink: 0,
+                backgroundColor: '#16C784', flexShrink: 0,
               }} />
               <span style={{ fontWeight: 500 }}>Review replied</span>
-              <span style={{ color: '#888888' }}>· 2s ago</span>
+              <span style={{ color: '#A39B8E' }}>· 2s ago</span>
             </div>
           </Card>
         </div>
@@ -272,9 +281,9 @@ function HeroContent() {
         <div style={{ ...card2, position: 'absolute', top: '28%', right: 'max(28px, 7%)' }}>
           <Card style={{ animation: 'cardBob 5s ease-in-out infinite' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span style={{ color: '#3B82F6', fontSize: 14, lineHeight: 1 }}>★</span>
+              <span style={{ color: '#FB7A1E', fontSize: 14, lineHeight: 1 }}>★</span>
               <span style={{ fontWeight: 500 }}>4.9</span>
-              <span style={{ color: '#888888' }}>avg rating this month</span>
+              <span style={{ color: '#A39B8E' }}>avg rating this month</span>
             </div>
           </Card>
         </div>
@@ -285,10 +294,10 @@ function HeroContent() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <span className="pulse-dot" style={{
                 width: 8, height: 8, borderRadius: '50%',
-                backgroundColor: '#22C55E', flexShrink: 0,
+                backgroundColor: '#16C784', flexShrink: 0,
               }} />
               <span style={{ fontWeight: 500 }}>AutoPilot is running</span>
-              <span style={{ color: '#888888' }}>· 47 tasks today</span>
+              <span style={{ color: '#A39B8E' }}>· 47 tasks today</span>
             </div>
           </Card>
         </div>
@@ -316,7 +325,7 @@ export default function Hero() {
     <section style={{
       position: 'relative',
       minHeight: '100vh',
-      backgroundColor: '#000000',
+      backgroundColor: '#0B0A09',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -335,8 +344,8 @@ export default function Hero() {
           top: '-15%', left: '-10%',
           width: 720, height: 720,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, #3B0764 0%, transparent 70%)',
-          opacity: 0.4,
+          background: 'radial-gradient(circle, #7A2E00 0%, transparent 70%)',
+          opacity: 0.5,
           filter: 'blur(40px)',
           animation: 'heroBlobA 15s ease-in-out infinite',
         }} />
@@ -345,8 +354,8 @@ export default function Hero() {
           bottom: '-20%', right: '-10%',
           width: 760, height: 760,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, #0C1A4E 0%, transparent 70%)',
-          opacity: 0.4,
+          background: 'radial-gradient(circle, #0A3D2B 0%, transparent 70%)',
+          opacity: 0.45,
           filter: 'blur(40px)',
           animation: 'heroBlobB 15s ease-in-out infinite',
         }} />
@@ -359,7 +368,7 @@ export default function Hero() {
         inset: 0,
         zIndex: 1,
         pointerEvents: 'none',
-        background: 'linear-gradient(180deg, transparent 0%, transparent 50%, #000000 100%)',
+        background: 'linear-gradient(180deg, transparent 0%, transparent 50%, #0B0A09 100%)',
       }} />
 
 

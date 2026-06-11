@@ -4,8 +4,8 @@ import { supabase } from '../../lib/supabase'
 const RESTAURANT = "Mario's Trattoria"
 
 const C = {
-  card: '#141414', border: '#2A2A2A', divider: '#1E1E1E',
-  primary: '#F0EEE9', secondary: '#888780', muted: '#3A3835', accent: '#4A90D9',
+  card: '#1A1713', border: '#2E2A24', divider: '#211E19',
+  primary: '#F5F1E8', secondary: '#A39B8E', muted: '#6E665B', accent: '#FB7A1E',
 }
 
 function formatTime(iso) {
@@ -118,10 +118,10 @@ export default function Messages() {
             maxWidth: '68%',
             padding: '9px 14px',
             borderRadius: isSent ? '3px 14px 14px 14px' : '14px 3px 14px 14px',
-            backgroundColor: isSent ? '#1D1D1D' : 'rgba(74,144,217,0.11)',
+            backgroundColor: isSent ? '#1D1D1D' : 'rgba(251,122,30,0.11)',
             border: isSent
               ? `1px solid ${C.border}`
-              : '1px solid rgba(74,144,217,0.22)',
+              : '1px solid rgba(251,122,30,0.22)',
           }}>
             <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: C.primary }}>
               {evt.text}
@@ -181,8 +181,8 @@ export default function Messages() {
         }}>
           <div style={{
             width: 7, height: 7, borderRadius: '50%',
-            backgroundColor: '#4ade80',
-            boxShadow: '0 0 0 2px rgba(74,222,128,0.15)',
+            backgroundColor: '#16C784',
+            boxShadow: '0 0 0 2px rgba(22,199,132,0.18)',
           }} />
           <span style={{ fontSize: 13, fontWeight: 600, color: C.primary }}>{RESTAURANT}</span>
           <span style={{ fontSize: 11, color: C.muted }}>with AutoPilot Support</span>

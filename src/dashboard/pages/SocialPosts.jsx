@@ -134,8 +134,8 @@ const LOADING_MSGS = [
 const TRAIL_DOTS = [12, 24, 36, 50, 63, 76, 88]
 
 const statusStyle = {
-  scheduled: { bg: 'rgba(74,144,217,0.08)', color: '#4A90D9', border: 'rgba(74,144,217,0.2)' },
-  published:  { bg: 'rgba(74,222,128,0.08)', color: '#4ade80', border: 'rgba(74,222,128,0.2)' },
+  scheduled: { bg: 'rgba(251,122,30,0.10)', color: 'var(--ap-accent)', border: 'rgba(251,122,30,0.22)' },
+  published:  { bg: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: 'rgba(22,199,132,0.22)' },
   draft:      { bg: 'rgba(136,135,128,0.08)', color: '#888780', border: 'rgba(136,135,128,0.2)' },
 }
 
@@ -410,8 +410,8 @@ export default function SocialPosts() {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
           padding: '10px 16px', borderRadius: 10, marginBottom: 20,
-          backgroundColor: 'rgba(245,158,11,0.08)',
-          border: '1px solid rgba(245,158,11,0.22)',
+          backgroundColor: 'rgba(245,180,60,0.10)',
+          border: '1px solid rgba(245,180,60,0.24)',
         }}>
           <span style={{ fontSize: 12, color: '#D97706' }}>
             ⚡ AutoPilot Pro unlocks AI phone answering and custom brand voice
@@ -434,13 +434,13 @@ export default function SocialPosts() {
 
       <div className="ap-posts-header flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Social Posts</h1>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: C.primary, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>Social Posts</h1>
           <p className="text-sm" style={{ color: C.secondary }}>Scheduled and published content</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="ap-posts-newbtn text-sm font-semibold px-4 py-2 rounded transition-colors"
-          style={{ backgroundColor: C.primary, color: C.bg, cursor: 'pointer' }}
+          className="ap-posts-newbtn text-sm font-bold px-4 py-2 rounded transition-colors"
+          style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: 'pointer', boxShadow: '0 4px 16px rgba(251,122,30,0.28)' }}
           onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
           onMouseLeave={e => e.currentTarget.style.opacity = '1'}
         >
@@ -538,8 +538,8 @@ export default function SocialPosts() {
                   disabled={!topic.trim() || isLoading}
                   className="text-xs px-2.5 py-1 rounded"
                   style={{
-                    backgroundColor: 'rgba(74,144,217,0.1)', color: '#4A90D9',
-                    border: '1px solid rgba(74,144,217,0.2)',
+                    backgroundColor: 'var(--ap-accent-soft)', color: 'var(--ap-accent)',
+                    border: '1px solid rgba(251,122,30,0.28)',
                     opacity: !topic.trim() || isLoading ? 0.4 : 1,
                     cursor: !topic.trim() || isLoading ? 'default' : 'pointer',
                     transition: 'opacity 0.2s',
@@ -578,7 +578,7 @@ export default function SocialPosts() {
                   transition: 'opacity 0.35s ease',
                 }}>
                   <div style={{ position: 'relative', width: '82%', height: 26 }}>
-                    <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px solid rgba(74,144,217,0.18)' }} />
+                    <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px solid rgba(251,122,30,0.18)' }} />
                     {TRAIL_DOTS.map((pos, i) => (
                       <div key={i} className="ap-trail-dot" style={{ left: `${pos}%`, animationDelay: `${(pos / 100) * 2000}ms` }} />
                     ))}
@@ -617,7 +617,7 @@ export default function SocialPosts() {
                 disabled={!text.trim() || saving}
                 className="text-sm px-4 py-2 rounded"
                 style={{
-                  backgroundColor: 'rgba(74,222,128,0.1)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.25)',
+                  backgroundColor: 'rgba(22,199,132,0.12)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.28)',
                   opacity: !text.trim() || saving ? 0.5 : 1,
                   cursor: !text.trim() || saving ? 'default' : 'pointer',
                 }}
@@ -627,7 +627,7 @@ export default function SocialPosts() {
                 disabled={!text.trim() || saving}
                 className="text-sm font-semibold px-4 py-2 rounded"
                 style={{
-                  backgroundColor: C.primary, color: C.bg,
+                  backgroundColor: C.accent, color: 'var(--ap-on-accent)',
                   opacity: !text.trim() || saving ? 0.5 : 1,
                   cursor: !text.trim() || saving ? 'default' : 'pointer',
                 }}
@@ -667,7 +667,7 @@ export default function SocialPosts() {
               to="/pricing"
               style={{
                 display: 'inline-block', padding: '12px 28px',
-                backgroundColor: C.primary, color: 'var(--ap-bg)',
+                backgroundColor: C.accent, color: 'var(--ap-on-accent)',
                 borderRadius: 980, fontWeight: 700, fontSize: 14,
                 textDecoration: 'none',
               }}

@@ -126,8 +126,8 @@ export default function SupportChat() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
                 width: 7, height: 7, borderRadius: '50%',
-                backgroundColor: '#4ade80',
-                boxShadow: '0 0 0 2px rgba(74,222,128,0.18)',
+                backgroundColor: 'var(--ap-success)',
+                boxShadow: '0 0 0 2px rgba(22,199,132,0.2)',
               }} />
               <span style={{ fontSize: 12.5, fontWeight: 600, color: C.primary }}>
                 {isPro ? '⚡ Priority Support' : 'AutoPilot Support'}
@@ -136,9 +136,9 @@ export default function SupportChat() {
                 <span style={{
                   fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
                   padding: '1px 5px', borderRadius: 4,
-                  backgroundColor: 'rgba(245,158,11,0.14)',
-                  color: '#F59E0B',
-                  border: '1px solid rgba(245,158,11,0.28)',
+                  backgroundColor: 'rgba(245,180,60,0.14)',
+                  color: '#F5B43C',
+                  border: '1px solid rgba(245,180,60,0.3)',
                 }}>PRO</span>
               )}
             </div>
@@ -180,10 +180,10 @@ export default function SupportChat() {
                       <div style={{
                         maxWidth: '74%', padding: '8px 12px',
                         borderRadius: isSent ? '3px 12px 12px 12px' : '12px 3px 12px 12px',
-                        backgroundColor: isSent ? C.sentBubble : 'rgba(74,144,217,0.11)',
+                        backgroundColor: isSent ? C.sentBubble : 'var(--ap-accent-soft)',
                         border: isSent
                           ? `1px solid ${C.border}`
-                          : '1px solid rgba(74,144,217,0.22)',
+                          : '1px solid rgba(251,122,30,0.28)',
                       }}>
                         <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: C.primary }}>
                           {evt.text}
@@ -206,12 +206,12 @@ export default function SupportChat() {
             padding: '10px 14px 14px', borderTop: `1px solid ${C.divider}`, flexShrink: 0,
           }}>
             {justSent && (
-              <p style={{ fontSize: 11, color: '#4ade80', marginBottom: 6, margin: '0 0 6px' }}>
+              <p style={{ fontSize: 11, color: 'var(--ap-success)', marginBottom: 6, margin: '0 0 6px' }}>
                 ✓ Message sent
               </p>
             )}
             {error && (
-              <p style={{ fontSize: 11, color: '#f87171', marginBottom: 6, margin: '0 0 6px' }}>
+              <p style={{ fontSize: 11, color: 'var(--ap-danger)', marginBottom: 6, margin: '0 0 6px' }}>
                 {error}
               </p>
             )}
@@ -235,8 +235,8 @@ export default function SupportChat() {
                 disabled={!inputText.trim() || sending}
                 style={{
                   padding: '8px 14px', borderRadius: 8, border: 'none', flexShrink: 0,
-                  backgroundColor: (inputText.trim() && !sending) ? C.accent : 'rgba(74,144,217,0.35)',
-                  color: '#fff', fontSize: 13, fontWeight: 600,
+                  backgroundColor: (inputText.trim() && !sending) ? C.accent : 'var(--ap-accent-soft)',
+                  color: (inputText.trim() && !sending) ? 'var(--ap-on-accent)' : C.muted, fontSize: 13, fontWeight: 700,
                   cursor: (inputText.trim() && !sending) ? 'pointer' : 'default',
                   transition: 'background-color 0.15s',
                 }}

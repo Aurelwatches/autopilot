@@ -89,9 +89,9 @@ export default function Login() {
       <Link to="/" className="flex items-center gap-2 mb-10" style={{ color: V.text }}>
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
-            stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            stroke="var(--ap-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span className="text-sm font-semibold tracking-tight">AutoPilot</span>
+        <span className="text-base font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>AutoPilot</span>
       </Link>
 
       <div
@@ -103,15 +103,15 @@ export default function Login() {
           boxShadow: V.shadow,
         }}
       >
-        <h1 className="text-xl font-semibold mb-1" style={{ color: V.text }}>Welcome back</h1>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: V.text, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>Welcome back</h1>
         <p className="text-sm mb-8" style={{ color: V.text2 }}>Sign in to your AutoPilot account.</p>
 
         {notice && (
           <div
             className="text-sm mb-6 px-4 py-3 rounded-lg"
             style={{
-              backgroundColor: 'rgba(74,142,255,0.10)',
-              border: '1px solid rgba(74,142,255,0.25)',
+              backgroundColor: 'var(--ap-accent-soft)',
+              border: '1px solid var(--ap-accent)',
               color: 'var(--ap-accent)',
             }}
           >
@@ -153,20 +153,22 @@ export default function Login() {
             </div>
           </div>
 
-          {error && <p className="text-xs" style={{ color: '#f87171' }}>{error}</p>}
+          {error && <p className="text-xs" style={{ color: 'var(--ap-danger)' }}>{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full text-sm font-semibold py-2.5 rounded-lg mt-2"
+            className="w-full text-sm font-bold py-2.5 rounded-lg mt-2"
             style={{
-              backgroundColor: loading ? 'rgba(10,10,10,0.5)' : V.text,
-              color: V.bg,
+              backgroundColor: 'var(--ap-accent)',
+              color: 'var(--ap-on-accent)',
+              opacity: loading ? 0.6 : 1,
+              boxShadow: loading ? 'none' : '0 6px 22px rgba(251,122,30,0.32)',
               cursor: loading ? 'default' : 'pointer',
-              transition: 'opacity 0.15s',
+              transition: 'opacity 0.15s, box-shadow 0.15s',
             }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.85' }}
-            onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = 'var(--ap-accent-hover)' }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'var(--ap-accent)' }}
           >
             {loading ? 'Signing in…' : 'Sign in to AutoPilot'}
           </button>

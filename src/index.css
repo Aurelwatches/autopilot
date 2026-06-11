@@ -8,57 +8,90 @@
 :root {
   color-scheme: dark;
 
-  --ap-bg:             #000000;
-  --ap-bg2:            #0A0A0A;
-  --ap-card:           rgba(255,255,255,0.03);
-  --ap-card-solid:     #141414;
+  /* Warm near-black base — premium + food-adjacent, never cold */
+  --ap-bg:             #0B0A09;
+  --ap-bg2:            #131210;
+  --ap-card:           rgba(255,255,255,0.04);
+  --ap-card-solid:     #1A1713;
   --ap-input:          rgba(255,255,255,0.04);
-  --ap-input-solid:    #0F0F0F;
-  --ap-border:         rgba(255,255,255,0.08);
-  --ap-border-solid:   #2A2A2A;
-  --ap-divider:        rgba(255,255,255,0.05);
-  --ap-text:           #F0EEE9;
-  --ap-text2:          #888780;
-  --ap-text3:          #555550;
-  --ap-text3b:         #3A3835;
-  --ap-accent:         #4A8EFF;
-  --ap-shadow:         0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  --ap-input-solid:    #131110;
+  --ap-border:         rgba(255,255,255,0.09);
+  --ap-border-solid:   #2E2A24;
+  --ap-divider:        rgba(255,255,255,0.06);
+  --ap-text:           #F5F1E8;
+  --ap-text2:          #A39B8E;
+  --ap-text3:          #6E665B;
+  --ap-text3b:         #443E36;
+
+  /* Brand + semantic accents — amber sells, emerald reassures */
+  --ap-accent:         #FB7A1E;   /* brand / every primary CTA  */
+  --ap-accent-hover:   #FF8C3A;
+  --ap-accent-soft:    rgba(251,122,30,0.14);
+  --ap-on-accent:      #2A1606;   /* dark ink on amber (WCAG)   */
+  --ap-success:        #16C784;   /* "it's working" / growth    */
+  --ap-success-soft:   rgba(22,199,132,0.14);
+  --ap-warning:        #F5B43C;
+  --ap-warning-soft:   rgba(245,180,60,0.14);
+  --ap-danger:         #F0524B;
+  --ap-danger-soft:    rgba(240,82,75,0.14);
+  --ap-grad:           linear-gradient(90deg, #FB7A1E, #FF5E4D);
+
+  --ap-shadow:         0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+  --ap-glow:           0 8px 30px rgba(251,122,30,0.35);
   --ap-blur:           blur(20px);
-  --ap-sidebar:        rgba(255,255,255,0.02);
-  --ap-sidebar-border: rgba(255,255,255,0.06);
-  --ap-sidebar-active: rgba(255,255,255,0.06);
+  --ap-sidebar:        rgba(255,255,255,0.025);
+  --ap-sidebar-border: rgba(255,255,255,0.07);
+  --ap-sidebar-active: rgba(251,122,30,0.10);
   --ap-sidebar-shadow: none;
   --ap-bubble:         rgba(255,255,255,0.06);
-  --ap-popup-shadow:   0 12px 48px rgba(0,0,0,0.5);
-  --ap-float-shadow:   0 4px 20px rgba(0,0,0,0.4);
+  --ap-popup-shadow:   0 12px 48px rgba(0,0,0,0.55);
+  --ap-float-shadow:   0 4px 20px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04);
+
+  --font-display:      'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+  --font-body:         'Inter', system-ui, sans-serif;
+  --font-mono:         'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
 }
 
 [data-theme="light"] {
   color-scheme: light;
 
-  --ap-bg:             #F5F4F0;
-  --ap-bg2:            #EEECE8;
+  /* Warm cream base — bright, appetizing, not clinical white */
+  --ap-bg:             #F7F5F0;
+  --ap-bg2:            #EFEBE3;
   --ap-card:           #FFFFFF;
   --ap-card-solid:     #FFFFFF;
   --ap-input:          #FFFFFF;
   --ap-input-solid:    #FFFFFF;
-  --ap-border:         #D8D5CF;
-  --ap-border-solid:   #D8D5CF;
-  --ap-divider:        #E4E1DC;
-  --ap-text:           #0A0A0A;
-  --ap-text2:          #6B6966;
-  --ap-text3:          #9B9894;
-  --ap-text3b:         #9B9894;
-  --ap-accent:         #4A8EFF;
-  --ap-shadow:         0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+  --ap-border:         #E5DFD3;
+  --ap-border-solid:   #D8D0C0;
+  --ap-divider:        #ECE7DD;
+  --ap-text:           #1A150E;
+  --ap-text2:          #6B6358;
+  --ap-text3:          #9C9486;
+  --ap-text3b:         #B6AE9F;
+
+  --ap-accent:         #EC6D13;
+  --ap-accent-hover:   #D55F0B;
+  --ap-accent-soft:    rgba(236,109,19,0.12);
+  --ap-on-accent:      #2A1606;   /* dark ink on amber (WCAG)   */
+  --ap-success:        #0F9E69;
+  --ap-success-soft:   rgba(15,158,105,0.12);
+  --ap-warning:        #C77A12;
+  --ap-warning-soft:   rgba(199,122,18,0.12);
+  --ap-danger:         #DC3B34;
+  --ap-danger-soft:    rgba(220,59,52,0.10);
+  --ap-grad:           linear-gradient(90deg, #EC6D13, #F0463A);
+
+  --ap-shadow:         0 1px 4px rgba(40,28,10,0.07), 0 0 0 1px rgba(40,28,10,0.04);
+  --ap-glow:           0 6px 22px rgba(236,109,19,0.28);
   --ap-blur:           blur(12px);
-  --ap-sidebar:        #EFEEE9;
-  --ap-sidebar-border: #D8D5CF;
-  --ap-sidebar-active: #E8E6E1;
-  --ap-sidebar-shadow: 2px 0 12px rgba(0,0,0,0.06);
-  --ap-bubble:         #E8E6E1;
-  --ap-popup-shadow:   0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05);
-  --ap-float-shadow:   0 4px 16px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+  --ap-sidebar:        #F1EDE4;
+  --ap-sidebar-border: #E5DFD3;
+  --ap-sidebar-active: rgba(236,109,19,0.10);
+  --ap-sidebar-shadow: 2px 0 12px rgba(40,28,10,0.05);
+  --ap-bubble:         #EDE8DE;
+  --ap-popup-shadow:   0 8px 32px rgba(40,28,10,0.12), 0 0 0 1px rgba(40,28,10,0.05);
+  --ap-float-shadow:   0 4px 16px rgba(40,28,10,0.12), 0 0 0 1px rgba(40,28,10,0.06);
 }
 
 /* ─── Smooth theme transition (applied only during the toggle) ──────────────── */
@@ -93,13 +126,33 @@
   body {
     background-color: var(--ap-bg);
     color: var(--ap-text);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-body);
     overflow-x: hidden;
   }
 
   ::selection {
-    background: rgba(74, 144, 217, 0.25);
+    background: rgba(251, 122, 30, 0.28);
   }
+}
+
+/* ─── Brand typography helpers ──────────────────────────────────────────────── */
+
+.font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
+.font-mono    { font-family: var(--font-mono); }
+
+/* Section eyebrow / data label: mono, uppercase, tracked */
+.ap-eyebrow {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 500;
+}
+
+/* Amber focus ring for keyboard users across interactive elements */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ap-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* ─── Custom slim scrollbar (chat thread) ──────────────────────────────────── */
@@ -164,11 +217,11 @@
   50%       { transform: translateY(-10px); }
 }
 
-/* Blue pulse ring on status dot */
+/* Amber pulse ring on status dot */
 @keyframes cardPulse {
-  0%   { box-shadow: 0 0 0 0   rgba(74, 142, 255, 0.55); }
-  60%  { box-shadow: 0 0 0 6px rgba(74, 142, 255, 0); }
-  100% { box-shadow: 0 0 0 0   rgba(74, 142, 255, 0); }
+  0%   { box-shadow: 0 0 0 0   rgba(251, 122, 30, 0.55); }
+  60%  { box-shadow: 0 0 0 6px rgba(251, 122, 30, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(251, 122, 30, 0); }
 }
 
 /* ─── Scroll offset for fixed navbar (h-14 = 56px + 16px breathing room) ────── */
@@ -234,7 +287,7 @@
   transform: translateY(-50%);
   font-size: 15px;
   line-height: 1;
-  color: #4A90D9;
+  color: var(--ap-accent);
   animation: apPlaneFly 2s linear infinite;
 }
 
@@ -244,7 +297,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background-color: #4A90D9;
+  background-color: var(--ap-accent);
   opacity: 0;
   animation: apTrailDot 2s linear infinite;
 }
@@ -359,4 +412,15 @@
 
   /* Plan-lock overlays span full width (no 240px sidebar offset) */
   .ap-lock-overlay { left: 0 !important; }
+}
+
+/* ─── Respect reduced-motion: calm the ambient/decorative animations ─────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

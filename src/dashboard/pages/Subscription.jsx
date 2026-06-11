@@ -36,12 +36,12 @@ function Row({ label, children, C, last }) {
 function SadFace() {
   return (
     <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
-      <circle cx="28" cy="28" r="25" stroke="#F59E0B" strokeWidth="2.5" opacity="0.5" />
-      <circle cx="20" cy="24" r="2.6" fill="#F59E0B" />
-      <circle cx="36" cy="24" r="2.6" fill="#F59E0B" />
-      <path d="M19 39c2.4-4 6-6 9-6s6.6 2 9 6" stroke="#F59E0B" strokeWidth="2.6"
+      <circle cx="28" cy="28" r="25" stroke="#F5B43C" strokeWidth="2.5" opacity="0.5" />
+      <circle cx="20" cy="24" r="2.6" fill="#F5B43C" />
+      <circle cx="36" cy="24" r="2.6" fill="#F5B43C" />
+      <path d="M19 39c2.4-4 6-6 9-6s6.6 2 9 6" stroke="#F5B43C" strokeWidth="2.6"
         strokeLinecap="round" fill="none" />
-      <path d="M40 17l3 1.5" stroke="#4A8EFF" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M40 17l3 1.5" stroke="#F5B43C" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
   )
 }
@@ -69,7 +69,7 @@ export default function Subscription() {
   return (
     <div className="ap-page px-8 py-8" style={{ maxWidth: 660 }}>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Subscription</h1>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: C.primary, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>Subscription</h1>
         <p className="text-sm" style={{ color: C.secondary }}>Manage your AutoPilot plan and billing</p>
       </div>
 
@@ -86,6 +86,7 @@ export default function Subscription() {
               {/* Large plan name in its accent color */}
               <div className="flex items-center gap-2.5 mb-1.5">
                 <h2 style={{
+                  fontFamily: "'Bricolage Grotesque', sans-serif",
                   fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em',
                   color: meta.color, lineHeight: 1,
                 }}>
@@ -94,9 +95,9 @@ export default function Subscription() {
                 <span style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
                   padding: '3px 10px', borderRadius: 980,
-                  background: canceled ? 'rgba(245,158,11,0.14)' : 'rgba(34,197,94,0.14)',
-                  color: canceled ? '#F59E0B' : '#22C55E',
-                  border: `1px solid ${canceled ? 'rgba(245,158,11,0.30)' : 'rgba(34,197,94,0.30)'}`,
+                  background: canceled ? 'rgba(245,180,60,0.14)' : 'rgba(22,199,132,0.14)',
+                  color: canceled ? '#F5B43C' : '#16C784',
+                  border: `1px solid ${canceled ? 'rgba(245,180,60,0.30)' : 'rgba(22,199,132,0.30)'}`,
                 }}>
                   {canceled ? 'CANCELING' : 'ACTIVE'}
                 </span>
@@ -127,10 +128,10 @@ export default function Subscription() {
 
       {canceled && (
         <div style={{
-          background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
+          background: 'rgba(245,180,60,0.08)', border: '1px solid rgba(245,180,60,0.25)',
           borderRadius: 12, padding: '14px 18px', marginBottom: 24,
         }}>
-          <p className="text-sm font-medium" style={{ color: '#F59E0B' }}>
+          <p className="text-sm font-medium" style={{ color: '#F5B43C' }}>
             Your subscription is set to cancel
           </p>
           <p className="text-xs mt-1" style={{ color: C.secondary }}>
@@ -163,7 +164,7 @@ export default function Subscription() {
             <button
               onClick={() => navigate('/pricing')}
               className="shrink-0 text-sm font-semibold px-5 py-2 rounded transition-colors"
-              style={{ backgroundColor: C.primary, color: 'var(--ap-bg)', cursor: 'pointer' }}
+              style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: 'pointer' }}
               onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
               onMouseLeave={e => e.currentTarget.style.opacity = '1'}
             >
@@ -180,7 +181,7 @@ export default function Subscription() {
                   <p className="text-sm font-medium" style={{ color: C.primary }}>Switch to yearly</p>
                   <p className="text-xs mt-0.5" style={{ color: C.secondary }}>
                     Pay annually and{' '}
-                    <span style={{ color: '#22C55E', fontWeight: 600 }}>
+                    <span style={{ color: 'var(--ap-success)', fontWeight: 600 }}>
                       save ${yearlySavings.toLocaleString()}
                     </span>{' '}
                     — that’s 2 months free.
@@ -190,11 +191,11 @@ export default function Subscription() {
                   onClick={changeToYearly}
                   className="shrink-0 text-sm font-semibold px-5 py-2 rounded transition-colors"
                   style={{
-                    backgroundColor: 'rgba(34,197,94,0.12)', color: '#22C55E',
-                    border: '1px solid rgba(34,197,94,0.30)', cursor: 'pointer',
+                    backgroundColor: 'rgba(22,199,132,0.12)', color: 'var(--ap-success)',
+                    border: '1px solid rgba(22,199,132,0.30)', cursor: 'pointer',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(34,197,94,0.2)'}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(34,197,94,0.12)'}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(22,199,132,0.2)'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(22,199,132,0.12)'}
                 >
                   Change to yearly
                 </button>
@@ -269,7 +270,7 @@ export default function Subscription() {
               <button
                 onClick={() => setShowCancel(false)}
                 className="w-full text-sm font-semibold py-2.5 rounded-lg transition-colors"
-                style={{ backgroundColor: C.primary, color: 'var(--ap-bg)', cursor: 'pointer' }}
+                style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}
               >

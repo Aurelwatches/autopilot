@@ -12,15 +12,15 @@ export const PLAN_META = {
     key: 'growth', label: 'Growth', emoji: '⚡',
     blurb: 'For restaurants ready to automate',
     monthly: 200, yearly: 2000,
-    color: '#4A8EFF',
-    pillBg: 'rgba(74,142,255,0.14)', pillBorder: 'rgba(74,142,255,0.30)',
+    color: 'var(--ap-accent)',
+    pillBg: 'var(--ap-accent-soft)', pillBorder: 'var(--ap-accent)',
   },
   pro: {
     key: 'pro', label: 'Pro', emoji: '🚀',
     blurb: 'For restaurants that want everything',
     monthly: 350, yearly: 3500,
-    color: '#F59E0B',
-    pillBg: 'rgba(245,158,11,0.14)', pillBorder: 'rgba(245,158,11,0.30)',
+    color: '#F5B43C',
+    pillBg: 'rgba(245,180,60,0.14)', pillBorder: 'rgba(245,180,60,0.32)',
   },
 }
 

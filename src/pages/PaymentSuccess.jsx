@@ -33,8 +33,8 @@ export default function PaymentSuccess() {
     <div
       style={{
         position: 'fixed', inset: 0, overflow: 'hidden',
-        background: 'radial-gradient(circle at 50% 35%, #0E0E12 0%, #000000 70%)',
-        color: '#F0EEE9',
+        background: 'radial-gradient(circle at 50% 35%, #15130F 0%, #0B0A09 70%)',
+        color: '#F5F1E8',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         textAlign: 'center', padding: 24,
@@ -43,50 +43,52 @@ export default function PaymentSuccess() {
       {/* Animated checkmark */}
       <div style={{ animation: 'apSuccessPop 600ms cubic-bezier(0.16, 1, 0.3, 1) both', marginBottom: 32 }}>
         <svg width="120" height="120" viewBox="0 0 120 120" fill="none" aria-hidden="true"
-          style={{ filter: 'drop-shadow(0 0 28px rgba(34,197,94,0.45))' }}>
-          <circle cx="60" cy="60" r="52" fill="rgba(34,197,94,0.06)" />
+          style={{ filter: 'drop-shadow(0 0 28px rgba(22,199,132,0.45))' }}>
+          <circle cx="60" cy="60" r="52" fill="rgba(22,199,132,0.07)" />
           <circle
             className="ap-success-circle"
             cx="60" cy="60" r="52" fill="none"
-            stroke="#22C55E" strokeWidth="4" strokeLinecap="round"
+            stroke="#16C784" strokeWidth="4" strokeLinecap="round"
             transform="rotate(-90 60 60)"
           />
           <path
             className="ap-success-check"
             d="M38 62 L54 78 L84 44" fill="none"
-            stroke="#22C55E" strokeWidth="5"
+            stroke="#16C784" strokeWidth="5"
             strokeLinecap="round" strokeLinejoin="round"
           />
         </svg>
       </div>
 
       <h1 style={{
+        fontFamily: "'Bricolage Grotesque', sans-serif",
         fontSize: 'clamp(30px, 5vw, 48px)', fontWeight: 800,
-        letterSpacing: '-0.03em', color: '#FFFFFF', margin: '0 0 14px',
+        letterSpacing: '-0.03em', color: '#FBF9F4', margin: '0 0 14px',
         animation: 'apFadeUp 600ms cubic-bezier(0.16, 1, 0.3, 1) 900ms both',
       }}>
         You’re all set!
       </h1>
 
       <p style={{
-        fontSize: 17, color: '#A8A6A1', maxWidth: 460, lineHeight: 1.6, margin: '0 0 36px',
+        fontSize: 17, color: '#A39B8E', maxWidth: 460, lineHeight: 1.6, margin: '0 0 36px',
         animation: 'apFadeUp 600ms cubic-bezier(0.16, 1, 0.3, 1) 1050ms both',
       }}>
-        Welcome to AutoPilot, <span style={{ color: '#F0EEE9', fontWeight: 600 }}>{restaurantName}</span>.
+        Welcome to AutoPilot, <span style={{ color: '#F5F1E8', fontWeight: 600 }}>{restaurantName}</span>.
         Your automation is ready.
       </p>
 
       <button
         onClick={() => navigate('/dashboard')}
         style={{
-          background: '#FFFFFF', color: '#000000',
+          background: '#FB7A1E', color: '#2A1606',
           border: 'none', borderRadius: 980,
-          padding: '13px 26px', fontSize: 15, fontWeight: 600, cursor: 'pointer',
-          transition: 'opacity 0.15s',
+          padding: '13px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+          boxShadow: '0 8px 30px rgba(251,122,30,0.45)',
+          transition: 'background-color 0.15s, box-shadow 0.15s',
           animation: 'apFadeUp 600ms cubic-bezier(0.16, 1, 0.3, 1) 1200ms both',
         }}
-        onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+        onMouseEnter={e => { e.currentTarget.style.background = '#FF8C3A' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#FB7A1E' }}
       >
         Go to dashboard →
       </button>

@@ -52,9 +52,9 @@ function CopyButton({ value, C }) {
       onClick={handleCopy}
       className="shrink-0 text-xs px-2 py-0.5 rounded transition-colors"
       style={{
-        backgroundColor: copied ? 'rgba(74,222,128,0.1)' : 'rgba(136,135,128,0.1)',
-        color: copied ? '#4ade80' : C.secondary,
-        border: `1px solid ${copied ? 'rgba(74,222,128,0.2)' : 'rgba(136,135,128,0.2)'}`,
+        backgroundColor: copied ? 'rgba(22,199,132,0.12)' : 'rgba(136,135,128,0.1)',
+        color: copied ? 'var(--ap-success)' : C.secondary,
+        border: `1px solid ${copied ? 'rgba(22,199,132,0.22)' : 'rgba(136,135,128,0.2)'}`,
         cursor: 'pointer',
       }}
     >
@@ -70,7 +70,7 @@ function Toggle({ checked, onChange, C }) {
       onClick={() => onChange(!checked)}
       style={{
         width: 40, height: 22, borderRadius: 11, border: 'none', cursor: 'pointer',
-        backgroundColor: checked ? '#4A90D9' : C.border,
+        backgroundColor: checked ? 'var(--ap-accent)' : C.border,
         position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
       }}
     >
@@ -199,7 +199,7 @@ export default function Settings() {
   return (
     <div className="ap-page px-8 py-8" style={{ maxWidth: 660 }}>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Settings</h1>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: C.primary, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>Settings</h1>
         <p className="text-sm" style={{ color: C.secondary }}>Manage your restaurant account</p>
       </div>
 
@@ -215,13 +215,13 @@ export default function Settings() {
             <button
               type="submit"
               className="text-sm font-semibold px-5 py-2 rounded transition-colors"
-              style={{ backgroundColor: C.primary, color: 'var(--ap-bg)', cursor: 'pointer' }}
+              style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: 'pointer' }}
               onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
               onMouseLeave={e => e.currentTarget.style.opacity = '1'}
             >
               Save changes
             </button>
-            {saved && <span className="text-xs" style={{ color: '#4ade80' }}>✓ Saved</span>}
+            {saved && <span className="text-xs" style={{ color: 'var(--ap-success)' }}>✓ Saved</span>}
           </div>
         </form>
       </Card>
@@ -238,8 +238,8 @@ export default function Settings() {
               <span style={{
                 fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
                 padding: '1px 7px', borderRadius: 980,
-                background: 'rgba(34,197,94,0.14)', color: '#22C55E',
-                border: '1px solid rgba(34,197,94,0.30)',
+                background: 'rgba(22,199,132,0.14)', color: 'var(--ap-success)',
+                border: '1px solid rgba(22,199,132,0.30)',
               }}>ACTIVE</span>
             </div>
           </div>
@@ -319,7 +319,7 @@ export default function Settings() {
             {connections.google ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs px-2.5 py-1 rounded"
-                  style={{ backgroundColor: 'rgba(74,222,128,0.08)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.15)' }}>
+                  style={{ backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }}>
                   ✓ Connected
                 </span>
                 <button
@@ -382,7 +382,7 @@ export default function Settings() {
             {connections.instagram ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs px-2.5 py-1 rounded"
-                  style={{ backgroundColor: 'rgba(74,222,128,0.08)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.15)' }}>
+                  style={{ backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }}>
                   ✓ Connected
                 </span>
                 <button
@@ -417,7 +417,7 @@ export default function Settings() {
             {connections.facebook ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs px-2.5 py-1 rounded"
-                  style={{ backgroundColor: 'rgba(74,222,128,0.08)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.15)' }}>
+                  style={{ backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }}>
                   ✓ Connected
                 </span>
                 <button
@@ -501,8 +501,8 @@ export default function Settings() {
               disabled={prefsLoading}
               className="text-sm font-semibold px-5 py-2 rounded transition-colors"
               style={{
-                backgroundColor: C.primary,
-                color: 'var(--ap-bg)',
+                backgroundColor: C.accent,
+                color: 'var(--ap-on-accent)',
                 cursor: prefsLoading ? 'default' : 'pointer',
                 opacity: prefsLoading ? 0.6 : 1,
               }}
@@ -511,7 +511,7 @@ export default function Settings() {
             >
               {prefsLoading ? 'Saving…' : 'Save preferences'}
             </button>
-            {prefSaved && <span className="text-xs" style={{ color: '#4ade80' }}>✓ Saved</span>}
+            {prefSaved && <span className="text-xs" style={{ color: 'var(--ap-success)' }}>✓ Saved</span>}
           </div>
 
         </div>

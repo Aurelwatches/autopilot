@@ -10,7 +10,7 @@ function CheckIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"
       style={{ flexShrink: 0, marginTop: 3 }}>
-      <path d="M3 8.5L6 11.5L13 4.5" stroke="#4A8EFF" strokeWidth="2"
+      <path d="M3 8.5L6 11.5L13 4.5" stroke="#16C784" strokeWidth="2"
         strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
@@ -20,8 +20,8 @@ function LockIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"
       style={{ flexShrink: 0, marginTop: 4 }}>
-      <rect x="3" y="7.5" width="10" height="7.5" rx="1.5" stroke="#555555" strokeWidth="1.5" />
-      <path d="M5.5 7.5V5a2.5 2.5 0 015 0v2.5" stroke="#555555" strokeWidth="1.5"
+      <rect x="3" y="7.5" width="10" height="7.5" rx="1.5" stroke="#6E665B" strokeWidth="1.5" />
+      <path d="M5.5 7.5V5a2.5 2.5 0 015 0v2.5" stroke="#6E665B" strokeWidth="1.5"
         strokeLinecap="round" />
     </svg>
   )
@@ -36,8 +36,8 @@ const plans = [
     yearly: 999,
     yearlySavings: null,
     badge: null,
-    border: 'rgba(255,255,255,0.08)',
-    shadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+    border: 'rgba(255,255,255,0.09)',
+    shadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
     featured: false,
     buttonStyle: 'outlined',
     buttonText: 'Get started',
@@ -58,11 +58,11 @@ const plans = [
     monthly: 200,
     yearly: 2000,
     yearlySavings: 400,
-    badge: { text: 'Most Popular', color: '#4A8EFF', bg: 'rgba(74,142,255,0.12)', border: 'rgba(74,142,255,0.25)' },
-    border: 'rgba(74,142,255,0.3)',
-    shadow: '0 0 48px rgba(74,142,255,0.12), 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
+    badge: { text: 'Most Popular', color: '#FB7A1E', bg: 'rgba(251,122,30,0.14)', border: 'rgba(251,122,30,0.3)' },
+    border: 'rgba(251,122,30,0.38)',
+    shadow: '0 0 56px rgba(251,122,30,0.16), 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
     featured: true,
-    buttonStyle: 'white',
+    buttonStyle: 'amber',
     buttonText: 'Start free trial',
     socialProof: null,
     features: [
@@ -81,11 +81,11 @@ const plans = [
     monthly: 350,
     yearly: 3500,
     yearlySavings: 700,
-    badge: { text: 'Best Value', color: '#E8A020', bg: 'rgba(232,160,32,0.12)', border: 'rgba(232,160,32,0.25)' },
-    border: 'rgba(232,160,32,0.3)',
-    shadow: '0 0 48px rgba(232,160,32,0.08), 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
+    badge: { text: 'Best Value', color: '#F5B43C', bg: 'rgba(245,180,60,0.12)', border: 'rgba(245,180,60,0.28)' },
+    border: 'rgba(245,180,60,0.3)',
+    shadow: '0 0 48px rgba(245,180,60,0.08), 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
     featured: false,
-    buttonStyle: 'amber',
+    buttonStyle: 'gold',
     buttonText: 'Get AutoPilot Pro',
     socialProof: 'Most restaurants on Pro save 3× their subscription in staff hours',
     features: [
@@ -125,14 +125,14 @@ function PlanCard({ plan, yearly, priceVisible, shown, delay }) {
   const btnBase = {
     display: 'block', width: '100%', textAlign: 'center',
     borderRadius: 980, padding: '13px 0',
-    fontSize: 15, fontWeight: 600, textDecoration: 'none',
+    fontSize: 15, fontWeight: 700, textDecoration: 'none',
     border: 'none', cursor: 'pointer',
-    transition: 'opacity 0.15s',
+    transition: 'opacity 0.15s, box-shadow 0.15s, background-color 0.15s',
   }
   const btnStyles = {
-    outlined: { ...btnBase, backgroundColor: 'transparent', color: '#888888', border: '1px solid rgba(255,255,255,0.14)' },
-    white:    { ...btnBase, backgroundColor: '#FFFFFF', color: '#000000' },
-    amber:    { ...btnBase, backgroundColor: '#E8A020', color: '#000000' },
+    outlined: { ...btnBase, backgroundColor: 'transparent', color: '#A39B8E', border: '1px solid rgba(255,255,255,0.16)' },
+    amber:    { ...btnBase, backgroundColor: '#FB7A1E', color: '#2A1606', boxShadow: '0 8px 30px rgba(251,122,30,0.45)' },
+    gold:     { ...btnBase, backgroundColor: '#F5B43C', color: '#2A1606', boxShadow: '0 8px 28px rgba(245,180,60,0.3)' },
   }
 
   return (
@@ -142,7 +142,7 @@ function PlanCard({ plan, yearly, priceVisible, shown, delay }) {
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        background: 'rgba(255,255,255,0.03)',
+        background: 'rgba(255,255,255,0.04)',
         border: `1px solid ${plan.border}`,
         borderRadius: 24,
         backdropFilter: 'blur(20px)',
@@ -173,10 +173,10 @@ function PlanCard({ plan, yearly, priceVisible, shown, delay }) {
       )}
 
       {/* Label + subtitle */}
-      <p style={{ fontSize: 18, fontWeight: 700, color: '#F0EEE9', marginBottom: 6 }}>
+      <p style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 19, fontWeight: 700, color: '#F5F1E8', marginBottom: 6 }}>
         {plan.label}
       </p>
-      <p style={{ fontSize: 13, color: '#888888', marginBottom: 24, lineHeight: 1.5 }}>
+      <p style={{ fontSize: 13, color: '#A39B8E', marginBottom: 24, lineHeight: 1.5 }}>
         {plan.subtitle}
       </p>
 
@@ -188,25 +188,25 @@ function PlanCard({ plan, yearly, priceVisible, shown, delay }) {
         transition: 'opacity 160ms ease, transform 160ms ease',
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 56, fontWeight: 800, lineHeight: 0.9, letterSpacing: '-0.03em', color: '#FFFFFF' }}>
+          <span style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 56, fontWeight: 800, lineHeight: 0.9, letterSpacing: '-0.03em', color: '#FBF9F4' }}>
             ${price.toLocaleString()}
           </span>
-          <span style={{ fontSize: 15, color: '#888888', marginBottom: 8 }}>/{period}</span>
+          <span style={{ fontSize: 15, color: '#A39B8E', marginBottom: 8 }}>/{period}</span>
         </div>
 
         {yearly && plan.yearlySavings ? (
-          <p style={{ fontSize: 13, color: '#22C55E', fontWeight: 500 }}>
+          <p style={{ fontSize: 13, color: '#16C784', fontWeight: 600 }}>
             Save ${plan.yearlySavings} · 2 months free
           </p>
         ) : (
-          <p style={{ fontSize: 13, color: '#888888' }}>
+          <p style={{ fontSize: 13, color: '#A39B8E' }}>
             {yearly ? 'Billed annually' : 'Billed monthly'}
           </p>
         )}
       </div>
 
       {/* Divider */}
-      <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', marginBottom: 20 }} />
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 20 }} />
 
       {/* Features */}
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, flex: 1, marginBottom: 28 }}>
@@ -214,14 +214,14 @@ function PlanCard({ plan, yearly, priceVisible, shown, delay }) {
           <li key={f.text} style={{
             display: 'flex', alignItems: 'flex-start', gap: 10,
             padding: '5px 0', fontSize: 14,
-            color: f.locked ? '#555555' : '#E8E6E1',
+            color: f.locked ? '#6E665B' : '#E8E2D6',
           }}>
             {f.locked ? <LockIcon /> : <CheckIcon />}
             <span>
               {f.text}
               {f.note && (
                 <span style={{
-                  fontSize: 10, color: '#888888', marginLeft: 7,
+                  fontSize: 10, color: '#A39B8E', marginLeft: 7,
                   padding: '2px 6px', borderRadius: 4,
                   background: 'rgba(255,255,255,0.05)',
                   border: '1px solid rgba(255,255,255,0.08)',
@@ -247,7 +247,7 @@ function PlanCard({ plan, yearly, priceVisible, shown, delay }) {
 
       {/* Social proof */}
       {plan.socialProof && (
-        <p style={{ fontSize: 12, color: '#888888', textAlign: 'center', marginTop: 12, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 12, color: '#A39B8E', textAlign: 'center', marginTop: 12, lineHeight: 1.5 }}>
           {plan.socialProof}
         </p>
       )}
@@ -275,7 +275,7 @@ export default function Pricing() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#000000', color: '#F0EEE9' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#0B0A09', color: '#F5F1E8' }}>
       <Navbar />
 
       <main style={{
@@ -294,15 +294,15 @@ export default function Pricing() {
           <div style={{
             position: 'absolute', top: '0%', left: '25%',
             width: 720, height: 720, borderRadius: '50%',
-            background: 'radial-gradient(circle, #3B0764 0%, transparent 70%)',
-            opacity: 0.28, filter: 'blur(60px)',
+            background: 'radial-gradient(circle, #7A2E00 0%, transparent 70%)',
+            opacity: 0.32, filter: 'blur(60px)',
             animation: 'heroBlobA 15s ease-in-out infinite',
           }} />
           <div style={{
             position: 'absolute', bottom: '0%', right: '15%',
             width: 640, height: 640, borderRadius: '50%',
-            background: 'radial-gradient(circle, #0C1A4E 0%, transparent 70%)',
-            opacity: 0.28, filter: 'blur(60px)',
+            background: 'radial-gradient(circle, #0A3D2B 0%, transparent 70%)',
+            opacity: 0.3, filter: 'blur(60px)',
             animation: 'heroBlobB 15s ease-in-out infinite',
           }} />
         </div>
@@ -315,13 +315,14 @@ export default function Pricing() {
           transition: `opacity 500ms ${EASE}, transform 500ms ${EASE}`,
         }}>
           <h1 style={{
-            fontSize: 'clamp(30px, 5vw, 50px)',
+            fontFamily: "'Bricolage Grotesque', sans-serif",
+            fontSize: 'clamp(30px, 5vw, 52px)',
             fontWeight: 800, letterSpacing: '-0.03em',
-            color: '#FFFFFF', margin: '0 0 12px',
+            color: '#FBF9F4', margin: '0 0 12px',
           }}>
             Simple, transparent pricing
           </h1>
-          <p style={{ fontSize: 17, color: '#888888', margin: 0 }}>
+          <p style={{ fontSize: 17, color: '#A39B8E', margin: 0 }}>
             Start free. Scale when you're ready.
           </p>
         </div>
@@ -331,7 +332,7 @@ export default function Pricing() {
           position: 'relative', zIndex: 1,
           display: 'inline-flex', alignItems: 'center',
           background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.09)',
           borderRadius: 980, padding: 4,
           opacity: shown ? 1 : 0,
           transform: shown ? 'translateY(0)' : 'translateY(8px)',
@@ -342,9 +343,9 @@ export default function Pricing() {
             onClick={() => switchPlan(false)}
             style={{
               padding: '7px 22px', borderRadius: 980,
-              fontSize: 14, fontWeight: 500, cursor: 'pointer', border: 'none',
-              background: !yearly ? '#FFFFFF' : 'transparent',
-              color: !yearly ? '#000000' : '#888888',
+              fontSize: 14, fontWeight: 600, cursor: 'pointer', border: 'none',
+              background: !yearly ? '#FB7A1E' : 'transparent',
+              color: !yearly ? '#2A1606' : '#A39B8E',
               transition: `background 200ms ${EASE}, color 200ms ${EASE}`,
             }}
           >
@@ -355,9 +356,9 @@ export default function Pricing() {
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '7px 22px', borderRadius: 980,
-              fontSize: 14, fontWeight: 500, cursor: 'pointer', border: 'none',
-              background: yearly ? '#FFFFFF' : 'transparent',
-              color: yearly ? '#000000' : '#888888',
+              fontSize: 14, fontWeight: 600, cursor: 'pointer', border: 'none',
+              background: yearly ? '#FB7A1E' : 'transparent',
+              color: yearly ? '#2A1606' : '#A39B8E',
               transition: `background 200ms ${EASE}, color 200ms ${EASE}`,
             }}
           >
@@ -365,7 +366,8 @@ export default function Pricing() {
             <span style={{
               fontSize: 11, fontWeight: 600, padding: '2px 7px',
               borderRadius: 980, lineHeight: 1.4, whiteSpace: 'nowrap',
-              background: 'rgba(34,197,94,0.12)', color: '#22C55E',
+              background: yearly ? 'rgba(42,22,6,0.18)' : 'rgba(22,199,132,0.16)',
+              color: yearly ? '#2A1606' : '#16C784',
             }}>
               2 months free
             </span>
@@ -396,10 +398,10 @@ export default function Pricing() {
           transition: `opacity 700ms ${EASE}`,
           transitionDelay: '440ms',
         }}>
-          <p style={{ fontSize: 14, color: '#C8C6C1', marginBottom: 8 }}>
+          <p style={{ fontSize: 14, color: '#C9C2B5', marginBottom: 8 }}>
             All plans include a 14-day free trial. No credit card required.
           </p>
-          <p style={{ fontSize: 13, color: '#666662' }}>
+          <p style={{ fontSize: 13, color: '#6E665B' }}>
             Join 200+ restaurants already on AutoPilot
           </p>
         </div>

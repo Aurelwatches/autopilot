@@ -16,7 +16,7 @@ const TYPE_MAP = {
   review_replied: { type: 'review', text: 'Review replied' },
   post_scheduled: { type: 'post',   text: 'Post scheduled' },
 }
-const typeColor = { review: '#4A90D9', post: '#a78bfa' }
+const typeColor = { review: '#FB7A1E', post: '#a78bfa' }
 const typeLabel = { review: 'R', post: 'P' }
 
 function relativeTime(iso) {
@@ -156,7 +156,7 @@ export default function Overview() {
           transition: `opacity 500ms ${EASE}, transform 500ms ${EASE}`,
         }}>
         <span className="w-2 h-2 rounded-full shrink-0 pulse-dot"
-          style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
+          style={{ backgroundColor: 'var(--ap-success)', display: 'inline-block' }} />
         <span style={{ color: C.primary }}>AutoPilot is running</span>
         <span style={{ color: C.muted }}>·</span>
         <span style={{ color: C.secondary }}>
@@ -175,7 +175,7 @@ export default function Overview() {
         transitionDelay: revealed ? '50ms' : '0ms',
       }}>
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: C.primary, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>
             {greeting}, {restaurantName}
           </h1>
           <p className="text-sm" style={{ color: C.secondary }}>{today}</p>
@@ -259,7 +259,7 @@ export default function Overview() {
           {feed.length > 0 && (
             <span className="text-[11px] flex items-center gap-1.5" style={{ color: C.secondary }}>
               <span className="w-1.5 h-1.5 rounded-full pulse-dot"
-                style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
+                style={{ backgroundColor: 'var(--ap-success)', display: 'inline-block' }} />
               Live
             </span>
           )}
@@ -277,7 +277,7 @@ export default function Overview() {
                 className="flex items-start gap-4 px-5 py-3.5"
                 style={{
                   borderBottom: i < feed.length - 1 ? `1px solid ${C.divider}` : 'none',
-                  backgroundColor: item.newest ? 'rgba(74,222,128,0.03)' : 'transparent',
+                  backgroundColor: item.newest ? 'rgba(22,199,132,0.06)' : 'transparent',
                   opacity: revealed ? 1 : 0,
                   transform: revealed ? 'translateY(0)' : 'translateY(10px)',
                   transition: `opacity 500ms ${EASE}, transform 500ms ${EASE}`,
@@ -295,7 +295,7 @@ export default function Overview() {
                     <span className="text-sm font-medium" style={{ color: C.primary }}>{item.text}</span>
                     {item.newest && (
                       <span className="w-1.5 h-1.5 rounded-full shrink-0 pulse-dot"
-                        style={{ backgroundColor: '#4ade80', display: 'inline-block' }} />
+                        style={{ backgroundColor: 'var(--ap-success)', display: 'inline-block' }} />
                     )}
                   </div>
                   <p className="text-xs mt-0.5" style={{ color: C.secondary }}>{item.detail}</p>

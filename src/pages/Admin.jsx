@@ -7,9 +7,9 @@ const ADMIN_EMAIL = 'bray.200913@gmail.com'
 const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL ?? '/api/webhook'
 
 const C = {
-  bg: '#0A0A0A', card: '#141414', border: '#2A2A2A', divider: '#1E1E1E',
-  primary: '#F0EEE9', secondary: '#888780', muted: '#3A3835',
-  accent: '#4A90D9', inputBg: '#0F0F0F',
+  bg: '#0B0A09', card: '#1A1713', border: '#2E2A24', divider: '#211E19',
+  primary: '#F5F1E8', secondary: '#A39B8E', muted: '#6E665B',
+  accent: '#FB7A1E', inputBg: '#131110',
 }
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
@@ -50,8 +50,8 @@ function CopyBtn({ value }) {
   return (
     <button onClick={doCopy} style={{
       fontSize: 11, padding: '3px 8px', borderRadius: 4, border: 'none',
-      backgroundColor: copied ? 'rgba(74,222,128,0.1)' : 'rgba(136,135,128,0.1)',
-      color: copied ? '#4ade80' : C.secondary,
+      backgroundColor: copied ? 'rgba(22,199,132,0.14)' : 'rgba(163,155,142,0.12)',
+      color: copied ? '#3FD99B' : C.secondary,
       cursor: 'pointer', flexShrink: 0,
     }}>
       {copied ? 'Copied' : 'Copy'}
@@ -87,7 +87,7 @@ export default function Admin() {
   if (user?.email !== ADMIN_EMAIL) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ fontSize: 13, color: '#f87171' }}>Access denied</p>
+        <p style={{ fontSize: 13, color: '#F0524B' }}>Access denied</p>
       </div>
     )
   }
@@ -159,7 +159,7 @@ export default function Admin() {
               AutoPilot Admin
             </span>
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, color: C.primary, marginBottom: 4 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: C.primary, marginBottom: 4 }}>
             Restaurant lookup
           </h1>
           <p style={{ fontSize: 13, color: C.secondary }}>
@@ -188,8 +188,8 @@ export default function Admin() {
               disabled={!query.trim() || searching}
               style={{
                 padding: '9px 22px', borderRadius: 7, border: 'none',
-                backgroundColor: C.primary, color: '#0A0A0A',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                backgroundColor: C.accent, color: '#2A1606',
+                fontSize: 13, fontWeight: 700, cursor: 'pointer',
                 opacity: (!query.trim() || searching) ? 0.5 : 1,
                 transition: 'opacity 0.15s',
               }}
@@ -203,7 +203,7 @@ export default function Admin() {
             </p>
           )}
           {searchErr && (
-            <p style={{ fontSize: 12, color: '#f87171', marginTop: 12 }}>{searchErr}</p>
+            <p style={{ fontSize: 12, color: '#F0524B', marginTop: 12 }}>{searchErr}</p>
           )}
         </Section>
 

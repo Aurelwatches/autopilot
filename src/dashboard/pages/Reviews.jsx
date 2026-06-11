@@ -16,7 +16,7 @@ function formatDate(iso) {
 function Stars({ rating }) {
   const r = Math.round(rating ?? 0)
   return (
-    <span style={{ letterSpacing: '-1px', fontSize: 13, color: '#E8A020' }}>
+    <span style={{ letterSpacing: '-1px', fontSize: 13, color: 'var(--ap-accent)' }}>
       {'★'.repeat(r)}
       <span style={{ opacity: 0.3 }}>{'★'.repeat(Math.max(0, 5 - r))}</span>
     </span>
@@ -132,7 +132,7 @@ export default function Reviews() {
     <div className="ap-page px-8 py-8" style={{ maxWidth: 900 }}>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Reviews</h1>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: C.primary, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>Reviews</h1>
           <p className="text-sm" style={{ color: C.secondary }}>
             {reviews.length} review{reviews.length !== 1 ? 's' : ''} · synced automatically
           </p>
@@ -140,7 +140,7 @@ export default function Reviews() {
         <div className="flex items-center gap-5">
           {repliedCount > 0 && (
             <span className="text-sm px-3 py-1 rounded"
-              style={{ backgroundColor: 'rgba(74,222,128,0.08)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.15)' }}>
+              style={{ backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }}>
               {repliedCount} replied this month
             </span>
           )}
@@ -148,7 +148,7 @@ export default function Reviews() {
             <div className="text-right">
               <div className="flex items-center gap-1.5 justify-end">
                 <span style={{ fontSize: 38, fontWeight: 700, lineHeight: 1, color: C.primary }}>{avgRating}</span>
-                <span style={{ fontSize: 22, color: '#E8A020', lineHeight: 1 }}>★</span>
+                <span style={{ fontSize: 22, color: 'var(--ap-accent)', lineHeight: 1 }}>★</span>
               </div>
               <p className="text-xs mt-1" style={{ color: C.muted }}>
                 avg rating · {ratedReviews.length} rated
@@ -163,8 +163,8 @@ export default function Reviews() {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '10px 16px', borderRadius: 10, marginBottom: 20,
-          backgroundColor: capExceeded ? 'rgba(251,191,36,0.08)' : 'rgba(74,144,217,0.06)',
-          border: `1px solid ${capExceeded ? 'rgba(251,191,36,0.22)' : 'rgba(74,144,217,0.15)'}`,
+          backgroundColor: capExceeded ? 'rgba(245,180,60,0.10)' : 'rgba(251,122,30,0.07)',
+          border: `1px solid ${capExceeded ? 'rgba(245,180,60,0.26)' : 'rgba(251,122,30,0.18)'}`,
         }}>
           <span style={{ fontSize: 12, color: C.secondary }}>
             {capExceeded
@@ -213,7 +213,7 @@ export default function Reviews() {
           padding: '11px 16px', borderRadius: 8, marginBottom: 14,
           backgroundColor: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)',
         }}>
-          <p style={{ fontSize: 12, color: '#f87171', margin: 0 }}>{error}</p>
+          <p style={{ fontSize: 12, color: 'var(--ap-danger)', margin: 0 }}>{error}</p>
         </div>
       )}
 
@@ -243,7 +243,7 @@ export default function Reviews() {
                     </div>
                     <span className="text-xs px-2 py-0.5 rounded shrink-0"
                       style={r.status === 'replied'
-                        ? { backgroundColor: 'rgba(74,222,128,0.08)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.15)' }
+                        ? { backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }
                         : { backgroundColor: 'rgba(251,191,36,0.08)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.15)' }}
                     >
                       {r.status === 'replied' ? '✓ Replied' : '⏳ Pending'}

@@ -3,9 +3,11 @@ import { useInView } from '../utils/useInView'
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
 const C = {
-  primary:   '#F0EEE9',
-  secondary: '#888888',
-  muted:     '#555555',
+  primary:   '#F5F1E8',
+  secondary: '#A39B8E',
+  muted:     '#6E665B',
+  accent:    '#FB7A1E',
+  success:   '#16C784',
 }
 
 /* ─── Slide-in wrapper ──────────────────────────────────────────────────────── */
@@ -34,12 +36,12 @@ function Slide({ show, dir, delay = 0, children, style }) {
 function Glass({ children }) {
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.03)',
-      border: '1px solid rgba(255,255,255,0.08)',
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.09)',
       borderRadius: 20,
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
       overflow: 'hidden',
     }}>
       {children}
@@ -73,7 +75,7 @@ function ReviewMockup() {
         label="Google Reviews"
         right={
           <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.muted }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.success, display: 'inline-block' }} />
             Live
           </span>
         }
@@ -92,7 +94,7 @@ function ReviewMockup() {
         <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '20px 0' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3B82F6', display: 'inline-block' }} />
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.accent, display: 'inline-block' }} />
           <span style={{ fontSize: 12, color: C.secondary }}>AutoPilot replied · 4 min ago</span>
         </div>
         <p style={{ fontSize: 14, lineHeight: 1.6, color: C.primary }}>
@@ -143,7 +145,7 @@ function SocialMockup() {
               borderRadius: 6,
               flexShrink: 0,
               ...(post.status === 'scheduled'
-                ? { background: 'rgba(34,197,94,0.12)', color: '#4ade80' }
+                ? { background: 'rgba(22,199,132,0.14)', color: '#3FD99B' }
                 : { background: 'rgba(255,255,255,0.06)', color: C.secondary }),
             }}>
               {post.status}
@@ -193,14 +195,15 @@ function FeatureSection({ section }) {
   // grid flips columns for textSide === 'right' via the --flip modifier.
   const text = (
     <Slide show={inView} dir={textDir}>
-      <span style={{ fontSize: 12, fontFamily: 'monospace', letterSpacing: '0.2em', color: C.muted }}>
+      <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.2em', color: C.accent }}>
         {section.number}
       </span>
       <h3 style={{
-        fontSize: 'clamp(28px, 4vw, 40px)',
+        fontFamily: "'Bricolage Grotesque', sans-serif",
+        fontSize: 'clamp(28px, 4vw, 42px)',
         fontWeight: 700,
         letterSpacing: '-0.02em',
-        lineHeight: 1.1,
+        lineHeight: 1.08,
         color: C.primary,
         margin: '16px 0 20px',
       }}>
@@ -230,7 +233,7 @@ function FeatureSection({ section }) {
 
 export default function Features() {
   return (
-    <section id="features" style={{ backgroundColor: '#000000' }}>
+    <section id="features" style={{ backgroundColor: '#0B0A09' }}>
       <div style={{ maxWidth: 1120, margin: '0 auto', padding: '96px 24px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 112 }}>
           {sections.map((s) => (

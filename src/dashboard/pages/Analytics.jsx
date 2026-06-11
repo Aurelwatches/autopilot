@@ -81,7 +81,7 @@ function DarkTooltip({ active, payload, label, C }) {
     }}>
       <p style={{ color: C.secondary, marginBottom: 3 }}>{label}</p>
       {payload.map(p => (
-        <p key={p.dataKey} style={{ color: '#E8A020', fontWeight: 600, margin: 0 }}>
+        <p key={p.dataKey} style={{ color: 'var(--ap-accent)', fontWeight: 600, margin: 0 }}>
           {p.value}
         </p>
       ))}
@@ -275,7 +275,7 @@ export default function Analytics() {
     <div className="ap-page px-8 py-8" style={{ maxWidth: 1000 }}>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Analytics</h1>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: C.primary, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>Analytics</h1>
           <p className="text-sm" style={{ color: C.secondary }}>Performance over time</p>
         </div>
 
@@ -334,7 +334,7 @@ export default function Analytics() {
             <YAxis tick={axisStyle} allowDecimals={false} />
             <Tooltip content={props => <DarkTooltip {...props} C={C} />} />
             <Line type="monotone" dataKey="count" stroke={C.primary}
-              strokeWidth={1.8} dot={false} activeDot={{ r: 3, fill: '#E8A020' }} />
+              strokeWidth={1.8} dot={false} activeDot={{ r: 3, fill: 'var(--ap-accent)' }} />
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -353,7 +353,7 @@ export default function Analytics() {
             <XAxis dataKey="date" tick={axisStyle} {...ticks} />
             <YAxis tick={axisStyle} allowDecimals={false} />
             <Tooltip content={props => <DarkTooltip {...props} C={C} />} />
-            <Bar dataKey="count" fill="#E8A020" radius={[3, 3, 0, 0]} maxBarSize={32} />
+            <Bar dataKey="count" fill="var(--ap-accent)" radius={[3, 3, 0, 0]} maxBarSize={32} />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -372,8 +372,8 @@ export default function Analytics() {
             <XAxis dataKey="date" tick={axisStyle} />
             <YAxis tick={axisStyle} domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} />
             <Tooltip content={props => <DarkTooltip {...props} C={C} />} />
-            <Line type="monotone" dataKey="avg" stroke="#E8A020"
-              strokeWidth={1.8} dot={{ r: 3, fill: '#E8A020' }} activeDot={{ r: 4 }} />
+            <Line type="monotone" dataKey="avg" stroke="var(--ap-accent)"
+              strokeWidth={1.8} dot={{ r: 3, fill: 'var(--ap-accent)' }} activeDot={{ r: 4 }} />
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -406,7 +406,7 @@ export default function Analytics() {
               to="/pricing"
               style={{
                 display: 'inline-block', padding: '12px 28px',
-                backgroundColor: C.primary, color: 'var(--ap-bg)',
+                backgroundColor: C.accent, color: 'var(--ap-on-accent)',
                 borderRadius: 980, fontWeight: 700, fontSize: 14,
                 textDecoration: 'none',
               }}

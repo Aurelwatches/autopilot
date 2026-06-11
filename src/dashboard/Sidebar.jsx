@@ -134,15 +134,15 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
         <div className="flex items-center gap-2.5">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
-              stroke={isPro ? '#F59E0B' : C.primary}
+              stroke={isPro ? '#F5B43C' : C.accent}
               strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="text-sm font-semibold tracking-tight" style={{ color: C.primary }}>
+          <span className="text-base font-bold tracking-tight" style={{ color: C.primary, fontFamily: 'var(--font-display)' }}>
             AutoPilot
             {isPro && (
               <span style={{
-                color: '#F59E0B',
-                textShadow: '0 0 14px rgba(245,158,11,0.5)',
+                color: '#F5B43C',
+                textShadow: '0 0 14px rgba(245,180,60,0.5)',
               }}> Pro</span>
             )}
           </span>
@@ -223,9 +223,9 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
               flexShrink: 0,
               fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
               padding: '1px 5px', borderRadius: 4,
-              backgroundColor: 'rgba(245,158,11,0.14)',
-              color: '#F59E0B',
-              border: '1px solid rgba(245,158,11,0.28)',
+              backgroundColor: 'rgba(245,180,60,0.14)',
+              color: '#F5B43C',
+              border: '1px solid rgba(245,180,60,0.28)',
             }}>PRO</span>
           )}
         </div>

@@ -22,7 +22,7 @@ export default function FollowUps() {
     <div className="ap-page px-8 py-8" style={{ maxWidth: 1100 }}>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ color: C.primary }}>Follow-ups</h1>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: C.primary, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>Follow-ups</h1>
           <p className="text-sm" style={{ color: C.secondary }}>Customer re-engagement texts sent by AutoPilot</p>
         </div>
       </div>
@@ -60,7 +60,7 @@ export default function FollowUps() {
                 <span
                   className="text-xs px-2 py-0.5 rounded self-start mt-0.5"
                   style={c.status === 'opened'
-                    ? { backgroundColor: 'rgba(74,222,128,0.08)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.15)' }
+                    ? { backgroundColor: 'rgba(22,199,132,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(22,199,132,0.2)' }
                     : { backgroundColor: 'rgba(136,135,128,0.08)', color: C.secondary, border: '1px solid rgba(136,135,128,0.2)' }}
                 >
                   {c.status}

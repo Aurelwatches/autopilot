@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
 
 const C = {
-  primary:   '#F0EEE9',
-  secondary: '#888888',
-  muted:     '#555555',
+  primary:   '#F5F1E8',
+  secondary: '#A39B8E',
+  muted:     '#6E665B',
 }
 
 export default function Footer() {
@@ -14,7 +14,7 @@ export default function Footer() {
   ]
 
   return (
-    <footer style={{ borderTop: '1px solid #1A1A1A', padding: '32px 24px' }}>
+    <footer style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '32px 24px', backgroundColor: '#0B0A09' }}>
       <div style={{
         maxWidth: 1120,
         margin: '0 auto',

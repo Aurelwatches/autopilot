@@ -68,9 +68,9 @@ export default function Checkout() {
       <Link to="/" className="flex items-center gap-2 mb-10" style={{ color: V.text }}>
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
-            stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            stroke="var(--ap-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span className="text-sm font-semibold tracking-tight">AutoPilot</span>
+        <span className="text-base font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>AutoPilot</span>
       </Link>
 
       <div
@@ -89,7 +89,7 @@ export default function Checkout() {
         <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: V.text2, marginBottom: 8 }}>
           Your plan
         </p>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: V.text, marginBottom: 4 }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: V.text, marginBottom: 4 }}>
           AutoPilot {label}
         </h1>
         <p style={{ fontSize: 13, color: V.text2, marginBottom: 28 }}>
@@ -101,14 +101,14 @@ export default function Checkout() {
 
         {/* Price */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 52, fontWeight: 800, lineHeight: 0.9, letterSpacing: '-0.03em', color: V.text }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 52, fontWeight: 800, lineHeight: 0.9, letterSpacing: '-0.03em', color: V.text }}>
             ${price.toLocaleString()}
           </span>
           <span style={{ fontSize: 15, color: V.text2, marginBottom: 8 }}>/{period}</span>
         </div>
 
         {interval === 'yearly' && PLAN_PRICES[plan] && (
-          <p style={{ fontSize: 13, color: '#22C55E', fontWeight: 500, marginBottom: 28 }}>
+          <p style={{ fontSize: 13, color: 'var(--ap-success)', fontWeight: 600, marginBottom: 28 }}>
             Save ${((PLAN_PRICES[plan].monthly * 12) - PLAN_PRICES[plan].yearly).toLocaleString()} vs monthly
           </p>
         )}
@@ -117,7 +117,7 @@ export default function Checkout() {
 
         {/* Error */}
         {error && (
-          <p style={{ fontSize: 13, color: '#f87171', marginBottom: 16, padding: '10px 14px', background: 'rgba(248,113,113,0.08)', borderRadius: 8 }}>
+          <p style={{ fontSize: 13, color: 'var(--ap-danger)', marginBottom: 16, padding: '10px 14px', background: 'var(--ap-danger-soft)', borderRadius: 8 }}>
             {error}
           </p>
         )}
@@ -129,14 +129,16 @@ export default function Checkout() {
           style={{
             display: 'block', width: '100%', padding: '14px 0',
             borderRadius: 980, border: 'none',
-            backgroundColor: loading ? 'rgba(10,10,10,0.4)' : V.text,
-            color: V.bg,
+            backgroundColor: 'var(--ap-accent)',
+            color: 'var(--ap-on-accent)',
+            opacity: loading ? 0.6 : 1,
+            boxShadow: loading ? 'none' : '0 8px 28px rgba(251,122,30,0.4)',
             fontSize: 15, fontWeight: 700,
             cursor: loading ? 'default' : 'pointer',
-            transition: 'opacity 0.15s',
+            transition: 'opacity 0.15s, background-color 0.15s',
           }}
-          onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.85' }}
-          onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+          onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = 'var(--ap-accent-hover)' }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'var(--ap-accent)' }}
         >
           {loading ? 'Redirecting to payment…' : 'Complete payment'}
         </button>
