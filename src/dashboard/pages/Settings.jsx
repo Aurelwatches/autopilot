@@ -332,7 +332,9 @@ export default function Settings() {
               </div>
             ) : (
               <button
-                onClick={() => window.open('https://accounts.google.com/o/oauth2/auth', '_blank')}
+                onClick={() => {
+                  window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/google/connect?user_id=${userId}`
+                }}
                 className="text-xs px-3 py-1.5 rounded font-medium"
                 style={{ backgroundColor: C.accent, color: '#fff', border: 'none', cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}

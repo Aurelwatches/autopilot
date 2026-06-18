@@ -101,7 +101,7 @@ const plans = [
   },
 ]
 
-function PlanCard({ plan, yearly, priceVisible }) {
+function PlanCard({ plan, yearly }) {
   const navigate = useNavigate()
   const { user } = useAuth()
   const price  = yearly ? plan.yearly : plan.monthly
@@ -120,7 +120,7 @@ function PlanCard({ plan, yearly, priceVisible }) {
     if (user) {
       navigate('/checkout')
     } else {
-      navigate('/login', { state: { message: 'Sign in to continue with your plan' } })
+      navigate('/signup', { state: { message: 'Create an account to continue with your plan' } })
     }
   }
 
@@ -184,12 +184,7 @@ function PlanCard({ plan, yearly, priceVisible }) {
       </p>
 
       {/* Animated price block */}
-      <div style={{
-        marginBottom: 24,
-        opacity: priceVisible ? 1 : 0,
-        transform: priceVisible ? 'translateY(0)' : 'translateY(5px)',
-        transition: 'opacity 160ms ease, transform 160ms ease',
-      }}>
+      <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, marginBottom: 6 }}>
           <span style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 56, fontWeight: 800, lineHeight: 0.9, letterSpacing: '-0.03em', color: '#FFFFFF' }}>
             ${price.toLocaleString()}
@@ -258,16 +253,11 @@ function PlanCard({ plan, yearly, priceVisible }) {
 }
 
 export default function Pricing() {
-  const [yearly,       setYearly]       = useState(false)
-  const [priceVisible, setPriceVisible] = useState(true)
+  const [yearly, setYearly] = useState(false)
 
   function switchPlan(toYearly) {
     if (toYearly === yearly) return
-    setPriceVisible(false)
-    setTimeout(() => {
-      setYearly(toYearly)
-      setPriceVisible(true)
-    }, 160)
+    setYearly(toYearly)
   }
 
   return (
@@ -386,7 +376,6 @@ export default function Pricing() {
               key={plan.id}
               plan={plan}
               yearly={yearly}
-              priceVisible={priceVisible}
             />
           ))}
         </Stagger>
@@ -402,7 +391,7 @@ export default function Pricing() {
             All plans include a 14-day free trial. No credit card required.
           </p>
           <p style={{ fontSize: 13, color: '#6E7A8F' }}>
-            Join 200+ restaurants already on AutoPilot
+            Built for independent restaurants
           </p>
         </motion.div>
 

@@ -2,9 +2,13 @@ import express from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+import googleOAuthRoutes from './google-oauth-routes.js'
+import { startReviewsPoller } from './google-reviews-poller.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
+
+app.use(googleOAuthRoutes)
 
 // Behind Railway's proxy — trust the first proxy hop so req.ip is the real client IP
 // (needed for accurate rate limiting).
@@ -363,4 +367,5 @@ app.post('/api/create-checkout-session', async (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`API server → http://0.0.0.0:${PORT}`)
+  startReviewsPoller()
 })
