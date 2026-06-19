@@ -11,7 +11,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
-async function refreshGoogleToken(client) {
+export async function refreshGoogleToken(client) {
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -43,7 +43,7 @@ async function refreshGoogleToken(client) {
   return data.access_token;
 }
 
-async function getValidAccessToken(client) {
+export async function getValidAccessToken(client) {
   const expiresAt = new Date(client.google_token_expires_at);
   const now = new Date();
   const bufferMs = 5 * 60 * 1000;

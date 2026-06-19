@@ -46,11 +46,11 @@ function ElegantShape({ delay = 0, width = 400, height = 100, rotate = 0, color,
 }
 
 const SHAPES = [
-  { delay: 0.30, width: 620, height: 150, rotate:  12, color: 'rgba(56,189,248,0.16)',  position: { left: '-6%',  top: '16%' } },
-  { delay: 0.50, width: 520, height: 130, rotate: -15, color: 'rgba(59,130,246,0.16)',  position: { right: '-4%', top: '70%' } },
-  { delay: 0.42, width: 320, height: 90,  rotate:  -8, color: 'rgba(34,211,238,0.16)',  position: { left: '7%',   bottom: '7%' } },
-  { delay: 0.60, width: 220, height: 64,  rotate:  20, color: 'rgba(255,255,255,0.10)', position: { right: '16%', top: '11%' } },
-  { delay: 0.70, width: 160, height: 44,  rotate: -25, color: 'rgba(103,232,249,0.16)', position: { left: '21%',  top: '7%' } },
+  { delay: 0.30, width: 620, height: 150, rotate:  12, color: 'rgba(34,211,238,0.10)',  position: { left: '-6%',  top: '16%' } },
+  { delay: 0.50, width: 520, height: 130, rotate: -15, color: 'rgba(14,165,233,0.08)',  position: { right: '-4%', top: '70%' } },
+  { delay: 0.42, width: 320, height: 90,  rotate:  -8, color: 'rgba(56,189,248,0.09)',  position: { left: '7%',   bottom: '7%' } },
+  { delay: 0.60, width: 220, height: 64,  rotate:  20, color: 'rgba(0,0,0,0.04)',       position: { right: '16%', top: '11%' } },
+  { delay: 0.70, width: 160, height: 44,  rotate: -25, color: 'rgba(34,211,238,0.08)',  position: { left: '21%',  top: '7%' } },
 ]
 
 export default function ElegantShapes() {

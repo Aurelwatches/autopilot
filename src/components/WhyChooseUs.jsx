@@ -1,16 +1,16 @@
 import { Reveal, Stagger, StaggerItem, GlowCard } from './motion'
 
 const C = {
-  primary:   '#EAF2FF',
-  secondary: '#94A3B8',
+  primary:   '#0A0A0A',
+  secondary: '#6B7280',
   accent:    '#22D3EE',
 }
 
 const reasons = [
-  { title: 'Built for restaurants', body: 'Not generic software bolted onto your business — AutoPilot is shaped around how restaurants actually run.' },
+  { title: 'Built for restaurants', body: 'Not generic software bolted onto your business. AutoPilot is shaped around how restaurants actually run.' },
   { title: 'Set up in minutes', body: 'We handle the whole setup. Connect your Google profile and AutoPilot takes it from there.' },
   { title: 'Cancel anytime', body: 'No contracts, no lock-in. Stay because it works, not because you signed something.' },
-  { title: 'Real AI, real results', body: 'Trained on real restaurant conversations, so every reply sounds like you — not a robot.' },
+  { title: 'Real AI, real results', body: 'Trained on real restaurant conversations, so every reply sounds like you, not a robot.' },
 ]
 
 function CheckIcon() {
@@ -27,10 +27,10 @@ export default function WhyChooseUs() {
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <Reveal amount={0.4} style={{ textAlign: 'center', marginBottom: 56 }}>
           <p style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 500,
-            textTransform: 'uppercase', letterSpacing: '0.18em', color: C.accent, marginBottom: 16,
+            fontSize: 13, fontWeight: 500,
+            color: C.accent, marginBottom: 16,
           }}>
-            Why choose us
+            Why AutoPilot
           </p>
           <h2 style={{
             fontFamily: "'Bricolage Grotesque', sans-serif",
@@ -52,11 +52,10 @@ export default function WhyChooseUs() {
                 glow="cyan"
                 style={{
                   width: '100%',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.09)',
+                  background: '#FFFFFF',
+                  border: '1px solid rgba(0,0,0,0.07)',
                   borderRadius: 22,
-                  backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+                  boxShadow: '0 2px 16px rgba(0,0,0,0.05)',
                   padding: 28,
                 }}
               >

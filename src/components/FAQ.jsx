@@ -3,8 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { EASE, Reveal } from './motion'
 
 const C = {
-  primary:   '#EAF2FF',
-  secondary: '#94A3B8',
+  primary:   '#0A0A0A',
+  secondary: '#6B7280',
   accent:    '#22D3EE',
 }
 
@@ -46,11 +46,10 @@ const faqs = [
 function FaqItem({ item, open, onToggle }) {
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.04)',
-      border: `1px solid ${open ? 'rgba(34,211,238,0.35)' : 'rgba(255,255,255,0.09)'}`,
+      background: '#FFFFFF',
+      border: `1px solid ${open ? 'rgba(34,211,238,0.45)' : 'rgba(0,0,0,0.07)'}`,
       borderRadius: 16,
-      backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-      boxShadow: open ? '0 0 30px rgba(34,211,238,0.10)' : 'none',
+      boxShadow: open ? '0 0 24px rgba(34,211,238,0.10)' : '0 2px 12px rgba(0,0,0,0.04)',
       overflow: 'hidden',
       transition: 'border-color 250ms ease, box-shadow 250ms ease',
     }}>
@@ -105,10 +104,10 @@ export default function FAQ() {
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <Reveal amount={0.4} style={{ textAlign: 'center', marginBottom: 48 }}>
           <p style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 500,
-            textTransform: 'uppercase', letterSpacing: '0.18em', color: C.accent, marginBottom: 16,
+            fontSize: 13, fontWeight: 500,
+            color: C.accent, marginBottom: 16,
           }}>
-            FAQ
+            Common questions
           </p>
           <h2 style={{
             fontFamily: "'Bricolage Grotesque', sans-serif",

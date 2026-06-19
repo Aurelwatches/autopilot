@@ -11,27 +11,10 @@ import { FloatingOrbs } from '../components/motion'
 export default function Home() {
   return (
     <div
-      className="min-h-screen ap-animated-gradient"
-      style={{ position: 'relative', color: '#EAF2FF', overflow: 'hidden' }}
+      style={{ position: 'relative', color: '#0A0A0A', overflow: 'hidden', background: '#FFFFFF' }}
     >
-      {/* Page ambient background — drifting orbs + subtle grid, behind everything */}
+      {/* Page ambient — subtle grid only */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-        <FloatingOrbs orbs={[
-          {
-            size: 600,
-            position: { top: '120vh', left: '-8%' },
-            background: 'radial-gradient(circle at 40% 40%, #0A2E54 0%, transparent 68%)',
-            opacity: 0.22, blur: 80, duration: 34,
-            x: [0, 50, -20, 0], y: [0, -40, 30, 0],
-          },
-          {
-            size: 560,
-            position: { top: '180vh', right: '-6%' },
-            background: 'radial-gradient(circle at 55% 45%, #063844 0%, transparent 68%)',
-            opacity: 0.2, blur: 80, duration: 40,
-            x: [0, -50, 20, 0], y: [0, 40, -25, 0],
-          },
-        ]} />
         <div className="ap-grid-overlay" />
       </div>
 

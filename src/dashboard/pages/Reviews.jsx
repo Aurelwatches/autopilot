@@ -56,12 +56,15 @@ function rowToReview(row) {
   }
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 export default function Reviews() {
   const { C, userId, plan } = useApp()
-  const [reviews, setReviews] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState('')
-  const [active,  setActive]  = useState('All')
+  const [reviews,   setReviews]   = useState([])
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState('')
+  const [active,    setActive]    = useState('All')
+  const [approving, setApproving] = useState(new Set()) // Supabase row ids currently being posted
 
   const { events } = useDashboard()
 
@@ -85,6 +88,24 @@ export default function Reviews() {
     }
   }
 
+  async function handleApprove(reviewId) {
+    setApproving(prev => new Set(prev).add(reviewId))
+    try {
+      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/approve`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) {
+        alert(`Could not post to Google: ${data.error}`)
+        return
+      }
+      // Optimistically update local state — no re-fetch needed
+      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, status: 'posted' } : r))
+    } catch (err) {
+      alert(`Network error: ${err.message}`)
+    } finally {
+      setApproving(prev => { const s = new Set(prev); s.delete(reviewId); return s })
+    }
+  }
+
   // Re-fetch when auth resolves (userId goes null → real id) and poll every 30s
   // so newly saved reviews appear without a manual refresh.
   useEffect(() => {
@@ -97,7 +118,7 @@ export default function Reviews() {
   const reviewEventCount = events.filter(e => e.type === 'review_replied').length
   useEffect(() => { if (reviewEventCount > 0) fetchReviews() }, [reviewEventCount])
 
-  const repliedCount = reviews.filter(r => r.status === 'replied').length
+  const repliedCount = reviews.filter(r => r.status === 'replied' || r.status === 'posted').length
 
   // This month's review count — used for Starter plan cap display
   const now = new Date()
@@ -110,10 +131,10 @@ export default function Reviews() {
   // Count matching reviews for a given filter — drives the per-tab badges
   // (the star-rating breakdown) and reuses the same predicate as filtering.
   function matchesFilter(r, f) {
-    if (f === 'Replied')  return r.status === 'replied'
+    if (f === 'Replied')  return r.status === 'replied' || r.status === 'posted'
     if (f === 'Pending')  return r.status === 'pending'
     if (f === '5 Star')   return r.rating === 5
-    if (f === '1–2 Star') return r.rating >= 1 && r.rating <= 2  // exclude null (don't coerce to 0)
+    if (f === '1–2 Star') return r.rating >= 1 && r.rating <= 2
     return true
   }
 
@@ -229,39 +250,66 @@ export default function Reviews() {
           </div>
         ) : filtered.length === 0 ? <EmptyState C={C} /> : (
           <div>
-            {filtered.map((r, i) => (
-              <div key={r.id}
-                style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${C.divider}` : 'none' }}>
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-4 mb-2">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-semibold" style={{ color: C.primary }}>{r.name}</span>
-                        <Stars rating={r.rating} />
+            {filtered.map((r, i) => {
+              const isPending   = r.status === 'pending'
+              const isPosted    = r.status === 'posted'
+              const isApproving = approving.has(r.id)
+
+              const badgeStyle = (isPending)
+                ? { backgroundColor: 'rgba(251,191,36,0.08)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.15)' }
+                : { backgroundColor: 'rgba(34,211,238,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.2)' }
+
+              const badgeText = isPending
+                ? '⏳ Awaiting approval'
+                : isPosted ? '✓ Posted to Google' : '✓ Replied'
+
+              return (
+                <div key={r.id}
+                  style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${C.divider}` : 'none' }}>
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-semibold" style={{ color: C.primary }}>{r.name}</span>
+                          <Stars rating={r.rating} />
+                        </div>
+                        <span className="text-xs" style={{ color: C.muted }}>{r.date}</span>
                       </div>
-                      <span className="text-xs" style={{ color: C.muted }}>{r.date}</span>
+                      <span className="text-xs px-2 py-0.5 rounded shrink-0" style={badgeStyle}>
+                        {badgeText}
+                      </span>
                     </div>
-                    <span className="text-xs px-2 py-0.5 rounded shrink-0"
-                      style={r.status === 'replied'
-                        ? { backgroundColor: 'rgba(34,211,238,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.2)' }
-                        : { backgroundColor: 'rgba(251,191,36,0.08)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.15)' }}
-                    >
-                      {r.status === 'replied' ? '✓ Replied' : '⏳ Pending'}
-                    </span>
+                    <p className="text-sm leading-relaxed" style={{ color: C.secondary }}>{r.text}</p>
                   </div>
-                  <p className="text-sm leading-relaxed" style={{ color: C.secondary }}>{r.text}</p>
-                </div>
-                <div className="px-5 pb-5 pt-0">
-                  <div className="rounded px-4 py-3"
-                    style={{ backgroundColor: C.inputBg, border: `1px solid ${C.divider}` }}>
-                    <p className="text-[11px] font-medium mb-1.5" style={{ color: C.muted }}>AutoPilot reply</p>
-                    <p className="text-sm leading-relaxed" style={{ color: r.reply ? C.primary : C.muted }}>
-                      {r.reply || 'No reply text received.'}
-                    </p>
+                  <div className="px-5 pb-5 pt-0">
+                    <div className="rounded px-4 py-3"
+                      style={{ backgroundColor: C.inputBg, border: `1px solid ${C.divider}` }}>
+                      <p className="text-[11px] font-medium mb-1.5" style={{ color: C.muted }}>AutoPilot reply</p>
+                      <p className="text-sm leading-relaxed" style={{ color: r.reply ? C.primary : C.muted }}>
+                        {r.reply || 'No reply text received.'}
+                      </p>
+                    </div>
+                    {isPending && (
+                      <button
+                        onClick={() => handleApprove(r.id)}
+                        disabled={isApproving}
+                        className="mt-3 text-xs font-semibold px-4 py-2 rounded transition-colors"
+                        style={{
+                          backgroundColor: isApproving ? 'rgba(34,211,238,0.08)' : 'rgba(34,211,238,0.14)',
+                          color: isApproving ? C.muted : 'var(--ap-success)',
+                          border: '1px solid rgba(34,211,238,0.25)',
+                          cursor: isApproving ? 'default' : 'pointer',
+                        }}
+                        onMouseEnter={e => { if (!isApproving) e.currentTarget.style.backgroundColor = 'rgba(34,211,238,0.22)' }}
+                        onMouseLeave={e => { if (!isApproving) e.currentTarget.style.backgroundColor = 'rgba(34,211,238,0.14)' }}
+                      >
+                        {isApproving ? 'Posting to Google…' : 'Approve & Post to Google'}
+                      </button>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

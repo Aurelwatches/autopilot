@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 import { Reveal } from './motion'
 
 const C = {
-  primary:   '#EAF2FF',
-  secondary: '#94A3B8',
-  muted:     '#6E7A8F',
+  primary:   '#0A0A0A',
+  secondary: '#6B7280',
+  muted:     '#9CA3AF',
 }
 
 export default function Footer() {

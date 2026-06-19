@@ -2,9 +2,9 @@ import { motion } from 'framer-motion'
 import { EASE, GlowCard, Stagger, StaggerItem } from './motion'
 
 const C = {
-  primary:   '#EAF2FF',
-  secondary: '#94A3B8',
-  muted:     '#6E7A8F',
+  primary:   '#0A0A0A',
+  secondary: '#6B7280',
+  muted:     '#9CA3AF',
   accent:    '#22D3EE',
   success:   '#22D3EE',
 }
@@ -82,11 +82,11 @@ function ReviewMockup() {
       <div style={{ padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <span style={{ fontSize: 14, fontWeight: 500, color: C.primary }}>Sarah M.</span>
-          <span style={{ fontSize: 12, color: '#7DD3FC' }}>★★★★★</span>
+          <span style={{ fontSize: 12, color: '#FBBF24' }}>★★★★★</span>
           <span style={{ fontSize: 12, color: C.muted }}>· 2h ago</span>
         </div>
         <p style={{ fontSize: 14, lineHeight: 1.6, color: C.secondary }}>
-          "Best tacos in the city. The service was incredible — our server remembered
+          "Best tacos in the city. The service was incredible. Our server remembered
           my usual order. Will absolutely be back."
         </p>
 
@@ -107,7 +107,7 @@ function ReviewMockup() {
 
 function SocialMockup() {
   const posts = [
-    { platform: 'Instagram', time: 'Today, 11:30 AM', copy: 'Taco Tuesday is back — 3 for $12, today only.', status: 'scheduled' },
+    { platform: 'Instagram', time: 'Today, 11:30 AM', copy: 'Taco Tuesday is back. 3 for $12, today only.', status: 'scheduled' },
     { platform: 'Facebook',  time: 'Wed, 6:00 PM',    copy: 'New happy hour menu just dropped. Come see us.',  status: 'draft' },
     { platform: 'Instagram', time: 'Fri, 12:00 PM',   copy: 'Weekend special: buy 2 get 1 free on mains.',     status: 'scheduled' },
   ]
@@ -162,7 +162,7 @@ const sections = [
   {
     number: '01',
     heading: 'Every review. Answered automatically.',
-    body: 'AutoPilot watches your Google listing around the clock. Every new review gets a thoughtful, on-brand reply within minutes — without you writing a single word.',
+    body: 'AutoPilot watches your Google listing around the clock. Every new review gets a thoughtful, on-brand reply within minutes. You never write a single word.',
     mockup: <ReviewMockup />,
     textSide: 'left',  // text left, mockup right
     stagger: false,
@@ -170,7 +170,7 @@ const sections = [
   {
     number: '02',
     heading: 'Show up in the feed. Without lifting a finger.',
-    body: 'Daily specials, seasonal promotions, events — AutoPilot drafts and schedules content for Instagram and Facebook. Your followers see you. You focus on your guests.',
+    body: 'Daily specials, seasonal promotions, events. AutoPilot drafts and schedules content for Instagram and Facebook so your followers see you while you focus on your guests.',
     mockup: <SocialMockup />,
     textSide: 'right', // text right, mockup left
     stagger: true,
@@ -193,9 +193,6 @@ function FeatureSection({ section }) {
   // grid flips columns for textSide === 'right' via the --flip modifier.
   const text = (
     <SlideIn dir={textDir}>
-      <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.2em', color: C.accent }}>
-        {section.number}
-      </span>
       <h3 style={{
         fontFamily: "'Bricolage Grotesque', sans-serif",
         fontSize: 'clamp(28px, 4vw, 42px)',

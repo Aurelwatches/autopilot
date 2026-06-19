@@ -30,8 +30,8 @@ export default function WaveDivider() {
       >
         <defs>
           <linearGradient id="apWaveA" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="rgba(56,189,248,0.16)" />
-            <stop offset="100%" stopColor="rgba(56,189,248,0)" />
+            <stop offset="0%"   stopColor="rgba(34,211,238,0.12)" />
+            <stop offset="100%" stopColor="rgba(34,211,238,0)" />
           </linearGradient>
         </defs>
         <path
@@ -52,7 +52,7 @@ export default function WaveDivider() {
       >
         <defs>
           <linearGradient id="apWaveB" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="rgba(34,211,238,0.26)" />
+            <stop offset="0%"   stopColor="rgba(34,211,238,0.18)" />
             <stop offset="100%" stopColor="rgba(34,211,238,0)" />
           </linearGradient>
         </defs>
@@ -64,9 +64,9 @@ export default function WaveDivider() {
         <path
           d="M0 90 C480 150 960 30 1440 90 C1920 150 2400 30 2880 90"
           fill="none"
-          stroke="rgba(103,232,249,0.55)"
+          stroke="rgba(34,211,238,0.45)"
           strokeWidth="2"
-          style={{ filter: 'drop-shadow(0 0 6px rgba(34,211,238,0.65))' }}
+          style={{ filter: 'drop-shadow(0 0 6px rgba(34,211,238,0.50))' }}
         />
       </svg>
     </div>

@@ -1,9 +1,9 @@
 import { Reveal, ShimmerButton } from './motion'
 
 const C = {
-  primary:   '#EAF2FF',
-  secondary: '#94A3B8',
-  muted:     '#6E7A8F',
+  primary:   '#0A0A0A',
+  secondary: '#6B7280',
+  muted:     '#9CA3AF',
 }
 
 export default function Pricing() {
@@ -14,11 +14,10 @@ export default function Pricing() {
     >
       <Reveal amount={0.3} y={40} style={{ maxWidth: 640, margin: '0 auto' }}>
         <p style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 12, fontWeight: 500, textTransform: 'uppercase',
-          letterSpacing: '0.18em', color: '#22D3EE', marginBottom: 20,
+          fontSize: 13, fontWeight: 500,
+          color: '#22D3EE', marginBottom: 20,
         }}>
-          Pricing
+          Plans
         </p>
 
         <h2 style={{

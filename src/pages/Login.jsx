@@ -7,25 +7,11 @@ import LoginPlane from '../components/LoginPlane'
 
 const ADMIN_EMAIL = 'bray.200913@gmail.com'
 
-// All colours come from CSS variables (index.css), which switch automatically
-// when [data-theme="light"] is set on <html> by the anti-FOUC script / AppContext.
-const V = {
-  bg:      'var(--ap-bg)',
-  card:    'var(--ap-card-solid)',
-  border:  'var(--ap-border-solid)',
-  input:   'var(--ap-input-solid)',
-  text:    'var(--ap-text)',
-  text2:   'var(--ap-text2)',
-  text3:   'var(--ap-text3b)',
-  shadow:  'var(--ap-shadow)',
-}
-
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const { signIn } = useAuth()
 
-  // Message shown when arriving from the pricing page ("Sign in to continue…")
   const notice = location.state?.message
 
   const [email,    setEmail]    = useState('')
@@ -50,9 +36,6 @@ export default function Login() {
       return
     }
 
-    // Only divert to checkout when a plan was chosen on /pricing AND the user
-    // doesn't already have an active subscription. Existing subscribers (and the
-    // admin) go straight to the dashboard via the cinematic airplane takeoff.
     const hasSelectedPlan = !!localStorage.getItem('ap_selected_plan')
     let hasActiveSub = false
 
@@ -80,108 +63,136 @@ export default function Login() {
     }
   }
 
+  const inputStyle = {
+    width: '100%', fontSize: 15, padding: '11px 16px',
+    borderRadius: 10, outline: 'none', border: '1px solid rgba(0,0,0,0.12)',
+    backgroundColor: 'rgba(0,0,0,0.025)', color: '#0A0A0A',
+    transition: 'border-color 0.15s',
+  }
+
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ backgroundColor: V.bg }}
-    >
+    <div style={{
+      minHeight: '100vh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: '24px 16px', backgroundColor: '#FFFFFF',
+      backgroundImage: 'linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px)',
+      backgroundSize: '64px 64px',
+    }}>
       {/* Logo */}
-      <Link to="/" className="flex items-center gap-2 mb-10" style={{ color: V.text }}>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <Link to="/" style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        marginBottom: 32, textDecoration: 'none', color: '#0A0A0A',
+      }}>
+        <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
           <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
-            stroke="var(--ap-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            stroke="#22D3EE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span className="text-base font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>AutoPilot</span>
+        <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Bricolage Grotesque', sans-serif" }}>
+          AutoPilot
+        </span>
       </Link>
 
-      <div
-        className="w-full rounded-2xl px-8 py-10"
-        style={{
-          maxWidth: 400,
-          backgroundColor: V.card,
-          border: `1px solid ${V.border}`,
-          boxShadow: V.shadow,
-        }}
-      >
-        <h1 className="text-2xl font-bold mb-1" style={{ color: V.text, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>Welcome back</h1>
-        <p className="text-sm mb-8" style={{ color: V.text2 }}>Sign in to your AutoPilot account.</p>
+      {/* Card */}
+      <div style={{
+        width: '100%', maxWidth: 420,
+        backgroundColor: '#FFFFFF',
+        border: '1px solid rgba(0,0,0,0.08)',
+        borderRadius: 20,
+        padding: '36px 32px',
+        boxShadow: '0 4px 32px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)',
+      }}>
+        <h1 style={{
+          fontFamily: "'Bricolage Grotesque', sans-serif",
+          fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em',
+          color: '#0A0A0A', margin: '0 0 6px',
+        }}>
+          Welcome back
+        </h1>
+        <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 28px' }}>
+          Sign in to your AutoPilot account.
+        </p>
 
         {notice && (
-          <div
-            className="text-sm mb-6 px-4 py-3 rounded-lg"
-            style={{
-              backgroundColor: 'var(--ap-accent-soft)',
-              border: '1px solid var(--ap-accent)',
-              color: 'var(--ap-accent)',
-            }}
-          >
+          <div style={{
+            fontSize: 13, marginBottom: 20, padding: '10px 14px', borderRadius: 10,
+            backgroundColor: 'rgba(34,211,238,0.08)',
+            border: '1px solid rgba(34,211,238,0.35)',
+            color: '#0A9BAD',
+          }}>
             {notice}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: V.text2 }}>Email</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
+              Email
+            </label>
             <input
               type="email"
               value={email}
               onChange={e => { setEmail(e.target.value); setError('') }}
               placeholder="you@restaurant.com"
               autoComplete="email"
-              className="w-full text-sm px-4 py-2.5 rounded-lg outline-none"
-              style={{ backgroundColor: V.input, color: V.text, border: `1px solid ${V.border}` }}
-              onFocus={e => e.target.style.borderColor = 'var(--ap-accent)'}
-              onBlur={e => e.target.style.borderColor = V.border}
+              style={inputStyle}
+              onFocus={e => e.target.style.borderColor = '#22D3EE'}
+              onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,0.12)'}
             />
           </div>
 
           <div>
-            <label className="text-xs font-medium" style={{ color: V.text2 }}>Password</label>
-            <div className="relative mt-1.5">
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
+              Password
+            </label>
+            <div style={{ position: 'relative' }}>
               <input
                 type={showPw ? 'text' : 'password'}
                 value={password}
                 onChange={e => { setPassword(e.target.value); setError('') }}
                 placeholder="••••••••"
                 autoComplete="current-password"
-                className="w-full text-sm pl-4 pr-11 py-2.5 rounded-lg outline-none"
-                style={{ backgroundColor: V.input, color: V.text, border: `1px solid ${V.border}` }}
-                onFocus={e => e.target.style.borderColor = 'var(--ap-accent)'}
-                onBlur={e => e.target.style.borderColor = V.border}
+                style={{ ...inputStyle, paddingRight: 44 }}
+                onFocus={e => e.target.style.borderColor = '#22D3EE'}
+                onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,0.12)'}
               />
-              <EyeToggle visible={showPw} onClick={() => setShowPw(s => !s)} color={V.text2} />
+              <EyeToggle visible={showPw} onClick={() => setShowPw(s => !s)} color="#9CA3AF" />
             </div>
           </div>
 
-          {error && <p className="text-xs" style={{ color: 'var(--ap-danger)' }}>{error}</p>}
+          {error && (
+            <p style={{ fontSize: 13, color: '#EF4444', margin: 0 }}>{error}</p>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full text-sm font-bold py-2.5 rounded-lg mt-2"
             style={{
-              backgroundColor: 'var(--ap-accent)',
-              color: 'var(--ap-on-accent)',
-              opacity: loading ? 0.6 : 1,
-              boxShadow: loading ? 'none' : '0 6px 22px rgba(34,211,238,0.32)',
-              cursor: loading ? 'default' : 'pointer',
-              transition: 'opacity 0.15s, box-shadow 0.15s',
+              width: '100%', padding: '13px 0',
+              borderRadius: 980, border: 'none',
+              fontSize: 15, fontWeight: 700, cursor: loading ? 'default' : 'pointer',
+              backgroundColor: '#22D3EE', color: '#04141A',
+              opacity: loading ? 0.65 : 1,
+              boxShadow: loading ? 'none' : '0 6px 24px rgba(34,211,238,0.38)',
+              transition: 'opacity 0.15s, background-color 0.15s',
+              marginTop: 4,
             }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = 'var(--ap-accent-hover)' }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'var(--ap-accent)' }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = '#67E8F9' }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#22D3EE' }}
           >
-            {loading ? 'Signing in…' : 'Sign in to AutoPilot'}
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
-        <p className="text-xs text-center mt-6" style={{ color: V.text3 }}>
+        <p style={{ fontSize: 13, textAlign: 'center', marginTop: 24, color: '#9CA3AF' }}>
           Don't have an account?{' '}
-          <Link to="/signup" style={{ color: V.text2 }}>Sign up</Link>
+          <Link to="/signup" style={{ color: '#22D3EE', fontWeight: 600, textDecoration: 'none' }}>
+            Sign up free
+          </Link>
         </p>
       </div>
 
-      <p className="text-xs mt-6" style={{ color: V.text3 }}>
-        <Link to="/" style={{ color: V.text2 }}>← Back to homepage</Link>
+      <p style={{ fontSize: 13, marginTop: 20, color: '#9CA3AF' }}>
+        <Link to="/" style={{ color: '#6B7280', textDecoration: 'none' }}>← Back to homepage</Link>
       </p>
 
       {flying && <LoginPlane onDone={() => navigate('/dashboard')} />}

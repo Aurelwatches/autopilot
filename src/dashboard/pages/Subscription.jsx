@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useApp } from '../AppContext'
 import { getPlanMeta, getBillingInterval, planPrice } from '../planMeta'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 // Next billing date: anchored once in localStorage, then advanced by the
 // billing interval until it lands in the future. Stable across renders.
 function nextBillingDate(interval) {
@@ -48,7 +50,7 @@ function SadFace() {
 
 export default function Subscription() {
   const navigate = useNavigate()
-  const { C, plan } = useApp()
+  const { C, plan, userId } = useApp()
 
   const meta     = getPlanMeta(plan)
   const planKey  = meta.key
@@ -57,8 +59,28 @@ export default function Subscription() {
   const price    = planPrice(meta, interval)
   const yearlySavings = meta.monthly * 12 - meta.yearly
 
-  const [showCancel, setShowCancel] = useState(false)
-  const [canceled,   setCanceled]   = useState(false)
+  const [showCancel,   setShowCancel]   = useState(false)
+  const [canceled,     setCanceled]     = useState(false)
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [portalError,   setPortalError]   = useState('')
+
+  async function handleCancelConfirm() {
+    setPortalLoading(true)
+    setPortalError('')
+    try {
+      const res = await fetch(`${API_URL}/api/create-portal-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to open portal')
+      window.location.href = data.url
+    } catch (err) {
+      setPortalError(err.message)
+      setPortalLoading(false)
+    }
+  }
 
   function changeToYearly() {
     localStorage.setItem('ap_selected_plan', planKey)
@@ -269,24 +291,30 @@ export default function Subscription() {
             <div className="flex flex-col gap-2.5">
               <button
                 onClick={() => setShowCancel(false)}
+                disabled={portalLoading}
                 className="w-full text-sm font-semibold py-2.5 rounded-lg transition-colors"
-                style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: 'pointer' }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: portalLoading ? 'default' : 'pointer', opacity: portalLoading ? 0.5 : 1 }}
+                onMouseEnter={e => { if (!portalLoading) e.currentTarget.style.opacity = '0.85' }}
+                onMouseLeave={e => e.currentTarget.style.opacity = portalLoading ? '0.5' : '1'}
               >
                 Never mind, keep my plan
               </button>
+              {portalError && (
+                <p className="text-xs text-center" style={{ color: 'rgb(239,68,68)' }}>{portalError}</p>
+              )}
               <button
-                onClick={() => { setCanceled(true); setShowCancel(false) }}
+                onClick={handleCancelConfirm}
+                disabled={portalLoading}
                 className="w-full text-sm font-medium py-2.5 rounded-lg transition-colors"
                 style={{
                   color: 'rgb(239,68,68)', border: '1px solid rgba(239,68,68,0.3)',
-                  backgroundColor: 'transparent', cursor: 'pointer',
+                  backgroundColor: 'transparent', cursor: portalLoading ? 'default' : 'pointer',
+                  opacity: portalLoading ? 0.6 : 1,
                 }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.08)'}
+                onMouseEnter={e => { if (!portalLoading) e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.08)' }}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                Cancel anyway
+                {portalLoading ? 'Opening portal…' : 'Cancel anyway'}
               </button>
             </div>
           </div>

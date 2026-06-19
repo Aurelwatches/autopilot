@@ -1,8 +1,8 @@
 import { Reveal, Stagger, StaggerItem, GlowCard } from './motion'
 
 const C = {
-  primary:   '#EAF2FF',
-  secondary: '#94A3B8',
+  primary:   '#0A0A0A',
+  secondary: '#6B7280',
   accent:    '#22D3EE',
 }
 
@@ -38,7 +38,7 @@ const AnalyticsIcon = (
 )
 
 const services = [
-  { icon: ReviewIcon, title: 'Review Management', body: 'AI replies to every Google review — thoughtful, on-brand, and within minutes, day or night.' },
+  { icon: ReviewIcon, title: 'Review Management', body: 'AI replies to every Google review. Thoughtful, on-brand, and within minutes, day or night.' },
   { icon: SocialIcon, title: 'Social Media', body: 'Auto-generated posts for Instagram and Facebook, drafted and scheduled so you stay in the feed.' },
   { icon: AnalyticsIcon, title: 'Analytics Dashboard', body: 'Track your reviews, posts, and customer sentiment in real time from one clean dashboard.' },
 ]
@@ -49,10 +49,10 @@ export default function Services() {
       <div style={{ maxWidth: 1120, margin: '0 auto' }}>
         <Reveal amount={0.4} style={{ textAlign: 'center', marginBottom: 56 }}>
           <p style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 500,
-            textTransform: 'uppercase', letterSpacing: '0.18em', color: C.accent, marginBottom: 16,
+            fontSize: 13, fontWeight: 500,
+            color: C.accent, marginBottom: 16,
           }}>
-            Our Services
+            What AutoPilot does
           </p>
           <h2 style={{
             fontFamily: "'Bricolage Grotesque', sans-serif",
@@ -74,11 +74,10 @@ export default function Services() {
                 glow="cyan"
                 style={{
                   width: '100%',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.09)',
+                  background: '#FFFFFF',
+                  border: '1px solid rgba(0,0,0,0.07)',
                   borderRadius: 22,
-                  backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+                  boxShadow: '0 2px 16px rgba(0,0,0,0.05)',
                   padding: 28,
                 }}
               >

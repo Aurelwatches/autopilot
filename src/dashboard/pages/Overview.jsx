@@ -17,7 +17,21 @@ const TYPE_MAP = {
   post_scheduled: { type: 'post',   text: 'Post scheduled' },
 }
 const typeColor = { review: '#22D3EE', post: '#a78bfa' }
-const typeLabel = { review: 'R', post: 'P' }
+
+function FeedIcon({ type }) {
+  if (type === 'review') return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 1l1.854 3.756L14 5.528l-3 2.924.708 4.128L8 10.5l-3.708 2.08L5 8.452 2 5.528l4.146-.772L8 1z"/>
+    </svg>
+  )
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      <circle cx="12.5" cy="3.5" r="1.5"/><circle cx="12.5" cy="12.5" r="1.5"/>
+      <circle cx="3.5" cy="8" r="1.5"/>
+      <line x1="5" y1="8" x2="11" y2="4.2"/><line x1="5" y1="8" x2="11" y2="11.8"/>
+    </svg>
+  )
+}
 
 function relativeTime(iso) {
   const secs = (Date.now() - new Date(iso)) / 1000
@@ -111,9 +125,9 @@ export default function Overview() {
     : '0'
 
   const statCards = [
-    { label: 'Reviews Replied', value: repliedCount,   path: '/dashboard/reviews'   },
-    { label: 'Posts Scheduled', value: postsScheduled, path: '/dashboard/posts'     },
-    { label: 'Avg Rating',      value: avgRating,      path: '/dashboard/analytics' },
+    { label: 'Reviews replied', value: repliedCount,   path: '/dashboard/reviews'   },
+    { label: 'Posts scheduled', value: postsScheduled, path: '/dashboard/posts'     },
+    { label: 'Avg rating',      value: avgRating,      path: '/dashboard/analytics' },
   ]
 
   // Recent activity: activity_feed rows plus review replies, newest first.
@@ -145,26 +159,17 @@ export default function Overview() {
     <div className="ap-page px-8 py-8" style={{ maxWidth: 1100 }}>
 
       {/* Status bar */}
-      <div className="flex items-center gap-3 px-4 py-3 mb-8 text-sm"
+      <div className="flex items-center gap-2.5 px-4 py-2.5 mb-8"
         style={{
           backgroundColor: C.card, border: `1px solid ${C.border}`,
-          borderRadius: 12,
-          backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
-          boxShadow: C.cardShadow,
+          borderRadius: 10, width: 'fit-content',
           opacity: revealed ? 1 : 0,
-          transform: revealed ? 'translateY(0)' : 'translateY(-6px)',
-          transition: `opacity 500ms ${EASE}, transform 500ms ${EASE}`,
+          transition: `opacity 500ms ${EASE}`,
         }}>
-        <span className="w-2 h-2 rounded-full shrink-0 pulse-dot"
-          style={{ backgroundColor: 'var(--ap-success)', display: 'inline-block' }} />
-        <span style={{ color: C.primary }}>AutoPilot is running</span>
-        <span style={{ color: C.muted }}>·</span>
-        <span style={{ color: C.secondary }}>
-          {loading
-            ? 'Loading…'
-            : totalTracked > 0
-              ? `${totalTracked} event${totalTracked !== 1 ? 's' : ''} tracked`
-              : 'Waiting for first event'}
+        <span className="w-1.5 h-1.5 rounded-full shrink-0 pulse-dot"
+          style={{ backgroundColor: 'var(--ap-accent)', display: 'inline-block' }} />
+        <span style={{ fontSize: 12, color: C.secondary }}>
+          {loading ? 'Loading…' : 'AutoPilot is running'}
         </span>
       </div>
 
@@ -175,10 +180,10 @@ export default function Overview() {
         transitionDelay: revealed ? '50ms' : '0ms',
       }}>
         <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ color: C.primary, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.1, color: C.primary, marginBottom: 6 }}>
             {greeting}, {restaurantName}
           </h1>
-          <p className="text-sm" style={{ color: C.secondary }}>{today}</p>
+          <p style={{ fontSize: 13, color: C.muted }}>{today}</p>
         </div>
         <button
           onClick={() => navigate('/dashboard/subscription')}
@@ -209,36 +214,30 @@ export default function Overview() {
       )}
 
       {/* Stat cards — clickable */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
         {statCards.map((s, index) => (
           <button
             key={s.label}
             onClick={() => s.path && navigate(s.path)}
             disabled={!s.path}
-            className="px-5 py-5 text-left w-full"
+            className="px-6 py-6 text-left w-full"
             style={{
               backgroundColor: C.card, border: `1px solid ${C.border}`,
-              borderRadius: 16,
+              borderRadius: 20,
               backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
-              boxShadow: C.cardShadow,
               cursor: s.path ? 'pointer' : 'default',
               opacity: revealed ? 1 : 0,
-              transform: revealed ? 'scale(1)' : 'scale(0.95)',
-              transition: `border-color 0.15s, opacity 600ms ${EASE}, transform 600ms ${EASE}`,
-              transitionDelay: revealed ? `${index * 100}ms` : '0ms',
+              transform: revealed ? 'translateY(0)' : 'translateY(12px)',
+              transition: `background-color 0.2s, border-color 0.2s, opacity 600ms ${EASE}, transform 600ms ${EASE}`,
+              transitionDelay: revealed ? `${index * 80}ms` : '0ms',
             }}
-            onMouseEnter={e => { if (s.path) e.currentTarget.style.borderColor = C.secondary }}
-            onMouseLeave={e => { if (s.path) e.currentTarget.style.borderColor = C.border }}
+            onMouseEnter={e => { if (s.path) e.currentTarget.style.backgroundColor = C.card.includes('rgba') ? 'rgba(255,255,255,0.07)' : C.card }}
+            onMouseLeave={e => { if (s.path) e.currentTarget.style.backgroundColor = C.card }}
           >
-            <p className="text-[11px] font-medium uppercase tracking-widest mb-3"
-              style={{ color: C.muted }}>{s.label}</p>
-            <p className="text-3xl font-semibold tracking-tight mb-1"
-              style={{ color: C.primary }}>{s.value}</p>
-            {s.path && (
-              <p className="text-xs flex items-center gap-1" style={{ color: C.muted }}>
-                View →
-              </p>
-            )}
+            <p style={{ fontSize: 48, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1, color: C.primary, fontFamily: 'var(--font-display)', marginBottom: 10 }}>
+              {s.value}
+            </p>
+            <p style={{ fontSize: 13, color: C.secondary, fontWeight: 450 }}>{s.label}</p>
           </button>
         ))}
       </div>
@@ -274,33 +273,25 @@ export default function Overview() {
             {feed.map((item, i) => (
               <div
                 key={i}
-                className="flex items-start gap-4 px-5 py-3.5"
+                className="flex items-center gap-4 px-5"
                 style={{
                   borderBottom: i < feed.length - 1 ? `1px solid ${C.divider}` : 'none',
-                  backgroundColor: item.newest ? 'rgba(34,211,238,0.06)' : 'transparent',
+                  padding: '13px 20px',
                   opacity: revealed ? 1 : 0,
-                  transform: revealed ? 'translateY(0)' : 'translateY(10px)',
-                  transition: `opacity 500ms ${EASE}, transform 500ms ${EASE}`,
-                  transitionDelay: revealed ? `${400 + i * 80}ms` : '0ms',
+                  transition: `opacity 500ms ${EASE}`,
+                  transitionDelay: revealed ? `${400 + i * 50}ms` : '0ms',
                 }}
               >
-                <div
-                  className="w-6 h-6 rounded flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold"
-                  style={{ backgroundColor: `${typeColor[item.type]}18`, color: typeColor[item.type] }}
-                >
-                  {typeLabel[item.type]}
+                <div style={{
+                  width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                  backgroundColor: item.newest ? 'var(--ap-accent)' : C.muted,
+                  boxShadow: item.newest ? '0 0 8px var(--ap-accent)' : 'none',
+                }} />
+                <div className="flex-1 min-w-0 flex items-baseline gap-2">
+                  <span style={{ fontSize: 13, fontWeight: 500, color: C.primary, whiteSpace: 'nowrap' }}>{item.text}</span>
+                  <span style={{ fontSize: 12, color: C.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.detail}</span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium" style={{ color: C.primary }}>{item.text}</span>
-                    {item.newest && (
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0 pulse-dot"
-                        style={{ backgroundColor: 'var(--ap-success)', display: 'inline-block' }} />
-                    )}
-                  </div>
-                  <p className="text-xs mt-0.5" style={{ color: C.secondary }}>{item.detail}</p>
-                </div>
-                <span className="text-xs shrink-0" style={{ color: C.muted }}>{item.time}</span>
+                <span style={{ fontSize: 11, color: C.muted, flexShrink: 0 }}>{item.time}</span>
               </div>
             ))}
           </div>

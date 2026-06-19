@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 import googleOAuthRoutes from './google-oauth-routes.js'
-import { startReviewsPoller } from './google-reviews-poller.js'
+import { startReviewsPoller, getValidAccessToken } from './google-reviews-poller.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -39,14 +39,17 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
   const sig = req.headers['stripe-signature']
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
+  if (!webhookSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET is not set — refusing webhook')
+    return res.status(500).json({ error: 'Webhook secret not configured' })
+  }
+
   let event
   try {
-    event = webhookSecret
-      ? stripe.webhooks.constructEvent(req.body, sig, webhookSecret)
-      : JSON.parse(req.body)
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret)
   } catch (err) {
-    console.error('Stripe webhook signature error:', err.message)
-    return res.status(400).json({ error: `Webhook error: ${err.message}` })
+    console.error('Stripe webhook signature verification failed:', err.message)
+    return res.status(400).json({ error: `Webhook signature error: ${err.message}` })
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -59,10 +62,40 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
         plan_interval: session.metadata?.interval,
         subscribed_at: new Date().toISOString(),
         subscription_status: 'active',
+        stripe_customer_id: session.customer ?? null,
       }).eq('id', userId)
 
       if (error) console.error('Supabase profile update error:', error.message)
       else console.log(`Activated subscription for user ${userId}, plan: ${session.metadata?.plan}`)
+    }
+  }
+
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object
+    const customerId = subscription.customer
+
+    if (customerId && supabase) {
+      const { error } = await supabase.from('profiles').update({
+        subscription_status: 'canceled',
+        plan: null,
+      }).eq('stripe_customer_id', customerId)
+
+      if (error) console.error('Supabase cancel update error:', error.message)
+      else console.log(`Canceled subscription for Stripe customer ${customerId}`)
+    }
+  }
+
+  if (event.type === 'invoice.payment_failed') {
+    const invoice = event.data.object
+    const customerId = invoice.customer
+
+    if (customerId && supabase) {
+      const { error } = await supabase.from('profiles').update({
+        subscription_status: 'past_due',
+      }).eq('stripe_customer_id', customerId)
+
+      if (error) console.error('Supabase past_due update error:', error.message)
+      else console.log(`Marked past_due for Stripe customer ${customerId}`)
     }
   }
 
@@ -177,6 +210,7 @@ app.post('/api/webhook', webhookLimiter, async (req, res) => {
   const {
     type, customerName, details, reviewText, aiReply,
     timestamp, platform, phone, lastVisit, rating,
+    review_id: reviewId,
   } = req.body
 
   if (!type) {
@@ -217,7 +251,8 @@ app.post('/api/webhook', webhookLimiter, async (req, res) => {
           review_text:   clean(reviewText ?? details, 5000),
           ai_reply:      clean(aiReply, 5000),
           rating:        rating != null && !Number.isNaN(Number(rating)) ? Number(rating) : null,
-          status:        'replied',
+          status:        'pending',
+          review_id:     reviewId ?? null,
           created_at:    timestamp  ?? new Date().toISOString(),
         }))
         supabase.from('reviews').insert(rows)
@@ -363,6 +398,108 @@ app.post('/api/create-checkout-session', async (req, res) => {
     console.error('Stripe checkout error:', err.message)
     res.status(500).json({ error: err.message })
   }
+})
+
+// POST /api/create-portal-session — open Stripe Customer Portal for cancellation/management
+app.post('/api/create-portal-session', async (req, res) => {
+  if (!stripe) return res.status(500).json({ error: 'Stripe not configured' })
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+
+  const { userId } = req.body
+  if (!userId) return res.status(400).json({ error: 'userId is required' })
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('stripe_customer_id')
+    .eq('id', userId)
+    .single()
+
+  if (error || !profile?.stripe_customer_id) {
+    return res.status(404).json({ error: 'No Stripe customer found for this account. Complete a checkout first.' })
+  }
+
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: profile.stripe_customer_id,
+      return_url: `${process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'}/dashboard/subscription`,
+    })
+    res.json({ url: session.url })
+  } catch (err) {
+    console.error('Stripe portal error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /api/reviews/:reviewId/approve — post AI reply to Google, mark as posted
+app.post('/api/reviews/:reviewId/approve', async (req, res) => {
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+
+  const { reviewId } = req.params
+
+  // 1. Look up the review
+  const { data: review, error: reviewErr } = await supabase
+    .from('reviews')
+    .select('user_id, ai_reply, review_id')
+    .eq('id', reviewId)
+    .single()
+
+  if (reviewErr || !review) return res.status(404).json({ error: 'Review not found' })
+  if (!review.ai_reply) return res.status(400).json({ error: 'No AI reply to post' })
+  if (!review.review_id) return res.status(400).json({ error: 'Google review_id not stored — cannot post reply' })
+
+  // 2. Look up the client's Google credentials
+  const { data: profile, error: profileErr } = await supabase
+    .from('profiles')
+    .select('google_access_token, google_refresh_token, google_token_expires_at, google_account_id, google_location_id')
+    .eq('id', review.user_id)
+    .single()
+
+  if (profileErr || !profile) return res.status(404).json({ error: 'Profile not found' })
+  if (!profile.google_refresh_token) return res.status(400).json({ error: 'Google not connected for this account' })
+
+  // 3. Refresh token if needed (reuses poller logic — no duplication)
+  let accessToken
+  try {
+    accessToken = await getValidAccessToken(profile)
+  } catch (err) {
+    return res.status(500).json({ error: `Token refresh failed: ${err.message}` })
+  }
+  if (!accessToken) return res.status(500).json({ error: 'Could not obtain a valid Google access token' })
+
+  // 4. POST the reply to Google Business Profile
+  const googleUrl = `https://mybusiness.googleapis.com/v4/accounts/${profile.google_account_id}/locations/${profile.google_location_id}/reviews/${review.review_id}/reply`
+
+  let googleRes
+  try {
+    googleRes = await fetch(googleUrl, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comment: review.ai_reply }),
+    })
+  } catch (err) {
+    return res.status(502).json({ error: `Network error reaching Google: ${err.message}` })
+  }
+
+  if (!googleRes.ok) {
+    const errText = await googleRes.text()
+    console.error(`Google reply API error (${googleRes.status}):`, errText)
+    return res.status(502).json({ error: `Google API error (${googleRes.status}): ${errText}` })
+  }
+
+  // 5. Mark the review as posted in Supabase
+  const { error: updateErr } = await supabase
+    .from('reviews')
+    .update({ status: 'posted' })
+    .eq('id', reviewId)
+
+  if (updateErr) {
+    console.error('Status update failed after posting to Google:', updateErr.message)
+    // Reply is live on Google — tell the client it worked but flag the DB miss
+    return res.json({ ok: true, warning: 'Reply posted to Google but DB status update failed' })
+  }
+
+  console.log(`Review ${reviewId} approved and posted to Google.`)
+  res.json({ ok: true })
 })
 
 app.listen(PORT, '0.0.0.0', () => {
