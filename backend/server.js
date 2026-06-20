@@ -34,7 +34,8 @@ const resend = process.env.RESEND_API_KEY
 async function sendSms(to, body) {
   if (!twilioClient) throw new Error('Twilio not configured (missing env vars)')
   const msg = await twilioClient.messages.create({ from: process.env.TWILIO_FROM_NUMBER, to, body })
-  console.log('[SMS] Sent:', msg.sid)
+  console.log('[SMS] Sent:', msg.sid, 'status:', msg.status)
+  return { sid: msg.sid, status: msg.status, from: process.env.TWILIO_FROM_NUMBER, to }
 }
 
 async function sendEmail({ to, subject, html }) {
@@ -758,8 +759,8 @@ app.post('/api/smoke-test', async (req, res) => {
   const results = {}
   if (phone) {
     try {
-      await sendSms(phone, 'AutoPilot smoke test SMS is working!')
-      results.sms = 'sent'
+      const smsInfo = await sendSms(phone, 'AutoPilot smoke test SMS is working!')
+      results.sms = smsInfo
     } catch (err) {
       results.sms = `failed: ${err.message}`
     }
