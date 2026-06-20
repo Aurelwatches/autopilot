@@ -104,6 +104,57 @@ function Field({ label, value, onChange, type = 'text', C }) {
 
 const ADMIN_EMAIL = 'bray.200913@gmail.com'
 
+// Converts "14:30" → { h: 2, m: 30, ap: 'PM' }
+function parse24(t) {
+  const [hh, mm] = (t || '09:00').split(':').map(Number)
+  const ap = hh >= 12 ? 'PM' : 'AM'
+  const h = hh % 12 || 12
+  return { h, m: mm, ap }
+}
+// Converts { h, m, ap } → "14:30"
+function to24({ h, m, ap }) {
+  let hh = h % 12
+  if (ap === 'PM') hh += 12
+  return `${String(hh).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+function TimePicker({ label, value, onChange, C }) {
+  const { h, m, ap } = parse24(value)
+  const set = (patch) => onChange(to24({ h, m, ap, ...patch }))
+  return (
+    <div>
+      <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>{label}</label>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div style={{ flex: 1 }}>
+          <Select
+            value={h}
+            onChange={v => set({ h: Number(v) })}
+            C={C} small
+            options={Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: String(i + 1) }))}
+          />
+        </div>
+        <span style={{ color: C.muted, fontSize: 16, fontWeight: 300, flexShrink: 0 }}>:</span>
+        <div style={{ flex: 1 }}>
+          <Select
+            value={m}
+            onChange={v => set({ m: Number(v) })}
+            C={C} small
+            options={Array.from({ length: 12 }, (_, i) => ({ value: i * 5, label: String(i * 5).padStart(2, '0') }))}
+          />
+        </div>
+        <div style={{ flex: 1 }}>
+          <Select
+            value={ap}
+            onChange={v => set({ ap: v })}
+            C={C} small
+            options={[{ value: 'AM', label: 'AM' }, { value: 'PM', label: 'PM' }]}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Settings() {
   const navigate = useNavigate()
   const { C, theme, toggleTheme, restaurantName, setRestaurantName, userId, plan } = useApp()
@@ -570,30 +621,8 @@ export default function Settings() {
             <>
               <div className="h-px" style={{ backgroundColor: C.divider }} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>Opens</label>
-                  <input
-                    type="time"
-                    value={bizOpen}
-                    onChange={e => setBizOpen(e.target.value)}
-                    className="w-full text-sm px-4 py-2.5 rounded outline-none"
-                    style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
-                    onFocus={e => e.target.style.borderColor = C.accent}
-                    onBlur={e => e.target.style.borderColor = C.border}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>Closes</label>
-                  <input
-                    type="time"
-                    value={bizClose}
-                    onChange={e => setBizClose(e.target.value)}
-                    className="w-full text-sm px-4 py-2.5 rounded outline-none"
-                    style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
-                    onFocus={e => e.target.style.borderColor = C.accent}
-                    onBlur={e => e.target.style.borderColor = C.border}
-                  />
-                </div>
+                <TimePicker label="Opens"  value={bizOpen}  onChange={setBizOpen}  C={C} />
+                <TimePicker label="Closes" value={bizClose} onChange={setBizClose} C={C} />
               </div>
               <div>
                 <Select
