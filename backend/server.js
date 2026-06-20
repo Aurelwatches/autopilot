@@ -197,7 +197,7 @@ const replyLimiter   = rateLimit({ windowMs: 60_000, max: 100 })
 
 function clean(v, maxLen = 5000) {
   if (v == null) return ''
-  return String(v).replace(//g, '').replace(/<\/?[^>]*>/g, '').trim().slice(0, maxLen)
+  return String(v).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').replace(/<\/?[^>]*>/g, '').trim().slice(0, maxLen)
 }
 
 app.use((req, _res, next) => {
@@ -672,4 +672,119 @@ app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      payment_met
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: 'https://autopilot-pink.vercel.app/payment-success',
+      cancel_url:  'https://autopilot-pink.vercel.app/pricing',
+      client_reference_id: userId ?? undefined,
+      metadata: { plan, interval, userId: userId ?? '' },
+      subscription_data: { trial_period_days: 14 },
+    })
+    res.json({ url: session.url })
+  } catch (err) {
+    console.error('Stripe checkout error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /api/create-portal-session
+app.post('/api/create-portal-session', async (req, res) => {
+  if (!stripe || !supabase) return res.status(500).json({ error: 'Stripe or Supabase not configured' })
+  const { userId } = req.body
+  if (!userId) return res.status(400).json({ error: 'userId is required' })
+  const { data: profile, error } = await supabase.from('profiles').select('stripe_customer_id').eq('id', userId).single()
+  if (error || !profile?.stripe_customer_id) return res.status(404).json({ error: 'No Stripe customer found.' })
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: profile.stripe_customer_id,
+      return_url: `${process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'}/dashboard/subscription`,
+    })
+    res.json({ url: session.url })
+  } catch (err) {
+    console.error('Stripe portal error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /api/reviews/:reviewId/approve — manual approve
+app.post('/api/reviews/:reviewId/approve', async (req, res) => {
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+  const { reviewId } = req.params
+
+  const { data: review, error: reviewErr } = await supabase
+    .from('reviews').select('user_id, ai_reply, review_id').eq('id', reviewId).single()
+  if (reviewErr || !review) return res.status(404).json({ error: 'Review not found' })
+  if (!review.ai_reply)   return res.status(400).json({ error: 'No AI reply to post' })
+  if (!review.review_id)  return res.status(400).json({ error: 'Google review_id not stored' })
+
+  const { data: profile, error: profileErr } = await supabase
+    .from('profiles')
+    .select('google_access_token, google_refresh_token, google_token_expires_at, google_account_id, google_location_id')
+    .eq('id', review.user_id).single()
+  if (profileErr || !profile) return res.status(404).json({ error: 'Profile not found' })
+  if (!profile.google_refresh_token) return res.status(400).json({ error: 'Google not connected' })
+
+  let accessToken
+  try { accessToken = await getValidAccessToken(profile) } catch (err) {
+    return res.status(500).json({ error: `Token refresh failed: ${err.message}` })
+  }
+  if (!accessToken) return res.status(500).json({ error: 'Could not obtain Google access token' })
+
+  const googleUrl = `https://mybusiness.googleapis.com/v4/accounts/${profile.google_account_id}/locations/${profile.google_location_id}/reviews/${review.review_id}/reply`
+
+  let googleRes
+  try {
+    googleRes = await fetch(googleUrl, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comment: review.ai_reply }),
+    })
+  } catch (err) {
+    return res.status(502).json({ error: `Network error reaching Google: ${err.message}` })
+  }
+
+  if (!googleRes.ok) {
+    const errText = await googleRes.text()
+    console.error(`Google reply API error (${googleRes.status}):`, errText)
+    return res.status(502).json({ error: `Google API error (${googleRes.status}): ${errText}` })
+  }
+
+  const { error: updateErr } = await supabase.from('reviews').update({ status: 'posted', scheduled_at: null }).eq('id', reviewId)
+  if (updateErr) {
+    console.error('Status update failed after posting to Google:', updateErr.message)
+    return res.json({ ok: true, warning: 'Reply posted to Google but DB status update failed' })
+  }
+
+  console.log(`Review ${reviewId} approved and posted to Google.`)
+  res.json({ ok: true })
+})
+
+
+// ─── Smoke test ──────────────────────────────────────────────────────────────
+app.post('/api/smoke-test', async (req, res) => {
+  const { phone, email } = req.body
+  if (!phone && !email) return res.status(400).json({ error: 'Provide phone and/or email' })
+  const results = {}
+  if (phone) {
+    try {
+      await sendSms(phone, 'AutoPilot smoke test ✅ SMS is working!')
+      results.sms = 'sent'
+    } catch (err) {
+      results.sms = `failed: ${err.message}`
+    }
+  }
+  if (email) {
+    try {
+      await sendEmail({ to: email, subject: 'AutoPilot Smoke Test', html: '<h2>✅ Email is working!</h2><p>AutoPilot email pipeline confirmed.</p>' })
+      results.email = 'sent'
+    } catch (err) {
+      results.email = `failed: ${err.message}`
+    }
+  }
+  res.json({ ok: true, results })
+})
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`API server → http://0.0.0.0:${PORT}`)
+  startReviewsPoller()
+})
