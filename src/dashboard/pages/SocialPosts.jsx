@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useApp } from '../AppContext'
 
@@ -241,6 +241,7 @@ function PostCard({ p, onDelete, C }) {
 
 export default function SocialPosts() {
   const { C, theme, userId, plan } = useApp()
+  const navigate = useNavigate()
 
   const isStarter = plan === 'starter'
   const isGrowth  = plan === 'growth'
@@ -473,8 +474,8 @@ export default function SocialPosts() {
             {/* Platform */}
             <div className="mb-4">
               <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>Platform</label>
-              <div className="ap-platform-tabs flex gap-2">
-                {['Instagram', 'Facebook', 'Twitter'].map(pl => (
+              <div className="ap-platform-tabs flex gap-2 flex-wrap">
+                {['Instagram', 'Facebook'].map(pl => (
                   <button
                     key={pl}
                     onClick={() => setPlatform(pl)}
@@ -488,7 +489,39 @@ export default function SocialPosts() {
                     }}
                   >{pl}</button>
                 ))}
+                {/* Twitter — Pro only */}
+                {plan === 'pro' ? (
+                  <button
+                    onClick={() => setPlatform('Twitter')}
+                    className="text-sm px-4 py-1.5 rounded transition-colors"
+                    style={{
+                      backgroundColor: platform === 'Twitter' ? C.primary : C.inputBg,
+                      color: platform === 'Twitter' ? C.bg : C.secondary,
+                      border: `1px solid ${platform === 'Twitter' ? 'transparent' : C.border}`,
+                      fontWeight: platform === 'Twitter' ? 600 : 400,
+                      cursor: 'pointer',
+                    }}
+                  >X / Twitter</button>
+                ) : (
+                  <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                    <button
+                      disabled
+                      className="text-sm px-4 py-1.5 rounded"
+                      style={{ backgroundColor: C.inputBg, color: C.muted, border: `1px solid ${C.border}`, cursor: 'not-allowed', opacity: 0.6 }}
+                    >X / Twitter</button>
+                    <span
+                      className="text-xs font-semibold px-1.5 py-0.5 rounded"
+                      style={{ position: 'absolute', top: -8, right: -4, backgroundColor: C.accent, color: 'var(--ap-on-accent)', fontSize: 9, lineHeight: 1.4, letterSpacing: '0.02em' }}
+                    >PRO</span>
+                  </div>
+                )}
               </div>
+              {plan !== 'pro' && (
+                <p className="text-xs mt-2" style={{ color: C.muted }}>
+                  X / Twitter posting is available on the{' '}
+                  <button onClick={() => navigate('/dashboard/subscription')} style={{ color: C.accent, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'inherit', fontWeight: 600 }}>Pro plan</button>.
+                </p>
+              )}
             </div>
 
             {/* Topic */}

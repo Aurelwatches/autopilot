@@ -139,9 +139,12 @@ export default function Settings() {
   const [saved,      setSaved]      = useState(false)
   const [prefSaved,  setPrefSaved]  = useState(false)
   const [notifSaved, setNotifSaved] = useState(false)
-  const [notifs,     setNotifs]     = useState({ email: true, sms: false, weekly: true, alerts: true })
-  const [notifEmail, setNotifEmail] = useState('')   // email address for digests
-  const [notifPhone, setNotifPhone] = useState('')   // phone for SMS alerts
+  const [notifs,     setNotifs]     = useState({ alerts: true })
+  const [notifEmail, setNotifEmail] = useState('')
+
+  // ── Cancel flow ───────────────────────────────────────────────────────────
+  const [cancelStep,   setCancelStep]   = useState(null)  // null | 'survey' | 'loading'
+  const [cancelReason, setCancelReason] = useState('')
 
   // ── Business hours ────────────────────────────────────────────────────────
   const [bizHoursEnabled, setBizHoursEnabled] = useState(true)
@@ -176,9 +179,8 @@ export default function Settings() {
         }
         if (data.notification_prefs) {
           const np = data.notification_prefs
-          setNotifs({ email: np.email ?? true, sms: np.sms ?? false, weekly: np.weekly ?? true, alerts: np.alerts ?? true })
+          setNotifs({ alerts: np.alerts ?? true })
           if (np.phone_email) setNotifEmail(np.phone_email)
-          if (np.phone)       setNotifPhone(np.phone)
         }
       })
   }, [userId])
@@ -212,13 +214,34 @@ export default function Settings() {
     const { error } = await supabase.from('profiles').upsert({
       id: userId,
       notification_prefs: {
-        email: notifs.email, sms: notifs.sms, weekly: notifs.weekly, alerts: notifs.alerts,
+        alerts: notifs.alerts,
         phone_email: notifEmail.trim(),
-        phone: notifPhone.trim(),
       },
     })
     if (!error) { setNotifSaved(true); setTimeout(() => setNotifSaved(false), 2500) }
     else console.error('[Settings] notif save:', error.message)
+  }
+
+  async function handleCancelPortal() {
+    setCancelStep('loading')
+    try {
+      // Store cancel reason before redirecting
+      if (cancelReason && supabase && userId) {
+        await supabase.from('profiles').upsert({ id: userId, cancel_reason: cancelReason, cancel_reason_at: new Date().toISOString() })
+      }
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://autopilot-production-7671.up.railway.app'}/api/create-portal-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ userId: session?.user?.id }),
+      })
+      const json = await res.json()
+      if (json.url) window.location.href = json.url
+      else { setCancelStep('survey'); alert(json.error ?? 'Could not open billing portal. Contact support.') }
+    } catch {
+      setCancelStep('survey')
+      alert('Failed to open billing portal. Please try again.')
+    }
   }
 
   // Connection status — stored per restaurant name, default all false
@@ -651,61 +674,31 @@ export default function Settings() {
       {/* Notifications */}
       <Card title="Notifications" C={C}>
         <div className="space-y-4">
-          {[
-            { key: 'email',  label: 'Email summaries', sub: 'Daily digest of all AutoPilot activity' },
-            { key: 'sms',    label: 'SMS alerts',       sub: 'Text when a 1–2 star review is posted' },
-            { key: 'weekly', label: 'Weekly report',    sub: 'Performance report every Monday morning' },
-            { key: 'alerts', label: 'System alerts',    sub: 'If AutoPilot pauses or needs attention' },
-          ].map(({ key, label, sub }, i, arr) => (
-            <div key={key}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium" style={{ color: C.primary }}>{label}</p>
-                  <p className="text-xs mt-0.5" style={{ color: C.secondary }}>{sub}</p>
-                </div>
-                <Toggle checked={notifs[key]} onChange={v => setNotifs(n => ({ ...n, [key]: v }))} C={C} />
-              </div>
-              {i < arr.length - 1 && <div className="h-px mt-4" style={{ backgroundColor: C.divider }} />}
+          {/* System alerts — the only live toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium" style={{ color: C.primary }}>System alerts</p>
+              <p className="text-xs mt-0.5" style={{ color: C.secondary }}>If AutoPilot pauses or needs attention</p>
             </div>
-          ))}
+            <Toggle checked={notifs.alerts} onChange={v => setNotifs(n => ({ ...n, alerts: v }))} C={C} />
+          </div>
 
           <div className="h-px" style={{ backgroundColor: C.divider }} />
 
-          {/* Contact fields */}
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
-                Email address for digests &amp; reports
-              </label>
-              <input
-                type="email"
-                value={notifEmail}
-                onChange={e => setNotifEmail(e.target.value)}
-                placeholder="you@restaurant.com"
-                className="w-full text-sm px-4 py-2.5 rounded outline-none"
-                style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
-                onFocus={e => e.target.style.borderColor = C.accent}
-                onBlur={e => e.target.style.borderColor = C.border}
-              />
-            </div>
-            {notifs.sms && (
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
-                  Mobile number for SMS alerts
-                </label>
-                <input
-                  type="tel"
-                  value={notifPhone}
-                  onChange={e => setNotifPhone(e.target.value)}
-                  placeholder="+1 555 000 0000"
-                  className="w-full text-sm px-4 py-2.5 rounded outline-none"
-                  style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
-                  onFocus={e => e.target.style.borderColor = C.accent}
-                  onBlur={e => e.target.style.borderColor = C.border}
-                />
-                <p className="text-xs mt-1" style={{ color: C.muted }}>Include country code, e.g. +1 for US/Canada</p>
-              </div>
-            )}
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
+              Email address for alerts
+            </label>
+            <input
+              type="email"
+              value={notifEmail}
+              onChange={e => setNotifEmail(e.target.value)}
+              placeholder="you@restaurant.com"
+              className="w-full text-sm px-4 py-2.5 rounded outline-none"
+              style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
+              onFocus={e => e.target.style.borderColor = C.accent}
+              onBlur={e => e.target.style.borderColor = C.border}
+            />
           </div>
 
           <div className="pt-1 flex items-center gap-3">
@@ -717,7 +710,7 @@ export default function Settings() {
               onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
               onMouseLeave={e => e.currentTarget.style.opacity = '1'}
             >
-              Save notifications
+              Save
             </button>
             {notifSaved && <span className="text-xs" style={{ color: 'var(--ap-success)' }}>✓ Saved</span>}
           </div>
@@ -738,26 +731,12 @@ export default function Settings() {
           <div>
             <p className="text-sm font-medium" style={{ color: C.primary }}>Cancel subscription</p>
             <p className="text-xs mt-0.5" style={{ color: C.secondary }}>
-              Your account will stop at the end of the billing period.
+              Your account will remain active until the end of the billing period.
             </p>
           </div>
           <button
-            onClick={async () => {
-              try {
-                const { data: { session } } = await supabase.auth.getSession()
-                const res = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/create-portal-session`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-                  body: JSON.stringify({ userId: session?.user?.id }),
-                })
-                const json = await res.json()
-                if (json.url) window.location.href = json.url
-                else alert(json.error ?? 'Could not open billing portal. Contact support.')
-              } catch (err) {
-                alert('Failed to open billing portal. Please try again.')
-              }
-            }}
-            className="text-sm font-medium px-4 py-2 rounded transition-colors"
+            onClick={() => setCancelStep('survey')}
+            className="text-sm font-medium px-4 py-2 rounded"
             style={{ color: 'rgb(239,68,68)', border: '1px solid rgba(239,68,68,0.3)', backgroundColor: 'rgba(239,68,68,0.06)', cursor: 'pointer' }}
             onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.12)'}
             onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.06)'}
@@ -766,6 +745,81 @@ export default function Settings() {
           </button>
         </div>
       </div>
+
+      {/* Cancel modal overlay */}
+      {cancelStep && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+          onClick={e => { if (e.target === e.currentTarget) setCancelStep(null) }}
+        >
+          <div style={{ width: '100%', maxWidth: 460, backgroundColor: C.card, borderRadius: 20, padding: '32px 28px', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', border: `1px solid ${C.border}` }}>
+            {/* Pause option */}
+            <div style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <p className="text-sm font-semibold" style={{ color: C.primary }}>Pause for 30 days instead</p>
+                <p className="text-xs mt-0.5" style={{ color: C.secondary }}>No charge, your data stays safe, resume anytime.</p>
+              </div>
+              <button
+                onClick={async () => {
+                  if (!supabase || !userId) return
+                  await supabase.from('profiles').upsert({ id: userId, subscription_status: 'paused', paused_until: new Date(Date.now() + 30 * 86400000).toISOString() })
+                  setCancelStep(null)
+                  alert('Your account is paused for 30 days. We\'ll remind you before it resumes.')
+                }}
+                className="text-sm font-semibold px-4 py-2 rounded whitespace-nowrap"
+                style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: 'pointer', flexShrink: 0 }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                Pause instead
+              </button>
+            </div>
+
+            <p className="text-base font-semibold mb-1" style={{ color: C.primary }}>Before you go — what happened?</p>
+            <p className="text-xs mb-4" style={{ color: C.secondary }}>Optional. Your answer helps us improve AutoPilot.</p>
+
+            {[
+              'Too expensive',
+              'Switching to another tool',
+              'Not using it enough',
+              'Missing a feature I need',
+              'Other',
+            ].map(reason => (
+              <label key={reason} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="cancelReason"
+                  value={reason}
+                  checked={cancelReason === reason}
+                  onChange={() => setCancelReason(reason)}
+                  style={{ accentColor: C.accent, width: 15, height: 15, cursor: 'pointer', flexShrink: 0 }}
+                />
+                <span className="text-sm" style={{ color: C.primary }}>{reason}</span>
+              </label>
+            ))}
+
+            <div className="flex items-center gap-3 mt-6">
+              <button
+                onClick={handleCancelPortal}
+                disabled={cancelStep === 'loading'}
+                className="text-sm font-semibold px-5 py-2.5 rounded"
+                style={{ backgroundColor: 'rgb(239,68,68)', color: '#fff', cursor: cancelStep === 'loading' ? 'not-allowed' : 'pointer', opacity: cancelStep === 'loading' ? 0.6 : 1 }}
+              >
+                {cancelStep === 'loading' ? 'Opening portal…' : 'Continue to cancel'}
+              </button>
+              <button
+                onClick={() => { setCancelStep(null); setCancelReason('') }}
+                className="text-sm px-4 py-2.5 rounded"
+                style={{ color: C.secondary, border: `1px solid ${C.border}`, cursor: 'pointer', backgroundColor: 'transparent' }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = C.inputBg}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                Never mind
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
