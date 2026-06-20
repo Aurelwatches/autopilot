@@ -1,10 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 
 const DROPDOWN_MAX_H = 220
 
-// Reads a CSS variable from the document root as a resolved value
 function resolveVar(v) {
   if (typeof v === 'string' && v.startsWith('var(')) {
     const name = v.match(/var\(([^)]+)\)/)?.[1]
@@ -13,40 +12,58 @@ function resolveVar(v) {
   return v
 }
 
-function DropdownPortal({ triggerRef, children, dropUp }) {
-  const [style, setStyle] = useState({})
+export default function Select({ label, value, onChange, options, C, placeholder = 'Select…', small = false }) {
+  const [open, setOpen]       = useState(false)
+  const [pos, setPos]         = useState(null)   // { top|bottom, left, width, dropUp }
+  const [scrollTop, setScrollTop]     = useState(0)
+  const [scrollHeight, setScrollHeight] = useState(0)
+  const [clientHeight, setClientHeight] = useState(0)
+  const containerRef = useRef(null)
+  const triggerRef   = useRef(null)
+  const listRef      = useRef(null)
 
-  useEffect(() => {
-    if (!triggerRef.current) return
+  const selected = options.find(o => String(o.value) === String(value))
+
+  // Calculate position synchronously before paint so there's no jump
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return
     const rect = triggerRef.current.getBoundingClientRect()
-    setStyle({
-      position: 'fixed',
-      left: rect.left,
+    const spaceBelow = window.innerHeight - rect.bottom
+    const dropUp = spaceBelow < DROPDOWN_MAX_H + 16
+    setPos({
+      left:  rect.left,
       width: rect.width,
-      zIndex: 99999,
+      dropUp,
       ...(dropUp
         ? { bottom: window.innerHeight - rect.top + 6 }
         : { top: rect.bottom + 6 }),
     })
-  }, [triggerRef, dropUp])
+  }, [open])
 
-  return createPortal(
-    <div style={style}>{children}</div>,
-    document.body
-  )
-}
-
-export default function Select({ label, value, onChange, options, C, placeholder = 'Select…', small = false }) {
-  const [open, setOpen] = useState(false)
-  const [scrollTop, setScrollTop] = useState(0)
-  const [scrollHeight, setScrollHeight] = useState(0)
-  const [clientHeight, setClientHeight] = useState(0)
-  const [dropUp, setDropUp] = useState(false)
-  const containerRef = useRef(null)
-  const triggerRef = useRef(null)
-  const listRef = useRef(null)
-
-  const selected = options.find(o => String(o.value) === String(value))
+  // Reposition on scroll/resize while open
+  useEffect(() => {
+    if (!open) return
+    function reposition() {
+      if (!triggerRef.current) return
+      const rect = triggerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      const dropUp = spaceBelow < DROPDOWN_MAX_H + 16
+      setPos({
+        left:  rect.left,
+        width: rect.width,
+        dropUp,
+        ...(dropUp
+          ? { bottom: window.innerHeight - rect.top + 6 }
+          : { top: rect.bottom + 6 }),
+      })
+    }
+    window.addEventListener('scroll', reposition, true)
+    window.addEventListener('resize', reposition)
+    return () => {
+      window.removeEventListener('scroll', reposition, true)
+      window.removeEventListener('resize', reposition)
+    }
+  }, [open])
 
   // Close on outside click
   useEffect(() => {
@@ -58,14 +75,7 @@ export default function Select({ label, value, onChange, options, C, placeholder
     return () => document.removeEventListener('mousedown', handle)
   }, [open])
 
-  // Decide drop direction
-  useEffect(() => {
-    if (!open || !triggerRef.current) return
-    const rect = triggerRef.current.getBoundingClientRect()
-    setDropUp(window.innerHeight - rect.bottom < DROPDOWN_MAX_H + 16)
-  }, [open])
-
-  // Scroll metrics for fade indicators
+  // Scroll metrics for fade indicators + scroll selected into view
   const updateScroll = useCallback(() => {
     const el = listRef.current
     if (!el) return
@@ -75,15 +85,14 @@ export default function Select({ label, value, onChange, options, C, placeholder
   }, [])
 
   useEffect(() => {
-    if (open) {
-      requestAnimationFrame(() => {
-        updateScroll()
-        const el = listRef.current
-        if (!el) return
-        const idx = options.findIndex(o => String(o.value) === String(value))
-        if (idx >= 0) el.children[idx]?.scrollIntoView({ block: 'nearest' })
-      })
-    }
+    if (!open) return
+    requestAnimationFrame(() => {
+      updateScroll()
+      const el = listRef.current
+      if (!el) return
+      const idx = options.findIndex(o => String(o.value) === String(value))
+      if (idx >= 0) el.children[idx]?.scrollIntoView({ block: 'nearest' })
+    })
   }, [open])
 
   function handleSelect(val) {
@@ -98,10 +107,19 @@ export default function Select({ label, value, onChange, options, C, placeholder
   const px = small ? '10px' : '14px'
   const fs = small ? 13 : 14
 
-  // Solid background colors that are visible regardless of theme
-  const panelBg     = resolveVar('var(--ap-card-solid)')  || '#0E1420'
+  const panelBg     = resolveVar('var(--ap-card-solid)')   || '#0E1420'
   const panelBorder = resolveVar('var(--ap-border-solid)') || '#2E2A24'
-  const accent      = resolveVar(C.accent) || '#22D3EE'
+  const accent      = resolveVar(C.accent)                  || '#22D3EE'
+
+  const panelStyle = pos ? {
+    position: 'fixed',
+    left:  pos.left,
+    width: pos.width,
+    zIndex: 99999,
+    ...(pos.dropUp
+      ? { bottom: pos.bottom }
+      : { top:    pos.top    }),
+  } : { position: 'fixed', opacity: 0, pointerEvents: 'none' }
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
@@ -111,7 +129,6 @@ export default function Select({ label, value, onChange, options, C, placeholder
         </label>
       )}
 
-      {/* Trigger button */}
       <button
         ref={triggerRef}
         type="button"
@@ -152,116 +169,116 @@ export default function Select({ label, value, onChange, options, C, placeholder
         </motion.svg>
       </button>
 
-      {/* Portalled dropdown panel — never clipped by parent overflow */}
-      <AnimatePresence>
-        {open && (
-          <DropdownPortal triggerRef={triggerRef} dropUp={dropUp}>
-            <motion.div
-              initial={{ opacity: 0, y: dropUp ? 6 : -6, scaleY: 0.94 }}
-              animate={{ opacity: 1, y: 0, scaleY: 1 }}
-              exit={{ opacity: 0, y: dropUp ? 6 : -6, scaleY: 0.94 }}
-              transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-              style={{
-                backgroundColor: panelBg,
-                border: `1px solid ${panelBorder}`,
-                borderRadius: 10,
-                boxShadow: '0 12px 40px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3)',
-                overflow: 'hidden',
-                transformOrigin: dropUp ? 'bottom center' : 'top center',
-                position: 'relative',
-              }}
-            >
-              {/* Top fade */}
-              <AnimatePresence>
-                {showTopFade && (
-                  <motion.div
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    transition={{ duration: 0.12 }}
-                    style={{
-                      position: 'absolute', top: 0, left: 0, right: 0, height: 28,
-                      background: `linear-gradient(to bottom, ${panelBg}, transparent)`,
-                      pointerEvents: 'none', zIndex: 1,
-                    }}
-                  />
-                )}
-              </AnimatePresence>
-
-              {/* Options list */}
-              <div
-                ref={listRef}
-                onScroll={updateScroll}
+      {createPortal(
+        <AnimatePresence>
+          {open && pos && (
+            <div style={panelStyle}>
+              <motion.div
+                initial={{ opacity: 0, y: pos.dropUp ? 6 : -6, scaleY: 0.94 }}
+                animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                exit={{ opacity: 0, y: pos.dropUp ? 6 : -6, scaleY: 0.94 }}
+                transition={{ duration: 0.16, ease: [0.4, 0, 0.2, 1] }}
                 style={{
-                  maxHeight: DROPDOWN_MAX_H,
-                  overflowY: 'auto',
-                  padding: '6px',
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
+                  backgroundColor: panelBg,
+                  border: `1px solid ${panelBorder}`,
+                  borderRadius: 10,
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)',
+                  overflow: 'hidden',
+                  transformOrigin: pos.dropUp ? 'bottom center' : 'top center',
+                  position: 'relative',
                 }}
               >
-                {options.map((opt, i) => {
-                  const isSelected = String(opt.value) === String(value)
-                  return (
-                    <motion.button
-                      key={opt.value}
-                      type="button"
-                      initial={{ opacity: 0, x: -4 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.12, delay: i * 0.018 }}
-                      onClick={() => handleSelect(opt.value)}
+                {/* Top scroll fade */}
+                <AnimatePresence>
+                  {showTopFade && (
+                    <motion.div
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                        padding: '8px 10px',
-                        borderRadius: 7,
-                        border: 'none',
-                        backgroundColor: isSelected ? `${accent}20` : 'transparent',
-                        color: isSelected ? accent : C.primary,
-                        fontSize: fs,
-                        fontWeight: isSelected ? 600 : 400,
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'background-color 0.1s ease',
-                        whiteSpace: 'nowrap',
+                        position: 'absolute', top: 0, left: 0, right: 0, height: 28,
+                        background: `linear-gradient(to bottom, ${panelBg}, transparent)`,
+                        pointerEvents: 'none', zIndex: 1,
                       }}
-                      onMouseEnter={e => {
-                        if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)'
-                      }}
-                      onMouseLeave={e => {
-                        if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'
-                      }}
-                    >
-                      <span>{opt.label}</span>
-                      {isSelected && (
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 6L9 17l-5-5" />
-                        </svg>
-                      )}
-                    </motion.button>
-                  )
-                })}
-              </div>
+                    />
+                  )}
+                </AnimatePresence>
 
-              {/* Bottom fade */}
-              <AnimatePresence>
-                {showBottomFade && (
-                  <motion.div
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    transition={{ duration: 0.12 }}
-                    style={{
-                      position: 'absolute', bottom: 0, left: 0, right: 0, height: 28,
-                      background: `linear-gradient(to top, ${panelBg}, transparent)`,
-                      pointerEvents: 'none', zIndex: 1,
-                    }}
-                  />
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </DropdownPortal>
-        )}
-      </AnimatePresence>
+                {/* Options */}
+                <div
+                  ref={listRef}
+                  onScroll={updateScroll}
+                  style={{
+                    maxHeight: DROPDOWN_MAX_H,
+                    overflowY: 'auto',
+                    padding: '6px',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                  }}
+                >
+                  {options.map((opt, i) => {
+                    const isSelected = String(opt.value) === String(value)
+                    return (
+                      <motion.button
+                        key={opt.value}
+                        type="button"
+                        initial={{ opacity: 0, x: -4 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.1, delay: i * 0.015 }}
+                        onClick={() => handleSelect(opt.value)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          width: '100%',
+                          padding: '8px 10px',
+                          borderRadius: 7,
+                          border: 'none',
+                          backgroundColor: isSelected ? `${accent}20` : 'transparent',
+                          color: isSelected ? accent : C.primary,
+                          fontSize: fs,
+                          fontWeight: isSelected ? 600 : 400,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'background-color 0.1s ease',
+                          whiteSpace: 'nowrap',
+                        }}
+                        onMouseEnter={e => {
+                          if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)'
+                        }}
+                        onMouseLeave={e => {
+                          if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'
+                        }}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6L9 17l-5-5" />
+                          </svg>
+                        )}
+                      </motion.button>
+                    )
+                  })}
+                </div>
+
+                {/* Bottom scroll fade */}
+                <AnimatePresence>
+                  {showBottomFade && (
+                    <motion.div
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      style={{
+                        position: 'absolute', bottom: 0, left: 0, right: 0, height: 28,
+                        background: `linear-gradient(to top, ${panelBg}, transparent)`,
+                        pointerEvents: 'none', zIndex: 1,
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }
