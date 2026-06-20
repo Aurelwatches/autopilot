@@ -81,18 +81,15 @@ export default function SupportChat() {
         .single()
       if (dbErr) throw new Error(dbErr.message)
 
-      const webhookUrl = import.meta.env.VITE_DISCORD_WEBHOOK_URL
-      if (webhookUrl) {
-        // Pro users get a priority tag in Discord so staff can identify them quickly
-        const prefix = isPro ? '⭐ **[PRO PRIORITY]** ' : ''
-        await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            content: `${prefix}📨 New message from ${restaurantName}\n${text}\n\nReply ID: ${data.id}`,
-          }),
-        })
-      }
+      const API = import.meta.env.VITE_API_URL || 'https://autopilot-production-7671.up.railway.app'
+      const prefix = isPro ? '⭐ **[PRO PRIORITY]** ' : ''
+      await fetch(`${API}/api/discord/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: `${prefix}📨 New message from ${restaurantName}\n${text}\n\nReply ID: ${data.id}`,
+        }),
+      }).catch(err => console.warn('Discord notify failed:', err.message))
 
       setJustSent(true)
       setTimeout(() => setJustSent(false), 2000)

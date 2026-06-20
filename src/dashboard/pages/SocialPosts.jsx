@@ -296,37 +296,17 @@ export default function SocialPosts() {
 
   async function handleAI() {
     if (!topic.trim() || isLoading) return
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY
-    if (!apiKey) {
-      setAiError('VITE_GROQ_API_KEY is not set in .env — add your key and restart the dev server.')
-      return
-    }
     setIsLoading(true); setAiError(''); setMsgIdx(0)
-    const charHint = platform === 'Twitter' ? 'Keep it under 280 characters.' : 'Aim for 150–300 characters.'
-
-    const TONE_DESC = {
-      friendly:     'Friendly & casual, warm and conversational',
-      professional: 'Professional and polished, business-appropriate',
-      energetic:    'Energetic and fun, lots of enthusiasm and personality',
-    }
-    const toneDesc = TONE_DESC[postTone] ?? TONE_DESC.friendly
-
+    const API = import.meta.env.VITE_API_URL || 'https://autopilot-production-7671.up.railway.app'
     try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const res = await fetch(`${API}/api/generate-post-groq`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: 512,
-          messages: [
-            { role: 'system', content: `You are a social media expert for independent restaurants. Write engaging, authentic posts that sound like a real restaurant owner wrote them — not a marketing agency. Be specific and include relevant emojis and 3-5 hashtags. Tone: ${toneDesc}.` },
-            { role: 'user', content: `Write a ${platform} post about: ${topic.trim()}. ${charHint} Return only the post text, nothing else.` },
-          ],
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: topic.trim(), platform, tone: postTone }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error?.message || `Groq API error ${res.status}`)
-      setText(data.choices[0].message.content.trim())
+      if (!res.ok) throw new Error(data.error || `Server error ${res.status}`)
+      setText(data.text)
     } catch (err) {
       setAiError(err.message || 'Something went wrong.')
     } finally {
