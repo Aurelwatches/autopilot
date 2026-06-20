@@ -80,15 +80,28 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object
     const userId = session.client_reference_id || session.metadata?.userId
+    const plan = session.metadata?.plan ?? 'unknown'
+    const interval = session.metadata?.interval ?? 'monthly'
     if (userId && supabase) {
-      const { error } = await supabase.from('profiles').update({
-        plan: session.metadata?.plan,
-        plan_interval: session.metadata?.interval,
+      const { data: profile, error } = await supabase.from('profiles').update({
+        plan,
+        plan_interval: interval,
         subscribed_at: new Date().toISOString(),
         subscription_status: 'active',
         stripe_customer_id: session.customer ?? null,
-      }).eq('id', userId)
+      }).eq('id', userId).select('email, restaurant_name, phone').single()
       if (error) console.error('Supabase profile update error:', error.message)
+      // Notify the new subscriber
+      if (profile?.email) {
+        sendEmail({
+          to: profile.email,
+          subject: '🎉 Welcome to AutoPilot!',
+          html: `<h2>You're in!</h2><p>Your <strong>${plan}</strong> plan is now active. Head to your <a href="https://autopilot-pink.vercel.app/dashboard">dashboard</a> to get started.</p><p>Your 14-day free trial has started — you won't be charged until it ends.</p>`,
+        })
+      }
+      if (profile?.phone) {
+        sendSms(profile.phone, `Welcome to AutoPilot! Your ${plan} plan is live. 14-day free trial started — you won't be charged until it ends. autopilot-pink.vercel.app/dashboard`)
+      }
     }
   }
 
@@ -120,11 +133,25 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
   if (event.type === 'invoice.payment_failed') {
     const customerId = event.data.object.customer
     if (customerId && supabase) {
-      const { error } = await supabase.from('profiles')
+      const { data: profile, error } = await supabase.from('profiles')
         .update({ subscription_status: 'past_due' })
         .eq('stripe_customer_id', customerId)
+        .select('email, phone, restaurant_name')
+        .single()
       if (error) console.error('[Stripe] payment_failed update failed:', error.message)
-      else console.log('[Stripe] payment failed for customer', customerId)
+      else {
+        console.log('[Stripe] payment failed for customer', customerId)
+        if (profile?.email) {
+          sendEmail({
+            to: profile.email,
+            subject: 'Action required: AutoPilot payment failed',
+            html: `<h2>Payment failed</h2><p>We couldn't process your AutoPilot subscription payment. Please update your billing info to keep your account active.</p><p><a href="https://autopilot-pink.vercel.app/dashboard/subscription">Update billing →</a></p>`,
+          })
+        }
+        if (profile?.phone) {
+          sendSms(profile.phone, 'AutoPilot: Your payment failed. Update your billing info to keep your account active: autopilot-pink.vercel.app/dashboard/subscription')
+        }
+      }
     }
   }
 
@@ -448,6 +475,23 @@ app.post('/api/webhook', webhookLimiter, async (req, res) => {
         }
         if (dbError) console.error('Supabase review upsert:', dbError.message)
 
+        // Notify the restaurant owner of new review
+        if (userId) {
+          const { data: ownerProfile } = await supabase.from('profiles').select('email, phone, notification_prefs').eq('id', userId).single()
+          const notif = ownerProfile?.notification_prefs ?? {}
+          const stars = numericRating ? `${'⭐'.repeat(numericRating)} (${numericRating}/5)` : ''
+          const preview = clean(resolvedReviewText, 120)
+          if (ownerProfile?.email && notif.email !== false) {
+            sendEmail({
+              to: ownerProfile.email,
+              subject: `New ${numericRating <= 3 ? '⚠️' : '⭐'} review from ${clean(resolvedCustomerName, 60)}`,
+              html: `<h2>New review received ${stars}</h2><p><strong>${clean(resolvedCustomerName, 100)}</strong> left a review:</p><blockquote>${preview}</blockquote>${resolvedReply ? `<p><strong>AI Reply ready:</strong> ${clean(resolvedReply, 300)}</p>` : ''}<p><a href="https://autopilot-pink.vercel.app/dashboard">View in dashboard →</a></p>`,
+            })
+          }
+          if (ownerProfile?.phone && notif.sms !== false) {
+            sendSms(ownerProfile.phone, `AutoPilot: New ${stars} review from ${clean(resolvedCustomerName, 40)}. "${preview.slice(0, 80)}..." — autopilot-pink.vercel.app/dashboard`)
+          }
+        }
       }
     }
 
@@ -628,119 +672,4 @@ app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: 'https://autopilot-pink.vercel.app/payment-success',
-      cancel_url:  'https://autopilot-pink.vercel.app/pricing',
-      client_reference_id: userId ?? undefined,
-      metadata: { plan, interval, userId: userId ?? '' },
-      subscription_data: { trial_period_days: 14 },
-    })
-    res.json({ url: session.url })
-  } catch (err) {
-    console.error('Stripe checkout error:', err.message)
-    res.status(500).json({ error: err.message })
-  }
-})
-
-// POST /api/create-portal-session
-app.post('/api/create-portal-session', async (req, res) => {
-  if (!stripe || !supabase) return res.status(500).json({ error: 'Stripe or Supabase not configured' })
-  const { userId } = req.body
-  if (!userId) return res.status(400).json({ error: 'userId is required' })
-  const { data: profile, error } = await supabase.from('profiles').select('stripe_customer_id').eq('id', userId).single()
-  if (error || !profile?.stripe_customer_id) return res.status(404).json({ error: 'No Stripe customer found.' })
-  try {
-    const session = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
-      return_url: `${process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'}/dashboard/subscription`,
-    })
-    res.json({ url: session.url })
-  } catch (err) {
-    console.error('Stripe portal error:', err.message)
-    res.status(500).json({ error: err.message })
-  }
-})
-
-// POST /api/reviews/:reviewId/approve — manual approve
-app.post('/api/reviews/:reviewId/approve', async (req, res) => {
-  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
-  const { reviewId } = req.params
-
-  const { data: review, error: reviewErr } = await supabase
-    .from('reviews').select('user_id, ai_reply, review_id').eq('id', reviewId).single()
-  if (reviewErr || !review) return res.status(404).json({ error: 'Review not found' })
-  if (!review.ai_reply)   return res.status(400).json({ error: 'No AI reply to post' })
-  if (!review.review_id)  return res.status(400).json({ error: 'Google review_id not stored' })
-
-  const { data: profile, error: profileErr } = await supabase
-    .from('profiles')
-    .select('google_access_token, google_refresh_token, google_token_expires_at, google_account_id, google_location_id')
-    .eq('id', review.user_id).single()
-  if (profileErr || !profile) return res.status(404).json({ error: 'Profile not found' })
-  if (!profile.google_refresh_token) return res.status(400).json({ error: 'Google not connected' })
-
-  let accessToken
-  try { accessToken = await getValidAccessToken(profile) } catch (err) {
-    return res.status(500).json({ error: `Token refresh failed: ${err.message}` })
-  }
-  if (!accessToken) return res.status(500).json({ error: 'Could not obtain Google access token' })
-
-  const googleUrl = `https://mybusiness.googleapis.com/v4/accounts/${profile.google_account_id}/locations/${profile.google_location_id}/reviews/${review.review_id}/reply`
-
-  let googleRes
-  try {
-    googleRes = await fetch(googleUrl, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ comment: review.ai_reply }),
-    })
-  } catch (err) {
-    return res.status(502).json({ error: `Network error reaching Google: ${err.message}` })
-  }
-
-  if (!googleRes.ok) {
-    const errText = await googleRes.text()
-    console.error(`Google reply API error (${googleRes.status}):`, errText)
-    return res.status(502).json({ error: `Google API error (${googleRes.status}): ${errText}` })
-  }
-
-  const { error: updateErr } = await supabase.from('reviews').update({ status: 'posted', scheduled_at: null }).eq('id', reviewId)
-  if (updateErr) {
-    console.error('Status update failed after posting to Google:', updateErr.message)
-    return res.json({ ok: true, warning: 'Reply posted to Google but DB status update failed' })
-  }
-
-  console.log(`Review ${reviewId} approved and posted to Google.`)
-  res.json({ ok: true })
-})
-
-
-// ─── Smoke test ──────────────────────────────────────────────────────────────
-app.post('/api/smoke-test', async (req, res) => {
-  const { phone, email } = req.body
-  if (!phone && !email) return res.status(400).json({ error: 'Provide phone and/or email' })
-  const results = {}
-  if (phone) {
-    try {
-      await sendSms(phone, 'AutoPilot smoke test ✅ SMS is working!')
-      results.sms = 'sent'
-    } catch (err) {
-      results.sms = `failed: ${err.message}`
-    }
-  }
-  if (email) {
-    try {
-      await sendEmail({ to: email, subject: 'AutoPilot Smoke Test', html: '<h2>✅ Email is working!</h2><p>AutoPilot email pipeline confirmed.</p>' })
-      results.email = 'sent'
-    } catch (err) {
-      results.email = `failed: ${err.message}`
-    }
-  }
-  res.json({ ok: true, results })
-})
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`API server → http://0.0.0.0:${PORT}`)
-  startReviewsPoller()
-})
+      payment_met
