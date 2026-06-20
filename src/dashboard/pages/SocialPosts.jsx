@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useApp } from '../AppContext'
+import Select from '../components/Select'
 
 // Default the schedule picker to tomorrow at 10:00 AM.
 function defaultScheduleDate() {
@@ -70,10 +71,6 @@ function DateTimePicker({ value, onChange, C }) {
     background: 'transparent', border: `1px solid ${C.border}`, color: C.secondary,
     borderRadius: 6, width: 26, height: 26, cursor: 'pointer', fontSize: 14, lineHeight: 1,
   }
-  const ddStyle = {
-    backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}`,
-    borderRadius: 6, padding: '6px 8px', fontSize: 13, outline: 'none', cursor: 'pointer',
-  }
 
   return (
     <div style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 10, padding: 14 }}>
@@ -108,18 +105,35 @@ function DateTimePicker({ value, onChange, C }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.divider}` }}>
-        <span style={{ fontSize: 11, color: C.secondary, marginRight: 2 }}>Time</span>
-        <select value={h12} onChange={e => setTimeParts({ h: Number(e.target.value) })} style={ddStyle} aria-label="Hour">
-          {Array.from({ length: 12 }, (_, i) => i + 1).map(h => <option key={h} value={h}>{h}</option>)}
-        </select>
-        <span style={{ color: C.muted }}>:</span>
-        <select value={minute} onChange={e => setTimeParts({ m: Number(e.target.value) })} style={ddStyle} aria-label="Minute">
-          {Array.from({ length: 12 }, (_, i) => i * 5).map(m => <option key={m} value={m}>{String(m).padStart(2, '0')}</option>)}
-        </select>
-        <select value={ampm} onChange={e => setTimeParts({ ap: e.target.value })} style={ddStyle} aria-label="AM/PM">
-          <option value="AM">AM</option>
-          <option value="PM">PM</option>
-        </select>
+        <span style={{ fontSize: 11, color: C.secondary, marginRight: 2, flexShrink: 0 }}>Time</span>
+        <div style={{ width: 60 }}>
+          <Select
+            value={h12}
+            onChange={v => setTimeParts({ h: Number(v) })}
+            C={C}
+            small
+            options={Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: String(i + 1) }))}
+          />
+        </div>
+        <span style={{ color: C.muted, flexShrink: 0 }}>:</span>
+        <div style={{ width: 66 }}>
+          <Select
+            value={minute}
+            onChange={v => setTimeParts({ m: Number(v) })}
+            C={C}
+            small
+            options={Array.from({ length: 12 }, (_, i) => ({ value: i * 5, label: String(i * 5).padStart(2, '0') }))}
+          />
+        </div>
+        <div style={{ width: 72 }}>
+          <Select
+            value={ampm}
+            onChange={v => setTimeParts({ ap: v })}
+            C={C}
+            small
+            options={[{ value: 'AM', label: 'AM' }, { value: 'PM', label: 'PM' }]}
+          />
+        </div>
       </div>
     </div>
   )
@@ -473,38 +487,16 @@ export default function SocialPosts() {
 
             {/* Platform */}
             <div className="mb-4">
-              <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>Platform</label>
-              <div style={{ position: 'relative' }}>
-                <select
-                  value={platform}
-                  onChange={e => setPlatform(e.target.value)}
-                  style={{
-                    width: '100%',
-                    appearance: 'none',
-                    WebkitAppearance: 'none',
-                    backgroundColor: C.inputBg,
-                    color: C.primary,
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 8,
-                    padding: '10px 36px 10px 14px',
-                    fontSize: 14,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    outline: 'none',
-                  }}
-                  onFocus={e => e.target.style.borderColor = C.accent}
-                  onBlur={e => e.target.style.borderColor = C.border}
-                >
-                  <option value="Instagram">Instagram</option>
-                  <option value="Facebook">Facebook</option>
-                </select>
-                <svg
-                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-                  width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.secondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                >
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </div>
+              <Select
+                label="Platform"
+                value={platform}
+                onChange={setPlatform}
+                C={C}
+                options={[
+                  { value: 'Instagram', label: 'Instagram' },
+                  { value: 'Facebook',  label: 'Facebook' },
+                ]}
+              />
             </div>
 
             {/* Topic */}

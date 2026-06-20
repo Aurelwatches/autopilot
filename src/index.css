@@ -625,3 +625,6 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ─── Custom select dropdown scrollbar hide ─────────────────────────────────── */
+.ap-select-list::-webkit-scrollbar { display: none; }

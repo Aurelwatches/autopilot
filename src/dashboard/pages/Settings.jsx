@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useApp } from '../AppContext'
 import { supabase } from '../../lib/supabase'
 import { getPlanMeta } from '../planMeta'
+import Select from '../components/Select'
 
 const REPLY_SPEED_OPTIONS = [
   { value: 'instant',    label: 'Instant',        desc: 'replies as soon as a review comes in' },
@@ -19,24 +20,7 @@ const POST_TONE_OPTIONS = [
 ]
 
 function SelectField({ label, value, onChange, options, C }) {
-  return (
-    <div>
-      <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>{label}</label>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className="w-full text-sm px-4 py-2.5 rounded outline-none"
-        style={{
-          backgroundColor: C.inputBg, color: C.primary,
-          border: `1px solid ${C.border}`, cursor: 'pointer',
-        }}
-        onFocus={e => e.target.style.borderColor = C.secondary}
-        onBlur={e => e.target.style.borderColor = C.border}
-      >
-        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-    </div>
-  )
+  return <Select label={label} value={value} onChange={onChange} options={options} C={C} />
 }
 
 function CopyButton({ value, C }) {
@@ -612,26 +596,24 @@ export default function Settings() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>Timezone</label>
-                <select
+                <Select
+                  label="Timezone"
                   value={bizTimezone}
-                  onChange={e => setBizTimezone(e.target.value)}
-                  className="w-full text-sm px-4 py-2.5 rounded outline-none"
-                  style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}`, cursor: 'pointer' }}
-                  onFocus={e => e.target.style.borderColor = C.accent}
-                  onBlur={e => e.target.style.borderColor = C.border}
-                >
-                  <option value="America/New_York">Eastern (ET)</option>
-                  <option value="America/Chicago">Central (CT)</option>
-                  <option value="America/Denver">Mountain (MT)</option>
-                  <option value="America/Los_Angeles">Pacific (PT)</option>
-                  <option value="America/Phoenix">Arizona (MST)</option>
-                  <option value="America/Anchorage">Alaska (AKT)</option>
-                  <option value="Pacific/Honolulu">Hawaii (HST)</option>
-                  <option value="Europe/London">London (GMT/BST)</option>
-                  <option value="Europe/Paris">Paris (CET)</option>
-                  <option value="Australia/Sydney">Sydney (AEST)</option>
-                </select>
+                  onChange={setBizTimezone}
+                  C={C}
+                  options={[
+                    { value: 'America/New_York',    label: 'Eastern (ET)' },
+                    { value: 'America/Chicago',      label: 'Central (CT)' },
+                    { value: 'America/Denver',       label: 'Mountain (MT)' },
+                    { value: 'America/Los_Angeles',  label: 'Pacific (PT)' },
+                    { value: 'America/Phoenix',      label: 'Arizona (MST)' },
+                    { value: 'America/Anchorage',    label: 'Alaska (AKT)' },
+                    { value: 'Pacific/Honolulu',     label: 'Hawaii (HST)' },
+                    { value: 'Europe/London',        label: 'London (GMT/BST)' },
+                    { value: 'Europe/Paris',         label: 'Paris (CET)' },
+                    { value: 'Australia/Sydney',     label: 'Sydney (AEST)' },
+                  ]}
+                />
               </div>
             </>
           )}
