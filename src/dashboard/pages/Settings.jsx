@@ -118,9 +118,18 @@ function Field({ label, value, onChange, type = 'text', C }) {
   )
 }
 
+const ADMIN_EMAIL = 'bray.200913@gmail.com'
+
 export default function Settings() {
   const navigate = useNavigate()
   const { C, theme, toggleTheme, restaurantName, setRestaurantName, userId, plan } = useApp()
+  const [userEmail, setUserEmail] = useState('')
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserEmail(session?.user?.email ?? '')
+    })
+  }, [])
 
   const planMeta = getPlanMeta(plan)
 
@@ -416,34 +425,6 @@ export default function Settings() {
 
           <div className="h-px" style={{ backgroundColor: C.divider }} />
 
-          {/* Make.com webhook */}
-          <div>
-            <p className="text-sm font-medium mb-1" style={{ color: C.primary }}>Make.com Webhook</p>
-            <p className="text-xs mb-2" style={{ color: C.secondary }}>
-              Paste this URL as the webhook target in your Make.com scenario. It's
-              unique to your restaurant — reviews and posts sent here land on your account.
-            </p>
-            {webhookUrl ? (
-              <div className="flex items-center gap-2 px-3 py-2 rounded text-xs font-mono"
-                style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}`, color: C.secondary }}>
-                <span className="flex-1 truncate">{webhookUrl}</span>
-                <CopyButton value={webhookUrl} C={C} />
-              </div>
-            ) : (
-              <div className="px-3 py-2.5 rounded"
-                style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}` }}>
-                <p className="text-xs font-medium" style={{ color: C.secondary }}>
-                  Sign in to see your webhook URL
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-                  We add your account ID to the URL so your data routes correctly
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="h-px" style={{ backgroundColor: C.divider }} />
-
           {/* Instagram */}
           <div className="flex items-center justify-between">
             <div>
@@ -528,9 +509,9 @@ export default function Settings() {
               options={REPLY_SPEED_OPTIONS}
               C={C}
             />
-            <p className="text-xs mt-1.5" style={{ color: C.muted }}>
+            <p className="text-xs mt-1.5" style={{ color: C.primary }}>
               AutoPilot will reply to new Google reviews{' '}
-              <span style={{ color: C.secondary }}>
+              <span style={{ color: C.primary }}>
                 {REPLY_SPEED_OPTIONS.find(o => o.value === replySpeed)?.desc ?? '…'}
               </span>
             </p>
@@ -547,7 +528,7 @@ export default function Settings() {
               options={POST_TONE_OPTIONS}
               C={C}
             />
-            <p className="text-xs mt-1.5" style={{ color: C.muted }}>
+            <p className="text-xs mt-1.5" style={{ color: C.primary }}>
               AI-generated social posts will match this writing style.
             </p>
           </div>
@@ -558,7 +539,7 @@ export default function Settings() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-medium" style={{ color: C.primary }}>Auto-post schedule</p>
-              <p className="text-xs mt-0.5" style={{ color: C.secondary }}>
+              <p className="text-xs mt-0.5" style={{ color: C.primary }}>
                 {autoPostEnabled
                   ? 'When on, AutoPilot posts automatically.'
                   : 'When off, posts need your approval before publishing.'}
@@ -671,8 +652,8 @@ export default function Settings() {
         </div>
       </Card>
 
-      {/* Notifications */}
-      <Card title="Notifications" C={C}>
+      {/* Notifications — admin only */}
+      {userEmail === ADMIN_EMAIL && <Card title="Notifications" C={C}>
         <div className="space-y-4">
           {/* System alerts — the only live toggle */}
           <div className="flex items-center justify-between">
@@ -715,7 +696,7 @@ export default function Settings() {
             {notifSaved && <span className="text-xs" style={{ color: 'var(--ap-success)' }}>✓ Saved</span>}
           </div>
         </div>
-      </Card>
+      </Card>}
 
       {/* Danger zone */}
       <div style={{

@@ -9,7 +9,7 @@ const C = {
 const reasons = [
   { title: 'Built for restaurants', body: 'Not generic software bolted onto your business. AutoPilot is shaped around how restaurants actually run.' },
   { title: 'Set up in minutes', body: 'We handle the whole setup. Connect your Google profile and AutoPilot takes it from there.' },
-  { title: 'Cancel anytime', body: 'No contracts, no lock-in. Stay because it works, not because you signed something.' },
+  { title: 'Cancel anytime', body: 'Month to month, no commitments. If it stops working for you, cancel in one click — no hoops, no questions.' },
   { title: 'Real AI, real results', body: 'Trained on real restaurant conversations, so every reply sounds like you, not a robot.' },
 ]
 

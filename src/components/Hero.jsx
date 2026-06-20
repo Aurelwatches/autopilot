@@ -172,7 +172,7 @@ export default function Hero() {
               maxWidth: 420, marginBottom: 40, textAlign: 'left',
             }}
           >
-            Google reviews answered automatically — in your voice, during your hours. Every day, without you.
+            Your reviews get answered in your voice, every day — without you having to think about it.
           </motion.p>
 
           <motion.div
