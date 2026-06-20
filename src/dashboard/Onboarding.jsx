@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useDashboardReveal } from './revealContext'
+import { supabase } from '../lib/supabase'
 
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 const PAD = 8 // spotlight padding around the target element
@@ -43,13 +44,31 @@ export default function Onboarding() {
   const revealed = useDashboardReveal()
   const cardRef = useRef(null)
 
-  const [active, setActive] = useState(() => !localStorage.getItem('ap_onboarded'))
-  const [step, setStep]     = useState(0)
-  const [rect, setRect]     = useState(null)
-  const [cardH, setCardH]   = useState(240)
+  const [active, setActive]   = useState(false)
+  const [step, setStep]       = useState(0)
+  const [rect, setRect]       = useState(null)
+  const [cardH, setCardH]     = useState(240)
   const [visible, setVisible] = useState(false)
 
   const current = steps[step]
+
+  // Check localStorage first (instant), then confirm with Supabase (cross-device)
+  useEffect(() => {
+    if (localStorage.getItem('ap_onboarded')) return
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return
+      const { data } = await supabase
+        .from('profiles')
+        .select('onboarded')
+        .eq('id', session.user.id)
+        .single()
+      if (data?.onboarded) {
+        localStorage.setItem('ap_onboarded', '1')
+      } else {
+        setActive(true)
+      }
+    })
+  }, [])
 
   // Fade in once the dashboard has finished its reveal animation
   useEffect(() => {
@@ -86,6 +105,11 @@ export default function Onboarding() {
     localStorage.setItem('ap_onboarded', '1')
     setVisible(false)
     setTimeout(() => setActive(false), 250)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        supabase.from('profiles').update({ onboarded: true }).eq('id', session.user.id)
+      }
+    })
   }
 
   function next() {
