@@ -65,6 +65,9 @@ export default function Onboarding() {
       if (data?.onboarded) {
         localStorage.setItem('ap_onboarded', '1')
       } else {
+        // Mark seen immediately so closing mid-tour doesn't replay it
+        localStorage.setItem('ap_onboarded', '1')
+        supabase.from('profiles').update({ onboarded: true }).eq('id', session.user.id)
         setActive(true)
       }
     })
