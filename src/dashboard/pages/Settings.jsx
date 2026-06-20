@@ -138,24 +138,48 @@ export default function Settings() {
 
   const [saved,      setSaved]      = useState(false)
   const [prefSaved,  setPrefSaved]  = useState(false)
+  const [notifSaved, setNotifSaved] = useState(false)
   const [notifs,     setNotifs]     = useState({ email: true, sms: false, weekly: true, alerts: true })
+  const [notifEmail, setNotifEmail] = useState('')   // email address for digests
+  const [notifPhone, setNotifPhone] = useState('')   // phone for SMS alerts
+
+  // ── Business hours ────────────────────────────────────────────────────────
+  const [bizHoursEnabled, setBizHoursEnabled] = useState(true)
+  const [bizOpen,         setBizOpen]         = useState('09:00')
+  const [bizClose,        setBizClose]        = useState('21:00')
+  const [bizTimezone,     setBizTimezone]     = useState('America/New_York')
+  const [bizSaved,        setBizSaved]        = useState(false)
 
   // ── Automation preferences ────────────────────────────────────────────────
-  const [replySpeed,     setReplySpeed]     = useState('within_1h')
-  const [postTone,       setPostTone]       = useState('friendly')
+  const [replySpeed,      setReplySpeed]      = useState('within_1h')
+  const [postTone,        setPostTone]        = useState('friendly')
   const [autoPostEnabled, setAutoPostEnabled] = useState(true)
-  const [prefsLoading,   setPrefsLoading]   = useState(false)
+  const [prefsLoading,    setPrefsLoading]    = useState(false)
 
   // Load saved preferences from Supabase profiles on mount / when user id resolves
   useEffect(() => {
     if (!supabase || !userId) return
-    supabase.from('profiles').select('reply_speed, post_tone, auto_post_enabled')
+    supabase.from('profiles')
+      .select('reply_speed, post_tone, auto_post_enabled, business_hours, notification_prefs')
       .eq('id', userId).single()
       .then(({ data }) => {
         if (!data) return
-        if (data.reply_speed      != null) setReplySpeed(data.reply_speed)
-        if (data.post_tone        != null) setPostTone(data.post_tone)
+        if (data.reply_speed       != null) setReplySpeed(data.reply_speed)
+        if (data.post_tone         != null) setPostTone(data.post_tone)
         if (data.auto_post_enabled != null) setAutoPostEnabled(data.auto_post_enabled)
+        if (data.business_hours) {
+          const bh = data.business_hours
+          if (bh.enabled  != null) setBizHoursEnabled(bh.enabled)
+          if (bh.open)              setBizOpen(bh.open)
+          if (bh.close)             setBizClose(bh.close)
+          if (bh.timezone)          setBizTimezone(bh.timezone)
+        }
+        if (data.notification_prefs) {
+          const np = data.notification_prefs
+          setNotifs({ email: np.email ?? true, sms: np.sms ?? false, weekly: np.weekly ?? true, alerts: np.alerts ?? true })
+          if (np.phone_email) setNotifEmail(np.phone_email)
+          if (np.phone)       setNotifPhone(np.phone)
+        }
       })
   }, [userId])
 
@@ -171,6 +195,30 @@ export default function Settings() {
     setPrefsLoading(false)
     if (!error) { setPrefSaved(true); setTimeout(() => setPrefSaved(false), 2500) }
     else console.error('[Settings] prefs save:', error.message)
+  }
+
+  async function handleBizHoursSave() {
+    if (!supabase || !userId) return
+    const { error } = await supabase.from('profiles').upsert({
+      id: userId,
+      business_hours: { enabled: bizHoursEnabled, open: bizOpen, close: bizClose, timezone: bizTimezone },
+    })
+    if (!error) { setBizSaved(true); setTimeout(() => setBizSaved(false), 2500) }
+    else console.error('[Settings] biz hours save:', error.message)
+  }
+
+  async function handleNotifSave() {
+    if (!supabase || !userId) return
+    const { error } = await supabase.from('profiles').upsert({
+      id: userId,
+      notification_prefs: {
+        email: notifs.email, sms: notifs.sms, weekly: notifs.weekly, alerts: notifs.alerts,
+        phone_email: notifEmail.trim(),
+        phone: notifPhone.trim(),
+      },
+    })
+    if (!error) { setNotifSaved(true); setTimeout(() => setNotifSaved(false), 2500) }
+    else console.error('[Settings] notif save:', error.message)
   }
 
   // Connection status — stored per restaurant name, default all false
@@ -519,6 +567,87 @@ export default function Settings() {
         </div>
       </Card>
 
+      {/* Business hours */}
+      <Card title="Business hours" C={C}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium" style={{ color: C.primary }}>Restrict reply times</p>
+              <p className="text-xs mt-0.5" style={{ color: C.secondary }}>Only auto-post replies during your open hours</p>
+            </div>
+            <Toggle checked={bizHoursEnabled} onChange={setBizHoursEnabled} C={C} />
+          </div>
+
+          {bizHoursEnabled && (
+            <>
+              <div className="h-px" style={{ backgroundColor: C.divider }} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>Opens</label>
+                  <input
+                    type="time"
+                    value={bizOpen}
+                    onChange={e => setBizOpen(e.target.value)}
+                    className="w-full text-sm px-4 py-2.5 rounded outline-none"
+                    style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
+                    onFocus={e => e.target.style.borderColor = C.accent}
+                    onBlur={e => e.target.style.borderColor = C.border}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>Closes</label>
+                  <input
+                    type="time"
+                    value={bizClose}
+                    onChange={e => setBizClose(e.target.value)}
+                    className="w-full text-sm px-4 py-2.5 rounded outline-none"
+                    style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
+                    onFocus={e => e.target.style.borderColor = C.accent}
+                    onBlur={e => e.target.style.borderColor = C.border}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>Timezone</label>
+                <select
+                  value={bizTimezone}
+                  onChange={e => setBizTimezone(e.target.value)}
+                  className="w-full text-sm px-4 py-2.5 rounded outline-none"
+                  style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}`, cursor: 'pointer' }}
+                  onFocus={e => e.target.style.borderColor = C.accent}
+                  onBlur={e => e.target.style.borderColor = C.border}
+                >
+                  <option value="America/New_York">Eastern (ET)</option>
+                  <option value="America/Chicago">Central (CT)</option>
+                  <option value="America/Denver">Mountain (MT)</option>
+                  <option value="America/Los_Angeles">Pacific (PT)</option>
+                  <option value="America/Phoenix">Arizona (MST)</option>
+                  <option value="America/Anchorage">Alaska (AKT)</option>
+                  <option value="Pacific/Honolulu">Hawaii (HST)</option>
+                  <option value="Europe/London">London (GMT/BST)</option>
+                  <option value="Europe/Paris">Paris (CET)</option>
+                  <option value="Australia/Sydney">Sydney (AEST)</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          <div className="pt-1 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleBizHoursSave}
+              className="text-sm font-semibold px-5 py-2 rounded"
+              style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              Save hours
+            </button>
+            {bizSaved && <span className="text-xs" style={{ color: 'var(--ap-success)' }}>✓ Saved</span>}
+          </div>
+        </div>
+      </Card>
+
       {/* Notifications */}
       <Card title="Notifications" C={C}>
         <div className="space-y-4">
@@ -539,6 +668,59 @@ export default function Settings() {
               {i < arr.length - 1 && <div className="h-px mt-4" style={{ backgroundColor: C.divider }} />}
             </div>
           ))}
+
+          <div className="h-px" style={{ backgroundColor: C.divider }} />
+
+          {/* Contact fields */}
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
+                Email address for digests &amp; reports
+              </label>
+              <input
+                type="email"
+                value={notifEmail}
+                onChange={e => setNotifEmail(e.target.value)}
+                placeholder="you@restaurant.com"
+                className="w-full text-sm px-4 py-2.5 rounded outline-none"
+                style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
+                onFocus={e => e.target.style.borderColor = C.accent}
+                onBlur={e => e.target.style.borderColor = C.border}
+              />
+            </div>
+            {notifs.sms && (
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
+                  Mobile number for SMS alerts
+                </label>
+                <input
+                  type="tel"
+                  value={notifPhone}
+                  onChange={e => setNotifPhone(e.target.value)}
+                  placeholder="+1 555 000 0000"
+                  className="w-full text-sm px-4 py-2.5 rounded outline-none"
+                  style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
+                  onFocus={e => e.target.style.borderColor = C.accent}
+                  onBlur={e => e.target.style.borderColor = C.border}
+                />
+                <p className="text-xs mt-1" style={{ color: C.muted }}>Include country code, e.g. +1 for US/Canada</p>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-1 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleNotifSave}
+              className="text-sm font-semibold px-5 py-2 rounded"
+              style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              Save notifications
+            </button>
+            {notifSaved && <span className="text-xs" style={{ color: 'var(--ap-success)' }}>✓ Saved</span>}
+          </div>
         </div>
       </Card>
 
