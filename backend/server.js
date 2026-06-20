@@ -32,24 +32,16 @@ const resend = process.env.RESEND_API_KEY
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 async function sendSms(to, body) {
-  if (!twilioClient) return console.warn('[SMS] Twilio not configured')
-  try {
-    const msg = await twilioClient.messages.create({ from: process.env.TWILIO_FROM_NUMBER, to, body })
-    console.log('[SMS] Sent:', msg.sid)
-  } catch (err) {
-    console.error('[SMS] Error:', err.message)
-  }
+  if (!twilioClient) throw new Error('Twilio not configured (missing env vars)')
+  const msg = await twilioClient.messages.create({ from: process.env.TWILIO_FROM_NUMBER, to, body })
+  console.log('[SMS] Sent:', msg.sid)
 }
 
 async function sendEmail({ to, subject, html }) {
-  if (!resend) return console.warn('[Email] Resend not configured')
-  try {
-    const { data, error } = await resend.emails.send({ from: process.env.EMAIL_FROM || 'onboarding@resend.dev', to, subject, html })
-    if (error) console.error('[Email] Error:', error)
-    else console.log('[Email] Sent:', data?.id)
-  } catch (err) {
-    console.error('[Email] Error:', err.message)
-  }
+  if (!resend) throw new Error('Resend not configured (missing RESEND_API_KEY)')
+  const { data, error } = await resend.emails.send({ from: process.env.EMAIL_FROM || 'onboarding@resend.dev', to, subject, html })
+  if (error) throw new Error(JSON.stringify(error))
+  console.log('[Email] Sent:', data?.id)
 }
 
 // CORS
