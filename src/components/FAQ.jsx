@@ -11,7 +11,7 @@ const C = {
 const faqs = [
   {
     q: 'How does AutoPilot reply to my reviews?',
-    a: 'AutoPilot watches your Google Business Profile around the clock. When a new review lands, our AI reads it and writes a thoughtful, on-brand reply in your voice — usually within a few minutes.',
+    a: 'AutoPilot watches your Google Business Profile around the clock. When a new review lands, our AI writes a thoughtful, on-brand reply in your voice and sends it during your set business hours — so replies go out at natural times, not 3 am.',
   },
   {
     q: 'Will the replies sound like a robot?',
@@ -39,7 +39,7 @@ const faqs = [
   },
   {
     q: 'How much does it cost?',
-    a: 'Plans start at $99/mo, with our most popular Growth plan at $200/mo. Every plan includes a 14-day free trial with no credit card required.',
+    a: 'AutoPilot starts at $99/mo for automated Google review replies. No credit card required to get started.',
   },
 ]
 

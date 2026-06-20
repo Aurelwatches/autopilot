@@ -24,7 +24,7 @@ const steps = [
   {
     number: '03',
     title: 'Sit back',
-    body: 'AI handles replies, posts, and customer follow-ups automatically so you can focus on your guests.',
+    body: 'AI handles your Google review replies automatically — in your voice, during your business hours — so you can focus on your guests.',
   },
 ]
 

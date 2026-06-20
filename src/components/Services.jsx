@@ -38,9 +38,9 @@ const AnalyticsIcon = (
 )
 
 const services = [
-  { icon: ReviewIcon, title: 'Review Management', body: 'AI replies to every Google review. Thoughtful, on-brand, and within minutes, day or night.' },
-  { icon: SocialIcon, title: 'Social Media', body: 'Auto-generated posts for Instagram and Facebook, drafted and scheduled so you stay in the feed.' },
-  { icon: AnalyticsIcon, title: 'Analytics Dashboard', body: 'Track your reviews, posts, and customer sentiment in real time from one clean dashboard.' },
+  { icon: ReviewIcon, title: 'Review Management', body: 'AI replies to every Google review in your voice — thoughtful, on-brand, and sent during your business hours.' },
+  { icon: SocialIcon, title: 'Social Posts', body: 'Draft and schedule social posts in seconds with AI Assist. Write your idea, let AutoPilot turn it into a polished post.' },
+  { icon: AnalyticsIcon, title: 'Analytics Dashboard', body: 'Track your reviews, post drafts, and reply performance in real time from one clean dashboard.' },
 ]
 
 export default function Services() {

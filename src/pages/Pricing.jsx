@@ -56,17 +56,18 @@ const plans = [
   {
     id: 'growth',
     label: 'Growth',
-    subtitle: 'For restaurants ready to automate',
+    subtitle: 'More automation, more platforms',
     monthly: 200,
     yearly: 2000,
     yearlySavings: 400,
-    badge: { text: 'Most Popular', color: '#22D3EE', bg: 'rgba(34,211,238,0.14)', border: 'rgba(34,211,238,0.3)' },
-    border: 'rgba(34,211,238,0.38)',
-    shadow: '0 0 40px rgba(34,211,238,0.14), 0 4px 24px rgba(0,0,0,0.06)',
-    featured: true,
-    buttonStyle: 'amber',
-    buttonText: 'Start free trial',
+    badge: { text: 'Coming Soon', color: '#6B7280', bg: 'rgba(107,114,128,0.10)', border: 'rgba(107,114,128,0.25)' },
+    border: 'rgba(0,0,0,0.08)',
+    shadow: '0 2px 16px rgba(0,0,0,0.06)',
+    featured: false,
+    buttonStyle: 'outlined',
+    buttonText: 'Coming soon',
     socialProof: null,
+    comingSoon: true,
     features: [
       { text: 'Everything in Starter' },
       { text: 'Unlimited reviews' },
@@ -83,13 +84,14 @@ const plans = [
     monthly: 350,
     yearly: 3500,
     yearlySavings: 700,
-    badge: { text: 'Best Value', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.28)' },
-    border: 'rgba(59,130,246,0.3)',
-    shadow: '0 0 32px rgba(59,130,246,0.08), 0 2px 16px rgba(0,0,0,0.05)',
+    badge: { text: 'Coming Soon', color: '#6B7280', bg: 'rgba(107,114,128,0.10)', border: 'rgba(107,114,128,0.25)' },
+    border: 'rgba(0,0,0,0.08)',
+    shadow: '0 2px 16px rgba(0,0,0,0.05)',
     featured: false,
-    buttonStyle: 'gold',
-    buttonText: 'Get AutoPilot Pro',
-    socialProof: 'Most restaurants on Pro save 3× their subscription in staff hours',
+    buttonStyle: 'outlined',
+    buttonText: 'Coming soon',
+    socialProof: null,
+    comingSoon: true,
     features: [
       { text: 'Everything in Growth' },
       { text: 'Custom brand voice training' },
@@ -108,15 +110,9 @@ function PlanCard({ plan, yearly }) {
   const period = yearly ? 'yr' : 'mo'
 
   function handleSelect() {
+    if (plan.comingSoon) return
     localStorage.setItem('ap_selected_plan', plan.id)
     localStorage.setItem('ap_selected_interval', yearly ? 'yearly' : 'monthly')
-    const destination = user ? '/checkout' : '/login'
-    console.log('[AutoPilot] Plan selected:', {
-      plan: plan.id,
-      interval: yearly ? 'yearly' : 'monthly',
-      loggedIn: !!user,
-      redirectingTo: destination,
-    })
     if (user) {
       navigate('/checkout')
     } else {
@@ -234,7 +230,10 @@ function PlanCard({ plan, yearly }) {
       {/* CTA */}
       <ShimmerButton
         onClick={handleSelect}
-        style={btnStyles[plan.buttonStyle]}
+        style={{
+          ...btnStyles[plan.buttonStyle],
+          ...(plan.comingSoon ? { cursor: 'default', opacity: 0.55 } : {}),
+        }}
       >
         {plan.buttonText}
       </ShimmerButton>

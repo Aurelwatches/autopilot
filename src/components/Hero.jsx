@@ -172,7 +172,7 @@ export default function Hero() {
               maxWidth: 420, marginBottom: 40, textAlign: 'left',
             }}
           >
-            Google reviews answered. Social posts published. Customers followed up with. Every day, without you.
+            Google reviews answered automatically — in your voice, during your hours. Every day, without you.
           </motion.p>
 
           <motion.div

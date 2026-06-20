@@ -105,49 +105,46 @@ function ReviewMockup() {
   )
 }
 
-function SocialMockup() {
-  const posts = [
-    { platform: 'Instagram', time: 'Today, 11:30 AM', copy: 'Taco Tuesday is back. 3 for $12, today only.', status: 'scheduled' },
-    { platform: 'Facebook',  time: 'Wed, 6:00 PM',    copy: 'New happy hour menu just dropped. Come see us.',  status: 'draft' },
-    { platform: 'Instagram', time: 'Fri, 12:00 PM',   copy: 'Weekend special: buy 2 get 1 free on mains.',     status: 'scheduled' },
+function ReplyQueueMockup() {
+  const items = [
+    { name: 'James T.', stars: 5, preview: 'Best tacos in the city, will definitely be back!', status: 'replied' },
+    { name: 'Maria L.', stars: 2, preview: 'Service was slow and the order came out wrong…',   status: 'pending' },
+    { name: 'David K.', stars: 4, preview: 'Great food, parking was a bit tough to find.',      status: 'replied' },
   ]
   return (
     <Glass>
       <GlassHeader
-        label="Scheduled Posts"
-        right={<span style={{ fontSize: 12, color: C.muted }}>3 queued</span>}
+        label="Review Queue"
+        right={<span style={{ fontSize: 12, color: C.muted }}>3 reviews</span>}
       />
       <Stagger stagger={0.14} amount={0.4}>
-        {posts.map((post, i) => (
+        {items.map((item, i) => (
           <StaggerItem
             key={i}
             style={{
-              padding: '16px 20px',
+              padding: '14px 20px',
               display: 'flex',
               alignItems: 'flex-start',
               gap: 12,
-              borderBottom: i < posts.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+              borderBottom: i < items.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: C.primary }}>{post.platform}</span>
-                <span style={{ fontSize: 12, color: C.muted }}>{post.time}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                <span style={{ fontSize: 12, fontWeight: 500, color: C.primary }}>{item.name}</span>
+                <span style={{ fontSize: 11, color: '#F59E0B', letterSpacing: 1 }}>{'★'.repeat(item.stars)}</span>
               </div>
               <p style={{ fontSize: 12, lineHeight: 1.5, color: C.secondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {post.copy}
+                {item.preview}
               </p>
             </div>
             <span style={{
-              fontSize: 11,
-              padding: '2px 8px',
-              borderRadius: 6,
-              flexShrink: 0,
-              ...(post.status === 'scheduled'
-                ? { background: 'rgba(34,211,238,0.14)', color: '#67E8F9' }
-                : { background: 'rgba(255,255,255,0.06)', color: C.secondary }),
+              fontSize: 11, padding: '2px 8px', borderRadius: 6, flexShrink: 0,
+              ...(item.status === 'replied'
+                ? { background: 'rgba(16,185,129,0.14)', color: '#34D399' }
+                : { background: 'rgba(34,211,238,0.14)', color: '#67E8F9' }),
             }}>
-              {post.status}
+              {item.status}
             </span>
           </StaggerItem>
         ))}
@@ -162,17 +159,17 @@ const sections = [
   {
     number: '01',
     heading: 'Every review. Answered automatically.',
-    body: 'AutoPilot watches your Google listing around the clock. Every new review gets a thoughtful, on-brand reply within minutes. You never write a single word.',
+    body: 'AutoPilot watches your Google listing around the clock. Every new review gets a thoughtful, on-brand reply — sent during your business hours so it looks natural, never 3 am.',
     mockup: <ReviewMockup />,
-    textSide: 'left',  // text left, mockup right
+    textSide: 'left',
     stagger: false,
   },
   {
     number: '02',
-    heading: 'Show up in the feed. Without lifting a finger.',
-    body: 'Daily specials, seasonal promotions, events. AutoPilot drafts and schedules content for Instagram and Facebook so your followers see you while you focus on your guests.',
-    mockup: <SocialMockup />,
-    textSide: 'right', // text right, mockup left
+    heading: 'Your full reply history, in one place.',
+    body: 'See every review, its star rating, and whether AutoPilot has replied — all from a single dashboard. Filter by pending, replied, or low-star reviews in seconds.',
+    mockup: <ReplyQueueMockup />,
+    textSide: 'right',
     stagger: true,
   },
 ]
