@@ -742,9 +742,19 @@ export default function Settings() {
             </p>
           </div>
           <button
-            onClick={() => {
-              if (window.confirm('Cancel your AutoPilot subscription at the end of the billing period?')) {
-                window.alert('Your cancellation request has been received. Our team will email you a confirmation shortly.')
+            onClick={async () => {
+              try {
+                const { data: { session } } = await supabase.auth.getSession()
+                const res = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/create-portal-session`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+                  body: JSON.stringify({ userId: session?.user?.id }),
+                })
+                const json = await res.json()
+                if (json.url) window.location.href = json.url
+                else alert(json.error ?? 'Could not open billing portal. Contact support.')
+              } catch (err) {
+                alert('Failed to open billing portal. Please try again.')
               }
             }}
             className="text-sm font-medium px-4 py-2 rounded transition-colors"
