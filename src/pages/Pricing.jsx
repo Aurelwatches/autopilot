@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useAuth } from '../lib/auth'
@@ -103,7 +103,7 @@ const plans = [
   },
 ]
 
-function PlanCard({ plan, yearly }) {
+function PlanCard({ plan, yearly, from }) {
   const navigate = useNavigate()
   const { user } = useAuth()
   const price  = yearly ? plan.yearly : plan.monthly
@@ -113,6 +113,7 @@ function PlanCard({ plan, yearly }) {
     if (plan.comingSoon) return
     localStorage.setItem('ap_selected_plan', plan.id)
     localStorage.setItem('ap_selected_interval', yearly ? 'yearly' : 'monthly')
+    if (from) localStorage.setItem('ap_checkout_from', from)
     if (user) {
       navigate('/checkout')
     } else {
@@ -251,6 +252,8 @@ function PlanCard({ plan, yearly }) {
 
 export default function Pricing() {
   const [yearly, setYearly] = useState(false)
+  const [searchParams] = useSearchParams()
+  const from = searchParams.get('from') || null
 
   function switchPlan(toYearly) {
     if (toYearly === yearly) return
@@ -373,6 +376,7 @@ export default function Pricing() {
               key={plan.id}
               plan={plan}
               yearly={yearly}
+              from={from}
             />
           ))}
         </Stagger>

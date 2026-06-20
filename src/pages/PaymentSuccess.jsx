@@ -15,17 +15,20 @@ export default function PaymentSuccess() {
     'your restaurant'
 
   const [flyPlane, setFlyPlane] = useState(false)
+  const returnTo = localStorage.getItem('ap_checkout_from') || '/dashboard'
 
   useEffect(() => {
     // Payment is complete — clear the pending plan selection so future logins
     // don't bounce the user back to checkout.
+    const returnTo = localStorage.getItem('ap_checkout_from') || '/dashboard'
     localStorage.removeItem('ap_selected_plan')
     localStorage.removeItem('ap_selected_interval')
+    localStorage.removeItem('ap_checkout_from')
 
     // Let the plane sweep across mid-celebration…
     const planeT = setTimeout(() => setFlyPlane(true), 900)
-    // …then head into the dashboard.
-    const goT = setTimeout(() => navigate('/dashboard'), REDIRECT_MS)
+    // …then head back to where they came from (or dashboard).
+    const goT = setTimeout(() => navigate(returnTo), REDIRECT_MS)
     return () => { clearTimeout(planeT); clearTimeout(goT) }
   }, [navigate])
 
@@ -78,7 +81,7 @@ export default function PaymentSuccess() {
       </p>
 
       <button
-        onClick={() => navigate('/dashboard')}
+        onClick={() => navigate(returnTo)}
         style={{
           background: '#22D3EE', color: '#04141A',
           border: 'none', borderRadius: 980,

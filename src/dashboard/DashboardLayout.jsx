@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import Sidebar from './Sidebar'
 import SupportChat from './SupportChat'
@@ -169,6 +169,7 @@ function DashboardContent() {
 
 export default function DashboardLayout() {
   const { user, loading } = useAuth()
+  const location = useLocation()
   const [subStatus, setSubStatus] = useState(null) // null = checking
   const [plan,      setPlan]      = useState(null)
   const [subChecked, setSubChecked] = useState(false)
@@ -204,8 +205,9 @@ export default function DashboardLayout() {
 
   if (loading || !subChecked) return <LoadingScreen />
   if (!user) return <Navigate to="/login" replace />
-  if (subStatus !== 'active') return <Navigate to="/pricing?message=subscribe" replace />
-  if (!plan) return <Navigate to="/pricing" replace />
+  const from = encodeURIComponent(location.pathname)
+  if (subStatus !== 'active') return <Navigate to={`/pricing?message=subscribe&from=${from}`} replace />
+  if (!plan) return <Navigate to={`/pricing?from=${from}`} replace />
 
   return (
     <AppProvider initialPlan={plan}>
