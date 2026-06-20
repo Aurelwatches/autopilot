@@ -264,6 +264,7 @@ export default function SocialPosts() {
   const [loading,    setLoading]    = useState(true)
   const [saving,     setSaving]     = useState(false)
   const [showForm,   setShowForm]   = useState(false)
+  const [formStep,   setFormStep]   = useState(1)  // 1=platform, 2=content, 3=schedule
   const [platform,   setPlatform]   = useState('Instagram')
   const [topic,      setTopic]      = useState('')
   const [text,       setText]       = useState('')
@@ -374,7 +375,7 @@ export default function SocialPosts() {
 
   function handleCloseForm() {
     setShowForm(false); setIsLoading(false); setAiError('')
-    setText(''); setTopic(''); setPlatform('Instagram'); setScheduleDate(defaultScheduleDate())
+    setText(''); setTopic(''); setPlatform('Instagram'); setScheduleDate(defaultScheduleDate()); setFormStep(1)
   }
 
   // Called by PostCard after its exit animation finishes
@@ -474,154 +475,242 @@ export default function SocialPosts() {
           style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
           onClick={e => e.target === e.currentTarget && handleCloseForm()}
         >
-          <div className="w-full p-8" style={{
-            maxWidth: 520, backgroundColor: C.card, border: `1px solid ${C.border}`,
-            borderRadius: 20,
+          <div className="w-full" style={{
+            maxWidth: 480, backgroundColor: C.card, border: `1px solid ${C.border}`,
+            borderRadius: 20, overflow: 'hidden',
             backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
             boxShadow: C.cardShadow,
           }}>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-base font-semibold" style={{ color: C.primary }}>New post</h2>
-              <button onClick={handleCloseForm} style={{ color: C.muted, fontSize: 18, lineHeight: 1, cursor: 'pointer' }}>×</button>
-            </div>
 
-            {/* Platform */}
-            <div className="mb-4">
-              <Select
-                label="Platform"
-                value={platform}
-                onChange={setPlatform}
-                C={C}
-                options={[
-                  { value: 'Instagram', label: 'Instagram' },
-                  { value: 'Facebook',  label: 'Facebook' },
-                ]}
-              />
-            </div>
-
-            {/* Topic */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
-                What's the post about?
-              </label>
-              <input
-                type="text"
-                value={topic}
-                onChange={e => setTopic(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAI()}
-                placeholder="e.g. Taco Tuesday special, new pasta dish, happy hour deals…"
-                className="w-full text-sm px-4 py-2.5 rounded outline-none"
-                style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
-                onFocus={e => e.target.style.borderColor = C.secondary}
-                onBlur={e => e.target.style.borderColor = C.border}
-              />
-            </div>
-
-            {/* Post copy */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium" style={{ color: C.secondary }}>Post copy</label>
-                <button
-                  onClick={handleAI}
-                  disabled={!topic.trim() || isLoading}
-                  className="text-xs px-2.5 py-1 rounded"
-                  style={{
-                    backgroundColor: 'var(--ap-accent-soft)', color: 'var(--ap-accent)',
-                    border: '1px solid rgba(34,211,238,0.28)',
-                    opacity: !topic.trim() || isLoading ? 0.4 : 1,
-                    cursor: !topic.trim() || isLoading ? 'default' : 'pointer',
-                    transition: 'opacity 0.2s',
-                  }}
-                >✦ AI assist</button>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4">
+              <div>
+                <h2 className="text-base font-semibold" style={{ color: C.primary }}>New post</h2>
+                <p className="text-xs mt-0.5" style={{ color: C.muted }}>
+                  {formStep === 1 ? 'Where are you posting?' : formStep === 2 ? 'Write your content' : 'When should it go out?'}
+                </p>
               </div>
+              <button onClick={handleCloseForm} style={{ color: C.muted, fontSize: 20, lineHeight: 1, cursor: 'pointer', background: 'none', border: 'none' }}>×</button>
+            </div>
 
-              {aiError && <p style={{ fontSize: 11, color: '#f87171', marginBottom: 6 }}>{aiError}</p>}
+            {/* Step indicator */}
+            <div className="flex gap-1.5 px-6 pb-5">
+              {[1, 2, 3].map(s => (
+                <div key={s} style={{
+                  flex: 1, height: 3, borderRadius: 99,
+                  backgroundColor: s <= formStep ? C.accent : C.border,
+                  transition: 'background-color 0.3s ease',
+                }} />
+              ))}
+            </div>
 
-              <div style={{ position: 'relative' }}>
-                <textarea
-                  rows={4}
-                  value={text}
-                  onChange={e => setText(e.target.value)}
-                  placeholder="Write your post, or describe it above and click AI assist…"
-                  className="w-full text-sm px-4 py-3 rounded outline-none resize-none"
-                  readOnly={isLoading}
-                  style={{
-                    backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}`,
-                    pointerEvents: isLoading ? 'none' : 'auto',
-                    opacity: isLoading ? 0 : 1,
-                    transition: 'opacity 0.35s ease',
-                  }}
-                  onFocus={e => e.target.style.borderColor = C.secondary}
-                  onBlur={e => e.target.style.borderColor = C.border}
-                />
+            <div className="px-6 pb-6">
 
-                {/* Loading overlay */}
-                <div aria-hidden={!isLoading} style={{
-                  position: 'absolute', inset: 0, borderRadius: 6,
-                  backgroundColor: C.inputBg, border: `1px solid ${C.border}`,
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  justifyContent: 'center', gap: 10,
-                  pointerEvents: isLoading ? 'auto' : 'none',
-                  opacity: isLoading ? 1 : 0,
-                  transition: 'opacity 0.35s ease',
-                }}>
-                  <div style={{ position: 'relative', width: '82%', height: 26 }}>
-                    <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px solid rgba(34,211,238,0.18)' }} />
-                    {TRAIL_DOTS.map((pos, i) => (
-                      <div key={i} className="ap-trail-dot" style={{ left: `${pos}%`, animationDelay: `${(pos / 100) * 2000}ms` }} />
+              {/* ── Step 1: Platform ── */}
+              {formStep === 1 && (
+                <div>
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    {[
+                      { value: 'Instagram', icon: '📸', desc: 'Photos & captions' },
+                      { value: 'Facebook',  icon: '📣', desc: 'Posts & updates' },
+                    ].map(pl => (
+                      <button
+                        key={pl.value}
+                        type="button"
+                        onClick={() => setPlatform(pl.value)}
+                        style={{
+                          padding: '20px 16px',
+                          borderRadius: 12,
+                          border: `2px solid ${platform === pl.value ? C.accent : C.border}`,
+                          backgroundColor: platform === pl.value ? `${C.accent}12` : C.inputBg,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <div style={{ fontSize: 22, marginBottom: 8 }}>{pl.icon}</div>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: C.primary, marginBottom: 2 }}>{pl.value}</p>
+                        <p style={{ fontSize: 11, color: C.muted }}>{pl.desc}</p>
+                      </button>
                     ))}
-                    <span className="ap-plane-fly">✈</span>
                   </div>
-                  <p style={{ fontSize: 11, color: C.secondary, textAlign: 'center', minHeight: 16 }}>
-                    {LOADING_MSGS[msgIdx]}
-                  </p>
+                  <button
+                    onClick={() => setFormStep(2)}
+                    style={{
+                      width: '100%', padding: '10px', borderRadius: 10, border: 'none',
+                      backgroundColor: C.accent, color: 'var(--ap-on-accent)',
+                      fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                  >Continue →</button>
                 </div>
-              </div>
-              <p className="text-xs mt-1 text-right" style={{ color: C.muted }}>{text.length}/280</p>
-            </div>
+              )}
 
-            {/* Schedule date/time picker */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
-                Schedule for
-                <span style={{ color: C.muted }}> · {fmtMDY(scheduleDate)} at {fmtTime(scheduleDate)}</span>
-              </label>
-              <DateTimePicker value={scheduleDate} onChange={setScheduleDate} C={C} />
-            </div>
+              {/* ── Step 2: Content ── */}
+              {formStep === 2 && (
+                <div>
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
+                      What's the post about?
+                    </label>
+                    <input
+                      type="text"
+                      value={topic}
+                      onChange={e => setTopic(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleAI()}
+                      placeholder="e.g. Taco Tuesday special, new pasta dish…"
+                      autoFocus
+                      className="w-full text-sm px-4 py-2.5 rounded outline-none"
+                      style={{ backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}` }}
+                      onFocus={e => e.target.style.borderColor = C.secondary}
+                      onBlur={e => e.target.style.borderColor = C.border}
+                    />
+                  </div>
 
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => handleSave('draft')}
-                disabled={!text.trim() || saving}
-                className="text-sm px-4 py-2 rounded"
-                style={{
-                  backgroundColor: C.inputBg, color: C.secondary, border: `1px solid ${C.border}`,
-                  opacity: !text.trim() || saving ? 0.5 : 1,
-                  cursor: !text.trim() || saving ? 'default' : 'pointer',
-                }}
-              >Save draft</button>
-              <button
-                onClick={() => handleSave('published')}
-                disabled={!text.trim() || saving}
-                className="text-sm px-4 py-2 rounded"
-                style={{
-                  backgroundColor: 'rgba(34,211,238,0.12)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.28)',
-                  opacity: !text.trim() || saving ? 0.5 : 1,
-                  cursor: !text.trim() || saving ? 'default' : 'pointer',
-                }}
-              >Publish now</button>
-              <button
-                onClick={() => handleSave('scheduled')}
-                disabled={!text.trim() || saving}
-                className="text-sm font-semibold px-4 py-2 rounded"
-                style={{
-                  backgroundColor: C.accent, color: 'var(--ap-on-accent)',
-                  opacity: !text.trim() || saving ? 0.5 : 1,
-                  cursor: !text.trim() || saving ? 'default' : 'pointer',
-                }}
-                onMouseEnter={e => { if (text.trim() && !saving) e.currentTarget.style.opacity = '0.85' }}
-                onMouseLeave={e => { if (text.trim() && !saving) e.currentTarget.style.opacity = '1' }}
-              >{saving ? 'Saving…' : 'Schedule'}</button>
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-medium" style={{ color: C.secondary }}>Post copy</label>
+                      <button
+                        onClick={handleAI}
+                        disabled={!topic.trim() || isLoading}
+                        className="text-xs px-2.5 py-1 rounded"
+                        style={{
+                          backgroundColor: 'var(--ap-accent-soft)', color: 'var(--ap-accent)',
+                          border: '1px solid rgba(34,211,238,0.28)',
+                          opacity: !topic.trim() || isLoading ? 0.4 : 1,
+                          cursor: !topic.trim() || isLoading ? 'default' : 'pointer',
+                          transition: 'opacity 0.2s',
+                        }}
+                      >✦ AI assist</button>
+                    </div>
+                    {aiError && <p style={{ fontSize: 11, color: '#f87171', marginBottom: 6 }}>{aiError}</p>}
+                    <div style={{ position: 'relative' }}>
+                      <textarea
+                        rows={5}
+                        value={text}
+                        onChange={e => setText(e.target.value)}
+                        placeholder="Write your post, or use AI assist above…"
+                        className="w-full text-sm px-4 py-3 rounded outline-none resize-none"
+                        readOnly={isLoading}
+                        style={{
+                          backgroundColor: C.inputBg, color: C.primary, border: `1px solid ${C.border}`,
+                          pointerEvents: isLoading ? 'none' : 'auto',
+                          opacity: isLoading ? 0 : 1,
+                          transition: 'opacity 0.35s ease',
+                        }}
+                        onFocus={e => e.target.style.borderColor = C.secondary}
+                        onBlur={e => e.target.style.borderColor = C.border}
+                      />
+                      <div aria-hidden={!isLoading} style={{
+                        position: 'absolute', inset: 0, borderRadius: 6,
+                        backgroundColor: C.inputBg, border: `1px solid ${C.border}`,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        justifyContent: 'center', gap: 10,
+                        pointerEvents: isLoading ? 'auto' : 'none',
+                        opacity: isLoading ? 1 : 0, transition: 'opacity 0.35s ease',
+                      }}>
+                        <div style={{ position: 'relative', width: '82%', height: 26 }}>
+                          <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px solid rgba(34,211,238,0.18)' }} />
+                          {TRAIL_DOTS.map((pos, i) => (
+                            <div key={i} className="ap-trail-dot" style={{ left: `${pos}%`, animationDelay: `${(pos / 100) * 2000}ms` }} />
+                          ))}
+                          <span className="ap-plane-fly">✈</span>
+                        </div>
+                        <p style={{ fontSize: 11, color: C.secondary, textAlign: 'center', minHeight: 16 }}>{LOADING_MSGS[msgIdx]}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs mt-1 text-right" style={{ color: C.muted }}>{text.length}/280</p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setFormStep(1)}
+                      style={{
+                        flex: 1, padding: '10px', borderRadius: 10,
+                        backgroundColor: C.inputBg, color: C.secondary,
+                        border: `1px solid ${C.border}`, fontSize: 14, cursor: 'pointer',
+                      }}
+                    >← Back</button>
+                    <button
+                      onClick={() => setFormStep(3)}
+                      disabled={!text.trim()}
+                      style={{
+                        flex: 2, padding: '10px', borderRadius: 10, border: 'none',
+                        backgroundColor: C.accent, color: 'var(--ap-on-accent)',
+                        fontSize: 14, fontWeight: 600,
+                        opacity: !text.trim() ? 0.4 : 1,
+                        cursor: !text.trim() ? 'default' : 'pointer',
+                      }}
+                      onMouseEnter={e => { if (text.trim()) e.currentTarget.style.opacity = '0.85' }}
+                      onMouseLeave={e => { if (text.trim()) e.currentTarget.style.opacity = '1' }}
+                    >Continue →</button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Step 3: Schedule ── */}
+              {formStep === 3 && (
+                <div>
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
+                      Schedule for
+                      <span style={{ color: C.muted }}> · {fmtMDY(scheduleDate)} at {fmtTime(scheduleDate)}</span>
+                    </label>
+                    <DateTimePicker value={scheduleDate} onChange={setScheduleDate} C={C} />
+                  </div>
+
+                  {/* Summary */}
+                  <div className="mb-5 px-4 py-3 rounded-xl" style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}` }}>
+                    <p className="text-xs font-medium mb-1" style={{ color: C.muted }}>Posting to {platform}</p>
+                    <p className="text-sm" style={{ color: C.secondary, lineHeight: 1.5 }}>{text.slice(0, 100)}{text.length > 100 ? '…' : ''}</p>
+                  </div>
+
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={() => setFormStep(2)}
+                      style={{
+                        flex: 1, padding: '10px', borderRadius: 10,
+                        backgroundColor: C.inputBg, color: C.secondary,
+                        border: `1px solid ${C.border}`, fontSize: 14, cursor: 'pointer',
+                      }}
+                    >← Back</button>
+                    <button
+                      onClick={() => handleSave('scheduled')}
+                      disabled={saving}
+                      style={{
+                        flex: 2, padding: '10px', borderRadius: 10, border: 'none',
+                        backgroundColor: C.accent, color: 'var(--ap-on-accent)',
+                        fontSize: 14, fontWeight: 600,
+                        opacity: saving ? 0.5 : 1, cursor: saving ? 'default' : 'pointer',
+                      }}
+                      onMouseEnter={e => { if (!saving) e.currentTarget.style.opacity = '0.85' }}
+                      onMouseLeave={e => { if (!saving) e.currentTarget.style.opacity = '1' }}
+                    >{saving ? 'Saving…' : 'Schedule post'}</button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSave('draft')}
+                      disabled={saving}
+                      style={{
+                        flex: 1, padding: '8px', borderRadius: 10,
+                        backgroundColor: 'transparent', color: C.muted,
+                        border: `1px solid ${C.border}`, fontSize: 13, cursor: saving ? 'default' : 'pointer',
+                      }}
+                    >Save draft</button>
+                    <button
+                      onClick={() => handleSave('published')}
+                      disabled={saving}
+                      style={{
+                        flex: 1, padding: '8px', borderRadius: 10,
+                        backgroundColor: 'rgba(34,211,238,0.08)', color: 'var(--ap-success)',
+                        border: '1px solid rgba(34,211,238,0.2)', fontSize: 13, cursor: saving ? 'default' : 'pointer',
+                      }}
+                    >Publish now</button>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         </div>
