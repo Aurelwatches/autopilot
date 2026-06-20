@@ -706,7 +706,7 @@ app.post('/api/create-portal-session', async (req, res) => {
   }
 })
 
-// POST /api/reviews/:reviewId/approve — manual approve
+// POST /api/reviews/:reviewId/approve
 app.post('/api/reviews/:reviewId/approve', async (req, res) => {
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
   const { reviewId } = req.params
@@ -759,15 +759,14 @@ app.post('/api/reviews/:reviewId/approve', async (req, res) => {
   res.json({ ok: true })
 })
 
-
-// ─── Smoke test ──────────────────────────────────────────────────────────────
+// POST /api/smoke-test
 app.post('/api/smoke-test', async (req, res) => {
   const { phone, email } = req.body
   if (!phone && !email) return res.status(400).json({ error: 'Provide phone and/or email' })
   const results = {}
   if (phone) {
     try {
-      await sendSms(phone, 'AutoPilot smoke test ✅ SMS is working!')
+      await sendSms(phone, 'AutoPilot smoke test SMS is working!')
       results.sms = 'sent'
     } catch (err) {
       results.sms = `failed: ${err.message}`
@@ -775,7 +774,7 @@ app.post('/api/smoke-test', async (req, res) => {
   }
   if (email) {
     try {
-      await sendEmail({ to: email, subject: 'AutoPilot Smoke Test', html: '<h2>✅ Email is working!</h2><p>AutoPilot email pipeline confirmed.</p>' })
+      await sendEmail({ to: email, subject: 'AutoPilot Smoke Test', html: '<h2>Email is working!</h2><p>AutoPilot email pipeline confirmed.</p>' })
       results.email = 'sent'
     } catch (err) {
       results.email = `failed: ${err.message}`
@@ -785,6 +784,6 @@ app.post('/api/smoke-test', async (req, res) => {
 })
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`API server → http://0.0.0.0:${PORT}`)
+  console.log(`API server -> http://0.0.0.0:${PORT}`)
   startReviewsPoller()
 })
