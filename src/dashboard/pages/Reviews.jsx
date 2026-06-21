@@ -8,6 +8,14 @@ const filters = ['All', 'Replied', 'Pending', '5 Star', '1–2 Star']
 
 const MONTHLY_REVIEW_CAP = 100
 
+const PULSE_CSS = `
+@keyframes ap-approve-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,211,238,0.45); }
+  60%       { box-shadow: 0 0 0 7px rgba(34,211,238,0); }
+}
+.ap-approve-btn { animation: ap-approve-pulse 2.2s ease-in-out infinite; }
+`
+
 function formatDate(iso) {
   if (!iso) return ''
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -16,38 +24,61 @@ function formatDate(iso) {
 function Stars({ rating }) {
   const r = Math.round(rating ?? 0)
   return (
-    <span style={{ letterSpacing: '-1px', fontSize: 13, color: 'var(--ap-accent)' }}>
-      {'★'.repeat(r)}
-      <span style={{ opacity: 0.3 }}>{'★'.repeat(Math.max(0, 5 - r))}</span>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+      {[1, 2, 3, 4, 5].map(i => (
+        <svg key={i} width="12" height="12" viewBox="0 0 24 24"
+          fill={i <= r ? '#F59E0B' : 'none'}
+          stroke={i <= r ? '#F59E0B' : '#6B7280'}
+          strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      ))}
     </span>
+  )
+}
+
+function ratingBorderColor(rating) {
+  if (!rating) return 'transparent'
+  if (rating >= 5) return 'var(--ap-success)'
+  if (rating >= 3) return '#F59E0B'
+  return '#f87171'
+}
+
+function RobotIcon({ color }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+      stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="10" rx="2"/>
+      <path d="M12 11V7"/>
+      <circle cx="12" cy="5" r="2"/>
+      <circle cx="8.5" cy="16" r="1" fill={color} stroke="none"/>
+      <circle cx="12" cy="16" r="1" fill={color} stroke="none"/>
+      <circle cx="15.5" cy="16" r="1" fill={color} stroke="none"/>
+    </svg>
   )
 }
 
 function EmptyState({ C }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-8">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
         className="mb-4" style={{ color: C.muted }}>
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
       </svg>
-      <p className="text-sm text-center" style={{ color: C.secondary }}>No reviews yet.</p>
-      <p className="text-xs text-center mt-1" style={{ color: C.muted }}>
-        Once connected to Google Business, replies will appear here.
+      <p className="text-sm font-medium text-center" style={{ color: C.secondary }}>No reviews yet</p>
+      <p className="text-xs text-center mt-1" style={{ color: C.muted, lineHeight: 1.6 }}>
+        Once connected to Google Business, replies will appear here automatically.
       </p>
     </div>
   )
 }
 
-// Reviews table mixes two schemas:
-//   old: reviewer_name, review, response, star_rating (text)
-//   new: customer_name, review_text, ai_reply, rating, status, user_id
-// Read from whichever columns are present.
 function rowToReview(row) {
   return {
     id:         row.id,
     name:       row.customer_name || row.reviewer_name || 'Unknown',
-    rating:     row.rating || parseInt(row.star_rating) || null,  // null excluded from the average
+    rating:     row.rating || parseInt(row.star_rating) || null,
     date:       formatDate(row.created_at),
     created_at: row.created_at,
     status:     row.status || 'replied',
@@ -64,7 +95,7 @@ export default function Reviews() {
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState('')
   const [active,    setActive]    = useState('All')
-  const [approving, setApproving] = useState(new Set()) // Supabase row ids currently being posted
+  const [approving, setApproving] = useState(new Set())
 
   const { events } = useDashboard()
 
@@ -72,7 +103,6 @@ export default function Reviews() {
 
   async function fetchReviews() {
     if (!supabase) { setError('Supabase is not configured.'); setLoading(false); return }
-    // Wait for auth so the query is always filtered to the logged-in user
     if (!userId) { setLoading(false); return }
     try {
       const { data, error: err } = await supabase
@@ -97,7 +127,6 @@ export default function Reviews() {
         alert(`Could not post to Google: ${data.error}`)
         return
       }
-      // Optimistically update local state — no re-fetch needed
       setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, status: 'posted' } : r))
     } catch (err) {
       alert(`Network error: ${err.message}`)
@@ -106,21 +135,17 @@ export default function Reviews() {
     }
   }
 
-  // Re-fetch when auth resolves (userId goes null → real id) and poll every 30s
-  // so newly saved reviews appear without a manual refresh.
   useEffect(() => {
     fetchReviews()
     const interval = setInterval(fetchReviews, 30000)
     return () => clearInterval(interval)
   }, [userId])
 
-  // Instant refresh when a review_replied event streams in over SSE
   const reviewEventCount = events.filter(e => e.type === 'review_replied').length
   useEffect(() => { if (reviewEventCount > 0) fetchReviews() }, [reviewEventCount])
 
   const repliedCount = reviews.filter(r => r.status === 'replied' || r.status === 'posted').length
 
-  // This month's review count — used for Starter plan cap display
   const now = new Date()
   const thisMonthCount = reviews.filter(r => {
     if (!r.created_at) return false
@@ -128,8 +153,6 @@ export default function Reviews() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
   }).length
 
-  // Count matching reviews for a given filter — drives the per-tab badges
-  // (the star-rating breakdown) and reuses the same predicate as filtering.
   function matchesFilter(r, f) {
     if (f === 'Replied')  return r.status === 'replied' || r.status === 'posted'
     if (f === 'Pending')  return r.status === 'pending'
@@ -141,7 +164,6 @@ export default function Reviews() {
   const countFor = f => reviews.filter(r => matchesFilter(r, f)).length
   const filtered = reviews.filter(r => matchesFilter(r, active))
 
-  // Average rating across reviews that actually have a rating — null/0 excluded
   const ratedReviews = reviews.filter(r => Number(r.rating) > 0)
   const avgRating = ratedReviews.length
     ? (ratedReviews.reduce((s, r) => s + Number(r.rating), 0) / ratedReviews.length).toFixed(1)
@@ -151,16 +173,20 @@ export default function Reviews() {
 
   return (
     <div className="ap-page px-8 py-8" style={{ maxWidth: 900 }}>
+      <style>{PULSE_CSS}</style>
+
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ color: C.primary, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>Reviews</h1>
-          <p className="text-sm" style={{ color: C.secondary }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.025em', color: C.primary, fontFamily: 'var(--font-display)', marginBottom: 4 }}>
+            Reviews
+          </h1>
+          <p style={{ fontSize: 14, color: C.secondary, lineHeight: 1.6 }}>
             {reviews.length} review{reviews.length !== 1 ? 's' : ''} · synced automatically
           </p>
         </div>
         <div className="flex items-center gap-5">
           {repliedCount > 0 && (
-            <span className="text-sm px-3 py-1 rounded"
+            <span className="text-sm px-3 py-1 rounded-lg"
               style={{ backgroundColor: 'rgba(34,211,238,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.2)' }}>
               {repliedCount} replied this month
             </span>
@@ -168,10 +194,12 @@ export default function Reviews() {
           {avgRating && (
             <div className="text-right">
               <div className="flex items-center gap-1.5 justify-end">
-                <span style={{ fontSize: 38, fontWeight: 700, lineHeight: 1, color: C.primary }}>{avgRating}</span>
-                <span style={{ fontSize: 22, color: 'var(--ap-accent)', lineHeight: 1 }}>★</span>
+                <span style={{ fontSize: 38, fontWeight: 800, lineHeight: 1, color: C.primary, letterSpacing: '-0.025em', fontFamily: 'var(--font-display)' }}>{avgRating}</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" strokeWidth="1">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
               </div>
-              <p className="text-xs mt-1" style={{ color: C.muted }}>
+              <p style={{ fontSize: 11, marginTop: 2, color: C.muted }}>
                 avg rating · {ratedReviews.length} rated
               </p>
             </div>
@@ -183,25 +211,27 @@ export default function Reviews() {
       {isStarter && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 16px', borderRadius: 10, marginBottom: 20,
+          padding: '10px 16px', borderRadius: 12, marginBottom: 20,
           backgroundColor: capExceeded ? 'rgba(59,130,246,0.10)' : 'rgba(34,211,238,0.07)',
           border: `1px solid ${capExceeded ? 'rgba(59,130,246,0.26)' : 'rgba(34,211,238,0.18)'}`,
         }}>
-          <span style={{ fontSize: 12, color: C.secondary }}>
+          <span style={{ fontSize: 12, color: C.secondary, lineHeight: 1.6 }}>
             {capExceeded
               ? `⚠️ You've reached your 100-review limit for this month — upgrade to process more`
               : `You've used ${thisMonthCount} of ${MONTHLY_REVIEW_CAP} reviews this month`}
           </span>
           <Link
             to="/pricing"
-            style={{ fontSize: 12, fontWeight: 600, color: C.accent, textDecoration: 'none', flexShrink: 0, marginLeft: 12 }}
+            style={{ fontSize: 12, fontWeight: 600, color: C.accent, textDecoration: 'none', flexShrink: 0, marginLeft: 12, transition: 'opacity 150ms' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
             Upgrade →
           </Link>
         </div>
       )}
 
-      {/* Filters — label + live count (star-rating breakdown) */}
+      {/* Filters */}
       <div className="ap-review-filters flex gap-1 mb-6">
         {filters.map(f => {
           const n = countFor(f)
@@ -209,13 +239,14 @@ export default function Reviews() {
             <button
               key={f}
               onClick={() => setActive(f)}
-              className="text-xs px-3 py-1.5 rounded transition-colors flex items-center gap-1.5"
+              className="text-xs px-3 py-1.5 rounded flex items-center gap-1.5"
               style={{
                 backgroundColor: active === f ? C.primary : C.card,
                 color:           active === f ? C.bg : C.secondary,
                 border:          `1px solid ${active === f ? 'transparent' : C.border}`,
                 fontWeight:      active === f ? 600 : 400,
                 cursor: 'pointer',
+                transition: 'background-color 150ms, color 150ms, border-color 150ms',
               }}
             >
               {f}
@@ -242,7 +273,7 @@ export default function Reviews() {
         backgroundColor: C.card, border: `1px solid ${C.border}`,
         borderRadius: 16, overflow: 'hidden',
         backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
-        boxShadow: C.cardShadow,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.08)',
       }}>
         {loading ? (
           <div className="flex justify-center py-20">
@@ -255,7 +286,7 @@ export default function Reviews() {
               const isPosted    = r.status === 'posted'
               const isApproving = approving.has(r.id)
 
-              const badgeStyle = (isPending)
+              const badgeStyle = isPending
                 ? { backgroundColor: 'rgba(251,191,36,0.08)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.15)' }
                 : { backgroundColor: 'rgba(34,211,238,0.10)', color: 'var(--ap-success)', border: '1px solid rgba(34,211,238,0.2)' }
 
@@ -265,45 +296,58 @@ export default function Reviews() {
 
               return (
                 <div key={r.id}
-                  style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${C.divider}` : 'none' }}>
+                  style={{
+                    borderBottom: i < filtered.length - 1 ? `1px solid ${C.divider}` : 'none',
+                    borderLeft: `3px solid ${ratingBorderColor(r.rating)}`,
+                  }}>
                   <div className="p-5">
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-semibold" style={{ color: C.primary }}>{r.name}</span>
+                        <div className="flex items-center gap-2.5 mb-1">
+                          <span style={{ fontSize: 14, fontWeight: 600, color: C.primary, lineHeight: 1.4 }}>{r.name}</span>
                           <Stars rating={r.rating} />
                         </div>
-                        <span className="text-xs" style={{ color: C.muted }}>{r.date}</span>
+                        <span style={{ fontSize: 11, color: C.muted }}>{r.date}</span>
                       </div>
-                      <span className="text-xs px-2 py-0.5 rounded shrink-0" style={badgeStyle}>
+                      <span className="text-xs px-2.5 py-1 rounded-lg shrink-0" style={badgeStyle}>
                         {badgeText}
                       </span>
                     </div>
-                    <p className="text-sm leading-relaxed" style={{ color: C.secondary }}>{r.text}</p>
+                    <p style={{ fontSize: 14, lineHeight: 1.6, color: C.secondary }}>{r.text}</p>
                   </div>
+
                   <div className="px-5 pb-5 pt-0">
-                    <div className="rounded px-4 py-3"
+                    <div className="rounded-xl px-4 py-3"
                       style={{ backgroundColor: C.inputBg, border: `1px solid ${C.divider}` }}>
-                      <p className="text-[11px] font-medium mb-1.5" style={{ color: C.muted }}>AutoPilot reply</p>
-                      <p className="text-sm leading-relaxed" style={{ color: r.reply ? C.primary : C.muted }}>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <RobotIcon color={C.accent} />
+                        <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.muted, margin: 0 }}>
+                          AutoPilot reply
+                        </p>
+                      </div>
+                      <p style={{ fontSize: 14, lineHeight: 1.6, color: r.reply ? C.primary : C.muted }}>
                         {r.reply || 'No reply text received.'}
                       </p>
                     </div>
+
                     {isPending && (
                       <button
                         onClick={() => handleApprove(r.id)}
                         disabled={isApproving}
-                        className="mt-3 text-xs font-semibold px-4 py-2 rounded transition-colors"
+                        className={isApproving ? '' : 'ap-approve-btn'}
                         style={{
-                          backgroundColor: isApproving ? 'rgba(34,211,238,0.08)' : 'rgba(34,211,238,0.14)',
+                          marginTop: 10,
+                          fontSize: 12, fontWeight: 600, padding: '8px 16px', borderRadius: 10,
+                          backgroundColor: isApproving ? 'rgba(34,211,238,0.06)' : 'rgba(34,211,238,0.12)',
                           color: isApproving ? C.muted : 'var(--ap-success)',
                           border: '1px solid rgba(34,211,238,0.25)',
                           cursor: isApproving ? 'default' : 'pointer',
+                          transition: 'background-color 150ms, color 150ms',
                         }}
                         onMouseEnter={e => { if (!isApproving) e.currentTarget.style.backgroundColor = 'rgba(34,211,238,0.22)' }}
-                        onMouseLeave={e => { if (!isApproving) e.currentTarget.style.backgroundColor = 'rgba(34,211,238,0.14)' }}
+                        onMouseLeave={e => { if (!isApproving) e.currentTarget.style.backgroundColor = 'rgba(34,211,238,0.12)' }}
                       >
-                        {isApproving ? 'Posting to Google…' : 'Approve & Post to Google'}
+                        {isApproving ? 'Posting to Google…' : '✓ Approve & Post to Google'}
                       </button>
                     )}
                   </div>

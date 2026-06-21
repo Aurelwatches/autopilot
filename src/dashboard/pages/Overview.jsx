@@ -16,7 +16,7 @@ const TYPE_MAP = {
   review_replied: { type: 'review', text: 'Review replied' },
   post_scheduled: { type: 'post',   text: 'Post scheduled' },
 }
-const typeColor = { review: '#22D3EE', post: '#a78bfa' }
+const typeColor = { review: 'var(--ap-accent)', post: '#a78bfa', message: 'var(--ap-success)' }
 
 function FeedIcon({ type }) {
   if (type === 'review') return (
@@ -45,13 +45,13 @@ function relativeTime(iso) {
 function EmptyFeed({ C }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-8">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
         className="mb-4" style={{ color: C.muted }}>
         <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
       </svg>
-      <p className="text-sm text-center" style={{ color: C.secondary }}>No activity yet.</p>
-      <p className="text-xs text-center mt-1" style={{ color: C.muted }}>AutoPilot will show live updates here.</p>
+      <p className="text-sm font-medium text-center" style={{ color: C.secondary }}>No activity yet</p>
+      <p className="text-xs text-center mt-1" style={{ color: C.muted, lineHeight: 1.6 }}>AutoPilot will show live updates here as reviews come in.</p>
     </div>
   )
 }
@@ -72,8 +72,6 @@ export default function Overview() {
 
   async function fetchData() {
     if (!supabase) { setError('Supabase is not configured.'); setLoading(false); return }
-    // Wait for auth to resolve — fetching before userId exists would either
-    // return nothing under RLS or pull other accounts' data.
     if (!userId) { setLoading(false); return }
     try {
       const [revRes, actRes] = await Promise.all([
@@ -102,18 +100,14 @@ export default function Overview() {
     }
   }
 
-  // Re-fetch when auth resolves (userId null → real id) and poll every 30s
   useEffect(() => {
     fetchData()
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
   }, [userId])
 
-  // Instant refresh when an event streams in over SSE
   useEffect(() => { if (events.length > 0) fetchData() }, [events.length])
 
-  // ── Stats from real Supabase data ─────────────────────────────────────────
-  // reviews table mixes two schemas (old: star_rating; new: rating), so read both.
   const reviewRating = r => Number(r.rating) || parseInt(r.star_rating) || 0
 
   const repliedCount   = reviews.filter(r => (r.status || 'replied') === 'replied').length
@@ -130,8 +124,6 @@ export default function Overview() {
     { label: 'Avg rating',      value: avgRating,      path: '/dashboard/analytics' },
   ]
 
-  // Recent activity: activity_feed rows plus review replies, newest first.
-  // Reviews land in their own table, so we merge them in to keep the feed useful.
   const feed = [
     ...reviews.map(r => ({
       type:   'review',
@@ -152,8 +144,6 @@ export default function Overview() {
     .sort((a, b) => new Date(b.ts) - new Date(a.ts))
     .slice(0, 12)
     .map((item, i) => ({ ...item, time: relativeTime(item.ts), newest: i === 0 }))
-
-  const totalTracked = reviews.length + activity.length
 
   return (
     <div className="ap-page px-8 py-8" style={{ maxWidth: 1100 }}>
@@ -180,20 +170,21 @@ export default function Overview() {
         transitionDelay: revealed ? '50ms' : '0ms',
       }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.1, color: C.primary, marginBottom: 6 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.1, color: C.primary, marginBottom: 6 }}>
             {greeting}, {restaurantName}
           </h1>
-          <p style={{ fontSize: 13, color: C.muted }}>{today}</p>
+          <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6 }}>{today}</p>
         </div>
         <button
           onClick={() => navigate('/dashboard/subscription')}
-          className="shrink-0 flex items-center gap-1.5 text-xs font-semibold rounded-full transition-opacity"
+          className="shrink-0 flex items-center gap-1.5 text-xs font-semibold rounded-full"
           style={{
             padding: '6px 13px',
             background: planMeta.pillBg,
             color: planMeta.color,
             border: `1px solid ${planMeta.pillBorder}`,
             cursor: 'pointer',
+            transition: 'opacity 150ms',
           }}
           onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
           onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
@@ -213,7 +204,7 @@ export default function Overview() {
         </div>
       )}
 
-      {/* Stat cards — clickable */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
         {statCards.map((s, index) => (
           <button
@@ -222,22 +213,30 @@ export default function Overview() {
             disabled={!s.path}
             className="px-6 py-6 text-left w-full"
             style={{
+              position: 'relative',
+              overflow: 'hidden',
               backgroundColor: C.card, border: `1px solid ${C.border}`,
               borderRadius: 20,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.08)',
               backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
               cursor: s.path ? 'pointer' : 'default',
               opacity: revealed ? 1 : 0,
               transform: revealed ? 'translateY(0)' : 'translateY(12px)',
-              transition: `background-color 0.2s, border-color 0.2s, opacity 600ms ${EASE}, transform 600ms ${EASE}`,
+              transition: `border-color 150ms, opacity 600ms ${EASE}, transform 600ms ${EASE}`,
               transitionDelay: revealed ? `${index * 80}ms` : '0ms',
             }}
-            onMouseEnter={e => { if (s.path) e.currentTarget.style.backgroundColor = C.card.includes('rgba') ? 'rgba(255,255,255,0.07)' : C.card }}
-            onMouseLeave={e => { if (s.path) e.currentTarget.style.backgroundColor = C.card }}
+            onMouseEnter={e => { if (s.path) e.currentTarget.style.borderColor = 'rgba(34,211,238,0.3)' }}
+            onMouseLeave={e => { if (s.path) e.currentTarget.style.borderColor = C.border }}
           >
-            <p style={{ fontSize: 48, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1, color: C.primary, fontFamily: 'var(--font-display)', marginBottom: 10 }}>
+            {/* Cyan gradient overlay */}
+            <div style={{
+              position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: 20,
+              background: 'linear-gradient(135deg, rgba(34,211,238,0.07) 0%, transparent 65%)',
+            }} />
+            <p style={{ fontSize: 36, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1, color: C.primary, fontFamily: 'var(--font-display)', marginBottom: 10 }}>
               {s.value}
             </p>
-            <p style={{ fontSize: 13, color: C.secondary, fontWeight: 450 }}>{s.label}</p>
+            <p style={{ fontSize: 13, color: C.secondary, fontWeight: 450, lineHeight: 1.6 }}>{s.label}</p>
           </button>
         ))}
       </div>
@@ -247,14 +246,16 @@ export default function Overview() {
         backgroundColor: C.card, border: `1px solid ${C.border}`,
         borderRadius: 16, overflow: 'hidden',
         backdropFilter: C.glassFilter, WebkitBackdropFilter: C.glassFilter,
-        boxShadow: C.cardShadow,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.08)',
         opacity: revealed ? 1 : 0,
         transition: `opacity 500ms ${EASE}`,
         transitionDelay: revealed ? '350ms' : '0ms',
       }}>
         <div className="px-5 py-4 flex items-center justify-between"
           style={{ borderBottom: `1px solid ${C.divider}` }}>
-          <h2 className="text-sm font-semibold" style={{ color: C.primary }}>Recent Activity</h2>
+          <h2 style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.muted, margin: 0 }}>
+            Recent Activity
+          </h2>
           {feed.length > 0 && (
             <span className="text-[11px] flex items-center gap-1.5" style={{ color: C.secondary }}>
               <span className="w-1.5 h-1.5 rounded-full pulse-dot"
@@ -273,24 +274,44 @@ export default function Overview() {
             {feed.map((item, i) => (
               <div
                 key={i}
-                className="flex items-center gap-4 px-5"
+                className="flex items-center gap-3"
                 style={{
                   borderBottom: i < feed.length - 1 ? `1px solid ${C.divider}` : 'none',
-                  padding: '13px 20px',
+                  padding: '12px 20px',
                   opacity: revealed ? 1 : 0,
                   transition: `opacity 500ms ${EASE}`,
                   transitionDelay: revealed ? `${400 + i * 50}ms` : '0ms',
                 }}
               >
+                {/* Left accent bar */}
                 <div style={{
-                  width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                  backgroundColor: item.newest ? 'var(--ap-accent)' : C.muted,
-                  boxShadow: item.newest ? '0 0 8px var(--ap-accent)' : 'none',
+                  width: 3, alignSelf: 'stretch', borderRadius: 2, flexShrink: 0, minHeight: 24,
+                  backgroundColor: typeColor[item.type] || C.muted,
+                  opacity: 0.85,
                 }} />
-                <div className="flex-1 min-w-0 flex items-baseline gap-2">
-                  <span style={{ fontSize: 13, fontWeight: 500, color: C.primary, whiteSpace: 'nowrap' }}>{item.text}</span>
-                  <span style={{ fontSize: 12, color: C.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.detail}</span>
+
+                {/* Icon chip */}
+                <div style={{
+                  width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: item.type === 'review' ? 'rgba(34,211,238,0.1)' : 'rgba(167,139,250,0.1)',
+                  color: typeColor[item.type] || C.muted,
+                }}>
+                  <FeedIcon type={item.type} />
                 </div>
+
+                <div className="flex-1 min-w-0">
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: C.primary, whiteSpace: 'nowrap' }}>{item.text}</span>
+                    {item.newest && (
+                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--ap-accent)', textTransform: 'uppercase' }}>New</span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 12, color: C.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', lineHeight: 1.6 }}>
+                    {item.detail}
+                  </span>
+                </div>
+
                 <span style={{ fontSize: 11, color: C.muted, flexShrink: 0 }}>{item.time}</span>
               </div>
             ))}

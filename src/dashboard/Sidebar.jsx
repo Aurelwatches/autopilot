@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useApp } from './AppContext'
 import { useAuth } from '../lib/auth'
@@ -43,6 +44,7 @@ const navItems = [
       </svg>
     ),
   },
+  // ── separator inserted between index 2 and 3 ──
   {
     path: '/dashboard/analytics',
     label: 'Analytics',
@@ -95,16 +97,20 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
   const { C, theme, toggleTheme, restaurantName, plan } = useApp()
   const { signOut, user } = useAuth()
   const revealed = useDashboardReveal()
+  const [logoHover, setLogoHover] = useState(false)
 
   const isPro = plan === 'pro'
 
-  // Current plan label shown under the restaurant name
   const planMeta   = getPlanMeta(plan)
   const isYearly   = getBillingInterval() === 'yearly'
   const planPriceN = planPrice(planMeta, isYearly ? 'yearly' : 'monthly')
   let planLabel = `${planMeta.label} plan`
   if (planMeta.key === 'pro') planLabel += ` · $${planPriceN.toLocaleString()}/${isYearly ? 'yr' : 'mo'}`
   if (isYearly) planLabel += ' · billed yearly'
+
+  const initials = restaurantName
+    ? restaurantName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : '?'
 
   async function handleLogout() {
     onClose()
@@ -131,14 +137,26 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
         opacity: revealed ? 1 : 0,
         transition: `opacity 400ms ${EASE}`,
       }}>
-        <div className="flex items-center gap-2.5">
+        <div
+          className="flex items-center gap-2.5"
+          style={{ cursor: 'default' }}
+          onMouseEnter={() => setLogoHover(true)}
+          onMouseLeave={() => setLogoHover(false)}
+        >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
-              stroke={isPro ? '#3B82F6' : C.accent}
-              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              stroke={isPro ? '#3B82F6' : 'var(--ap-accent)'}
+              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transition: 'stroke 200ms' }}
+            />
           </svg>
-          <span className="text-base font-bold tracking-tight" style={{ color: C.primary, fontFamily: 'var(--font-display)' }}>
-            AutoPilot
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', color: C.primary }}>
+            <span>Auto</span>
+            <span style={{
+              color: logoHover ? 'var(--ap-accent)' : C.primary,
+              textShadow: logoHover ? '0 0 18px rgba(34,211,238,0.55)' : 'none',
+              transition: 'color 200ms, text-shadow 200ms',
+            }}>Pilot</span>
             {isPro && (
               <span style={{
                 color: '#3B82F6',
@@ -147,6 +165,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
             )}
           </span>
         </div>
+
         <div className="flex items-center gap-2">
           <button
             onClick={toggleTheme}
@@ -155,7 +174,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
               color: C.muted, padding: 4, borderRadius: 6,
               border: `1px solid ${C.border}`,
               backgroundColor: 'transparent',
-              cursor: 'pointer', transition: 'color 0.15s, border-color 0.15s',
+              cursor: 'pointer', transition: 'color 150ms, border-color 150ms',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
             onMouseEnter={e => { e.currentTarget.style.color = C.secondary; e.currentTarget.style.borderColor = C.secondary }}
@@ -183,68 +202,99 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 overflow-y-auto" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {navItems.map(({ path, label, icon, tour }, index) => (
-          <NavLink
-            key={path}
-            to={path}
-            data-tour={tour}
-            onClick={onClose}
-            className="ap-nav-link flex items-center gap-3 px-3 py-2 rounded text-sm"
-            style={({ isActive }) => ({
-              color: isActive ? C.primary : C.secondary,
-              backgroundColor: isActive ? C.sidebarActiveBg : 'transparent',
-              borderLeft: isActive ? `2px solid ${C.accent}` : '2px solid transparent',
-              opacity: revealed ? 1 : 0,
-              transform: revealed ? 'translateX(0)' : 'translateX(-14px)',
-              transition: `color 0.15s, background-color 0.15s, opacity 400ms ${EASE}, transform 400ms ${EASE}`,
-              transitionDelay: revealed ? `${index * 50}ms` : '0ms',
-            })}
-          >
-            {icon}
-            {label}
-          </NavLink>
+          <div key={path}>
+            {/* Gradient separator between Social Posts and Analytics */}
+            {index === 3 && (
+              <div style={{
+                height: 1,
+                margin: '6px 4px 8px',
+                background: `linear-gradient(90deg, transparent, ${C.divider} 30%, ${C.divider} 70%, transparent)`,
+              }} />
+            )}
+            <NavLink
+              to={path}
+              data-tour={tour}
+              onClick={onClose}
+              className="ap-nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"
+              style={({ isActive }) => ({
+                color: isActive ? C.primary : C.secondary,
+                backgroundColor: isActive ? C.sidebarActiveBg : 'transparent',
+                borderLeft: isActive ? `2px solid var(--ap-accent)` : '2px solid transparent',
+                boxShadow: isActive ? '0 0 14px rgba(34,211,238,0.12), inset 0 1px 0 rgba(34,211,238,0.06)' : 'none',
+                fontWeight: isActive ? 600 : 400,
+                opacity: revealed ? 1 : 0,
+                transform: revealed ? 'translateX(0)' : 'translateX(-14px)',
+                transition: `color 150ms, background-color 150ms, box-shadow 150ms, opacity 400ms ${EASE}, transform 400ms ${EASE}`,
+                transitionDelay: revealed ? `${index * 50}ms` : '0ms',
+              })}
+            >
+              {icon}
+              {label}
+            </NavLink>
+          </div>
         ))}
       </nav>
 
-      {/* Bottom: restaurant name + Pro badge + email + logout */}
-      <div className="px-5 py-4" style={{
+      {/* Bottom: avatar + restaurant info + logout */}
+      <div className="px-4 py-4" style={{
         borderTop: `1px solid ${C.divider}`,
         opacity: revealed ? 1 : 0,
         transition: `opacity 400ms ${EASE}`,
         transitionDelay: revealed ? '280ms' : '0ms',
       }}>
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <p className="text-xs font-semibold truncate" style={{ color: C.primary }}>
-            {restaurantName}
-          </p>
-          {isPro && (
-            <span style={{
-              flexShrink: 0,
-              fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
-              padding: '1px 5px', borderRadius: 4,
-              backgroundColor: 'rgba(59,130,246,0.14)',
-              color: '#3B82F6',
-              border: '1px solid rgba(59,130,246,0.28)',
-            }}>PRO</span>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          {/* Avatar */}
+          <div style={{
+            width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backgroundColor: 'rgba(34,211,238,0.1)',
+            border: '1px solid rgba(34,211,238,0.2)',
+            fontSize: 12, fontWeight: 700, color: 'var(--ap-accent)',
+            letterSpacing: '-0.01em',
+          }}>
+            {initials}
+          </div>
+
+          {/* Info */}
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 1 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: C.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+                {restaurantName}
+              </p>
+              {isPro && (
+                <span style={{
+                  flexShrink: 0,
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
+                  padding: '1px 5px', borderRadius: 4,
+                  backgroundColor: 'rgba(59,130,246,0.14)',
+                  color: '#3B82F6',
+                  border: '1px solid rgba(59,130,246,0.28)',
+                }}>PRO</span>
+              )}
+            </div>
+            <p style={{ fontSize: 10, fontWeight: 500, color: planMeta.color, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+              {planLabel}
+            </p>
+            {user?.email && (
+              <p style={{ fontSize: 10, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '1px 0 0' }}>
+                {user.email}
+              </p>
+            )}
+          </div>
         </div>
-        <p className="text-[10px] font-medium mb-0.5 truncate" style={{ color: planMeta.color }}>
-          {planLabel}
-        </p>
-        {user?.email && (
-          <p className="text-[10px] truncate mt-0.5 mb-1" style={{ color: C.muted }}>
-            {user.email}
-          </p>
-        )}
+
         <button
           onClick={handleLogout}
-          className="text-xs transition-colors"
-          style={{ color: C.secondary, marginTop: user?.email ? 0 : 4 }}
+          style={{
+            fontSize: 11, color: C.secondary, background: 'none', border: 'none',
+            cursor: 'pointer', padding: 0, transition: 'color 150ms',
+          }}
           onMouseEnter={e => e.target.style.color = C.primary}
           onMouseLeave={e => e.target.style.color = C.secondary}
         >
-          Log out
+          Log out →
         </button>
       </div>
     </aside>
