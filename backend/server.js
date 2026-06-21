@@ -771,6 +771,77 @@ app.post('/api/reviews/:reviewId/approve', async (req, res) => {
   res.json({ ok: true })
 })
 
+// POST /api/test-review  — injects a fake review through the full pipeline for testing
+// Usage: POST { user_id, rating, reviewer_name, review_text } — all optional, sensible defaults provided
+app.post('/api/test-review', async (req, res) => {
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+
+  const {
+    user_id,
+    rating        = 5,
+    reviewer_name = 'Test Customer',
+    review_text   = 'Amazing food and incredible service! The pasta was perfectly cooked and the staff were so friendly. Will definitely be coming back!',
+    review_id     = `test_${Date.now()}`,
+  } = req.body
+
+  if (!user_id) return res.status(400).json({ error: 'user_id is required' })
+
+  // Load user prefs
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('auto_post_enabled, reply_speed, business_hours')
+    .eq('id', user_id)
+    .single()
+
+  // Generate a fake AI reply based on rating
+  const fakeReplies = {
+    5: `Thank you so much for your wonderful review! We're thrilled you enjoyed your experience with us. Comments like yours make everything we do worthwhile. We look forward to welcoming you back soon! 🍝`,
+    4: `Thank you for the kind words! We're so glad you had a great time and we hope to see you again soon.`,
+    3: `Thank you for taking the time to share your feedback. We're glad parts of your visit were enjoyable, and we'll use your comments to keep improving. Hope to see you again!`,
+    2: `We sincerely apologize your experience didn't meet expectations. We take all feedback seriously and would love the chance to make it right. Please reach out to us directly.`,
+    1: `We're truly sorry to hear about your experience. This is not the standard we hold ourselves to. Please contact us directly so we can make this right for you.`,
+  }
+  const ai_reply = fakeReplies[Math.round(rating)] || fakeReplies[5]
+
+  const isManual = !profile?.auto_post_enabled || profile?.reply_speed === 'manual'
+  const scheduledAt = (!isManual)
+    ? computeScheduledAt(profile?.reply_speed || 'instant', profile?.business_hours)
+    : null
+
+  const reviewRow = {
+    user_id,
+    customer_name: reviewer_name,
+    review_text,
+    ai_reply,
+    rating:        Number(rating),
+    status:        isManual ? 'pending' : 'replied',
+    review_id,
+    scheduled_at:  scheduledAt?.toISOString() ?? null,
+    created_at:    new Date().toISOString(),
+  }
+
+  const { data, error } = await supabase.from('reviews').insert(reviewRow).select().single()
+  if (error) return res.status(500).json({ error: error.message })
+
+  // Push to SSE so the dashboard updates instantly without a refresh
+  const sseEvent = {
+    id:           Date.now(),
+    type:         'review_replied',
+    customerName: reviewer_name,
+    reviewText:   review_text,
+    aiReply:      ai_reply,
+    rating:       Number(rating),
+    timestamp:    new Date().toISOString(),
+    receivedAt:   new Date().toISOString(),
+  }
+  events.unshift(sseEvent)
+  if (events.length > MAX_EVENTS) events.length = MAX_EVENTS
+  pushToClients()
+
+  console.log(`[TestReview] Injected fake review for user ${user_id} — status: ${reviewRow.status}`)
+  res.json({ ok: true, review: data, status: reviewRow.status, scheduled_at: reviewRow.scheduled_at })
+})
+
 // POST /api/smoke-test
 app.post('/api/smoke-test', async (req, res) => {
   const { phone, email } = req.body
