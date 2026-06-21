@@ -5,6 +5,6 @@ del .git\index 2>nul
 git reset
 echo Re-adding all project files...
 git add -A
-git commit -m "fix: correct business hours scheduling timezone offset in adjustForBizHours"
+git commit -m "feat: add email notification to poller for real Google reviews"
 git push
 pause

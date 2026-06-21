@@ -5,11 +5,45 @@
 
 import cron from 'node-cron';
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+async function sendOwnerEmail(userId, restaurantName, reviewerName, starRating, reviewText, aiReply) {
+  if (!resend) return;
+  try {
+    const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+    const ownerEmail = authUser?.email;
+    if (!ownerEmail) return;
+
+    const { data: profile } = await supabase.from('profiles').select('notification_prefs').eq('id', userId).single();
+    if (profile?.notification_prefs?.email === false) return;
+
+    const stars = '⭐'.repeat(Number(starRating) || 0);
+    const frontendUrl = process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app';
+
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+      to: ownerEmail,
+      subject: `New ${starRating}★ review from ${reviewerName} — ${restaurantName}`,
+      html: `
+        <h2>⭐ New Review — ${stars} (${starRating}/5)</h2>
+        <p><strong>${reviewerName}</strong> left a review for <strong>${restaurantName}</strong>:</p>
+        <blockquote style="border-left:3px solid #ccc;padding-left:12px;color:#555">${reviewText || '(no text)'}</blockquote>
+        <p><strong>AI Reply ready:</strong><br>${aiReply || '(none generated)'}</p>
+        <p><a href="${frontendUrl}/dashboard/reviews" style="background:#000;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none">View in Dashboard →</a></p>
+      `,
+    });
+    console.log(`[Poller] Email sent to ${ownerEmail} for review by ${reviewerName}`);
+  } catch (err) {
+    console.warn('[Poller] Email notification failed:', err.message);
+  }
+}
 
 // ── Token helpers ─────────────────────────────────────────────────────────────
 
@@ -247,8 +281,9 @@ async function pollAllClients() {
           console.log(`  Saved review ${review.reviewId} — status: ${reviewStatus}${scheduledAt ? ` (scheduled ${scheduledAt.toISOString()})` : ''}`);
         }
 
-        // Notify Discord
+        // Notify Discord + email owner
         await notifyDiscord(client.restaurant_name, reviewerName, starRating, reviewText, aiReply);
+        await sendOwnerEmail(client.id, client.restaurant_name, reviewerName, Number({ ONE:1,TWO:2,THREE:3,FOUR:4,FIVE:5 }[starRating] ?? starRating), reviewText, aiReply);
 
         // Mark as processed so we don't re-fire on next poll
         await supabase.from('processed_reviews').insert({
