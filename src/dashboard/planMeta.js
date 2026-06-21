@@ -9,14 +9,14 @@ export const PLAN_META = {
     pillBg: 'rgba(136,135,128,0.14)', pillBorder: 'rgba(136,135,128,0.28)',
   },
   growth: {
-    key: 'growth', label: 'Growth', emoji: '⚡',
+    key: 'growth', label: 'Growth', emoji: '',
     blurb: 'For restaurants ready to automate',
     monthly: 200, yearly: 2000,
     color: 'var(--ap-accent)',
     pillBg: 'var(--ap-accent-soft)', pillBorder: 'var(--ap-accent)',
   },
   pro: {
-    key: 'pro', label: 'Pro', emoji: '🚀',
+    key: 'pro', label: 'Pro', emoji: '',
     blurb: 'For restaurants that want everything',
     monthly: 350, yearly: 3500,
     color: '#3B82F6',

@@ -395,7 +395,9 @@ export default function Analytics() {
             borderRadius: 20, padding: '36px 44px',
             boxShadow: 'var(--ap-popup-shadow)', maxWidth: 400,
           }}>
-            <p style={{ fontSize: 30, marginBottom: 14 }}>📊</p>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.16)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: C.primary, marginBottom: 8 }}>
               Analytics is a Growth feature
             </h3>

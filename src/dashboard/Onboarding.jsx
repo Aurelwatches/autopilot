@@ -6,28 +6,28 @@ const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
 const steps = [
   {
-    icon: '🧭',
+    icon: null,
     title: 'Welcome to AutoPilot',
     body: 'Your restaurant now has a 24/7 AI assistant. Reviews, social posts, and customer follow-ups — all handled automatically while you focus on running the place.',
   },
   {
-    icon: '⭐',
+    icon: null,
     title: 'Automatic review replies',
     body: 'Every new Google review gets an AI-crafted reply in your voice. Approve and post in one click — or let AutoPilot handle it fully on your schedule.',
   },
   {
-    icon: '📣',
+    icon: null,
     title: 'Social posts on autopilot',
     body: 'Generate and schedule social content in seconds. Drop an idea, hit AI Assist, and get a polished post ready to publish.',
   },
   {
-    icon: '📊',
+    icon: null,
     title: 'Analytics & insights',
     body: 'Track your review score trends, reply speed, and customer sentiment over time. Know exactly how your reputation is moving.',
   },
   {
     icon: null,
-    title: "You're all set 🎉",
+    title: "You're all set",
     body: "Your dashboard is live and your restaurant is on AutoPilot. Connect Google Business Profile in Settings to start receiving automated replies.",
     final: true,
   },
@@ -150,19 +150,9 @@ export default function Onboarding() {
         <div style={{ padding: '36px 36px 32px', textAlign: isFinal ? 'center' : 'left' }}>
 
           {/* Icon / check */}
-          {isFinal ? (
+          {isFinal && (
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
               <CheckCircle />
-            </div>
-          ) : (
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 52, height: 52, borderRadius: 14,
-              background: 'rgba(34,211,238,0.08)',
-              border: '1px solid rgba(34,211,238,0.16)',
-              fontSize: 24, marginBottom: 20,
-            }}>
-              {current.icon}
             </div>
           )}
 

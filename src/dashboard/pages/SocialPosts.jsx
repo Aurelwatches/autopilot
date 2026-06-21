@@ -511,8 +511,8 @@ export default function SocialPosts() {
                 <div>
                   <div className="grid grid-cols-2 gap-3 mb-6">
                     {[
-                      { value: 'Instagram', icon: '📸', desc: 'Photos & captions' },
-                      { value: 'Facebook',  icon: '📣', desc: 'Posts & updates' },
+                      { value: 'Instagram', icon: 'IG', desc: 'Photos & captions' },
+                      { value: 'Facebook',  icon: 'FB', desc: 'Posts & updates' },
                     ].map(pl => (
                       <button
                         key={pl.value}
