@@ -5,6 +5,6 @@ del .git\index 2>nul
 git reset
 echo Re-adding all project files...
 git add -A
-git commit -m "feat: poller now handles Groq + Discord directly, no Make.com dependency"
+git commit -m "feat: add email notification to test-review endpoint"
 git push
 pause

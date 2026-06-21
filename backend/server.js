@@ -839,6 +839,41 @@ app.post('/api/test-review', async (req, res) => {
   pushToClients()
 
   console.log(`[TestReview] Injected fake review for user ${user_id} — status: ${reviewRow.status}`)
+
+  // Send email notification to the owner (mirrors webhook handler logic)
+  try {
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('notification_prefs, restaurant_name')
+      .eq('id', user_id)
+      .single()
+    const { data: { user: authUser } } = await supabase.auth.admin.getUserById(user_id)
+    const ownerEmail = authUser?.email
+    const notif = ownerProfile?.notification_prefs ?? {}
+    const stars = `${'⭐'.repeat(Number(rating))} (${rating}/5)`
+    const restName = ownerProfile?.restaurant_name || 'your restaurant'
+    const frontendUrl = process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'
+    if (ownerEmail && notif.email !== false) {
+      await sendEmail({
+        to: ownerEmail,
+        subject: `[TEST] New review from ${reviewer_name} — ${restName}`,
+        html: `
+          <h2>🧪 Test Review — ${stars}</h2>
+          <p><strong>${reviewer_name}</strong> left a review for <strong>${restName}</strong>:</p>
+          <blockquote style="border-left:3px solid #ccc;padding-left:12px;color:#555">${review_text}</blockquote>
+          <p><strong>AI Reply ready:</strong><br>${ai_reply}</p>
+          <p><a href="${frontendUrl}/dashboard/reviews" style="background:#000;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none">View in Dashboard →</a></p>
+          <p style="color:#888;font-size:12px;margin-top:20px">This is a test review injected via the AutoPilot /api/test-review endpoint. No actual Google review was posted.</p>
+        `,
+      })
+      console.log(`[TestReview] Email sent to ${ownerEmail}`)
+    } else {
+      console.log(`[TestReview] Email skipped — ownerEmail=${ownerEmail}, notif.email=${notif.email}`)
+    }
+  } catch (emailErr) {
+    console.warn('[TestReview] Email notification failed:', emailErr.message)
+  }
+
   res.json({ ok: true, review: data, status: reviewRow.status, scheduled_at: reviewRow.scheduled_at })
 })
 
