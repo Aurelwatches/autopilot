@@ -5,6 +5,6 @@ del .git\index 2>nul
 git reset
 echo Re-adding all project files...
 git add -A
-git commit -m "feat: branded email template, AutoPilot sender, test-email diagnostic endpoint"
+git commit -m "feat: custom reply tone per client, onboarding redesign, redesign prompt"
 git push
 pause

@@ -1,40 +1,44 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDashboardReveal } from './revealContext'
 import { supabase } from '../lib/supabase'
 
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
-const PAD = 8 // spotlight padding around the target element
 
 const steps = [
   {
-    target: '[data-tour="sidebar"]',
+    icon: '🧭',
     title: 'Welcome to AutoPilot',
-    body: 'This is your command center. Everything — reviews, social posts, analytics and settings — lives in the sidebar on the left.',
+    body: 'Your restaurant now has a 24/7 AI assistant. Reviews, social posts, and customer follow-ups — all handled automatically while you focus on running the place.',
   },
   {
-    target: '[data-tour="reviews"]',
-    title: 'Your reviews',
-    body: 'Every new Google review lands here. AutoPilot drafts an on-brand AI reply for each one, so you can approve and post in a single click.',
+    icon: '⭐',
+    title: 'Automatic review replies',
+    body: 'Every new Google review gets an AI-crafted reply in your voice. Approve and post in one click — or let AutoPilot handle it fully on your schedule.',
   },
   {
-    target: '[data-tour="posts"]',
-    title: 'Social posting',
-    body: 'Generate and schedule social posts in seconds. Use AI Assist to turn a quick idea into a polished, ready-to-publish post.',
+    icon: '📣',
+    title: 'Social posts on autopilot',
+    body: 'Generate and schedule social content in seconds. Drop an idea, hit AI Assist, and get a polished post ready to publish.',
   },
   {
-    target: null,
-    title: "You're all set",
-    body: 'That’s the whole tour. Your dashboard is ready and your restaurant is on AutoPilot.',
+    icon: '📊',
+    title: 'Analytics & insights',
+    body: 'Track your review score trends, reply speed, and customer sentiment over time. Know exactly how your reputation is moving.',
+  },
+  {
+    icon: null,
+    title: "You're all set 🎉",
+    body: "Your dashboard is live and your restaurant is on AutoPilot. Connect Google Business Profile in Settings to start receiving automated replies.",
     final: true,
   },
 ]
 
 function CheckCircle() {
   return (
-    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <circle cx="32" cy="32" r="30" stroke="#22D3EE" strokeWidth="2.5" opacity="0.4" />
-      <circle cx="32" cy="32" r="22" fill="rgba(34,211,238,0.12)" />
-      <path d="M22 33l7 7 14-15" stroke="#22D3EE" strokeWidth="3.5"
+    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+      <circle cx="28" cy="28" r="26" stroke="#22D3EE" strokeWidth="2" opacity="0.35" />
+      <circle cx="28" cy="28" r="19" fill="rgba(34,211,238,0.10)" />
+      <path d="M19 29l6 6 13-13" stroke="#22D3EE" strokeWidth="3"
         strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
@@ -42,17 +46,15 @@ function CheckCircle() {
 
 export default function Onboarding() {
   const revealed = useDashboardReveal()
-  const cardRef = useRef(null)
 
-  const [active, setActive]   = useState(false)
-  const [step, setStep]       = useState(0)
-  const [rect, setRect]       = useState(null)
-  const [cardH, setCardH]     = useState(240)
+  const [active,  setActive]  = useState(false)
+  const [step,    setStep]    = useState(0)
   const [visible, setVisible] = useState(false)
 
   const current = steps[step]
+  const total   = steps.length - 1  // exclude final step from count
 
-  // Check localStorage first (instant), then confirm with Supabase (cross-device)
+  // Check localStorage first, then Supabase
   useEffect(() => {
     if (localStorage.getItem('ap_onboarded')) return
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -65,7 +67,6 @@ export default function Onboarding() {
       if (data?.onboarded) {
         localStorage.setItem('ap_onboarded', '1')
       } else {
-        // Mark seen immediately so closing mid-tour doesn't replay it
         localStorage.setItem('ap_onboarded', '1')
         supabase.from('profiles').update({ onboarded: true }).eq('id', session.user.id)
         setActive(true)
@@ -73,41 +74,19 @@ export default function Onboarding() {
     })
   }, [])
 
-  // Fade in once the dashboard has finished its reveal animation
+  // Fade in after dashboard reveal
   useEffect(() => {
     if (active && revealed) {
-      const id = requestAnimationFrame(() => setVisible(true))
-      return () => cancelAnimationFrame(id)
+      const id = setTimeout(() => setVisible(true), 100)
+      return () => clearTimeout(id)
     }
   }, [active, revealed])
-
-  // Measure the spotlight target for the current step
-  useLayoutEffect(() => {
-    if (!active) return
-    function measure() {
-      if (current.target) {
-        const el = document.querySelector(current.target)
-        setRect(el ? el.getBoundingClientRect() : null)
-      } else {
-        setRect(null)
-      }
-    }
-    measure()
-    window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
-  }, [active, step, current.target])
-
-  // Measure card height so we can keep it inside the viewport
-  useLayoutEffect(() => {
-    if (cardRef.current) setCardH(cardRef.current.offsetHeight)
-  }, [step, visible])
 
   if (!active || !revealed) return null
 
   function finish() {
-    localStorage.setItem('ap_onboarded', '1')
     setVisible(false)
-    setTimeout(() => setActive(false), 250)
+    setTimeout(() => setActive(false), 280)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         supabase.from('profiles').update({ onboarded: true }).eq('id', session.user.id)
@@ -120,207 +99,199 @@ export default function Onboarding() {
     else setStep(s => s + 1)
   }
 
-  // ----- Spotlight geometry -----
-  const spot = rect
-    ? {
-        top: rect.top - PAD,
-        left: rect.left - PAD,
-        width: rect.width + PAD * 2,
-        height: rect.height + PAD * 2,
-      }
-    : null
-
-  // ----- Card placement -----
-  const vw = typeof window !== 'undefined' ? window.innerWidth : 1280
-  const vh = typeof window !== 'undefined' ? window.innerHeight : 800
-  const CARD_W = 360
-  let cardStyle
-
-  if (current.final || !spot) {
-    // Centered for the final step
-    cardStyle = {
-      left: '50%',
-      top: '50%',
-      transform: visible
-        ? 'translate(-50%, -50%) scale(1)'
-        : 'translate(-50%, -48%) scale(0.97)',
-    }
-  } else {
-    // Place to the right of the spotlit element, vertically clamped
-    const left = Math.min(spot.left + spot.width + 24, vw - CARD_W - 24)
-    let top
-    if (spot.height > vh * 0.55) {
-      top = (vh - cardH) / 2 // tall target (sidebar) → center vertically
-    } else {
-      top = spot.top + spot.height / 2 - cardH / 2
-    }
-    top = Math.max(24, Math.min(top, vh - cardH - 24))
-    cardStyle = {
-      left,
-      top,
-      transform: visible ? 'translateX(0)' : 'translateX(-10px)',
-    }
+  function prev() {
+    if (step > 0) setStep(s => s - 1)
   }
+
+  const isFinal = current.final
 
   return (
     <div
       style={{
-        position: 'fixed', inset: 0, zIndex: 100,
+        position: 'fixed', inset: 0, zIndex: 200,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 24,
+        background: 'rgba(8,8,12,0.75)',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
         opacity: visible ? 1 : 0,
-        transition: `opacity 250ms ${EASE}`,
+        transition: `opacity 280ms ${EASE}`,
         pointerEvents: visible ? 'auto' : 'none',
       }}
     >
-      {/* Spotlight cutout: a huge box-shadow dims everything except the target */}
-      {spot && !current.final ? (
-        <div
-          style={{
-            position: 'fixed',
-            top: spot.top, left: spot.left,
-            width: spot.width, height: spot.height,
-            borderRadius: 12,
-            boxShadow: '0 0 0 9999px rgba(8,8,12,0.74)',
-            border: '1px solid rgba(255,255,255,0.22)',
-            transition: `all 320ms ${EASE}`,
-            pointerEvents: 'none',
-          }}
-        />
-      ) : (
-        // Final step: full dark glass veil
-        <div
-          style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(8,8,12,0.78)',
-            backdropFilter: 'blur(3px)',
-            WebkitBackdropFilter: 'blur(3px)',
-          }}
-        />
-      )}
-
-      {/* Tooltip / step card */}
+      {/* Modal card */}
       <div
-        ref={cardRef}
         style={{
-          position: 'fixed',
-          width: CARD_W, maxWidth: 'calc(100vw - 48px)',
-          background: 'rgba(20,20,26,0.92)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          borderRadius: 18,
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
-          padding: current.final ? '36px 32px 32px' : '26px 26px 22px',
-          color: '#F0EEE9',
-          textAlign: current.final ? 'center' : 'left',
-          transition: `opacity 320ms ${EASE}, transform 320ms ${EASE}`,
-          ...cardStyle,
+          width: '100%',
+          maxWidth: 480,
+          background: 'rgba(18,18,24,0.96)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: 24,
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)',
+          overflow: 'hidden',
+          transform: visible ? 'translateY(0) scale(1)' : 'translateY(12px) scale(0.97)',
+          transition: `transform 320ms ${EASE}`,
         }}
       >
-        {/* Arrow pointing toward the spotlit element (left edge) */}
-        {!current.final && spot && (
-          <div
-            style={{
-              position: 'absolute', left: -7, top: 32,
-              width: 14, height: 14,
-              background: 'rgba(20,20,26,0.92)',
-              borderLeft: '1px solid rgba(255,255,255,0.12)',
-              borderBottom: '1px solid rgba(255,255,255,0.12)',
-              transform: 'rotate(45deg)',
-            }}
-          />
-        )}
-
-        {current.final && (
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-            <CheckCircle />
-          </div>
-        )}
-
-        {!current.final && (
-          <p style={{
-            fontSize: 11, fontWeight: 600, letterSpacing: '0.08em',
-            textTransform: 'uppercase', color: '#22D3EE', marginBottom: 8,
-            fontFamily: 'var(--font-mono)',
-          }}>
-            Step {step + 1} of {steps.length - 1}
-          </p>
-        )}
-
-        <h2 style={{
-          fontFamily: "'Bricolage Grotesque', sans-serif",
-          fontSize: current.final ? 24 : 19, fontWeight: 700,
-          letterSpacing: '-0.02em', color: '#FFFFFF', marginBottom: 8,
-        }}>
-          {current.title}
-        </h2>
-        <p style={{ fontSize: 14, lineHeight: 1.6, color: '#A8A6A1', marginBottom: 24 }}>
-          {current.body}
-        </p>
-
-        {/* Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Progress dots */}
-          <div style={{ display: 'flex', gap: 7 }}>
-            {steps.map((_, i) => (
-              <span
-                key={i}
-                style={{
-                  width: i === step ? 20 : 7, height: 7, borderRadius: 980,
-                  background: i === step ? '#22D3EE' : 'rgba(255,255,255,0.18)',
-                  transition: `all 250ms ${EASE}`,
-                }}
-              />
-            ))}
-          </div>
-
-          {current.final ? (
-            <button
-              onClick={finish}
-              style={{
-                background: '#22D3EE', color: '#04141A',
-                border: 'none', borderRadius: 980,
-                padding: '11px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                boxShadow: '0 6px 22px rgba(34,211,238,0.4)',
-                transition: 'opacity 0.15s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-            >
-              Let’s go →
-            </button>
-          ) : (
-            <button
-              onClick={next}
-              style={{
-                background: '#22D3EE', color: '#04141A',
-                border: 'none', borderRadius: 980,
-                padding: '9px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                transition: 'opacity 0.15s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-            >
-              Next
-            </button>
-          )}
+        {/* Progress bar */}
+        <div style={{ height: 3, background: 'rgba(255,255,255,0.07)' }}>
+          <div style={{
+            height: '100%',
+            width: `${((step + 1) / steps.length) * 100}%`,
+            background: 'linear-gradient(90deg, #22D3EE, #0ea5e9)',
+            borderRadius: 999,
+            transition: `width 320ms ${EASE}`,
+          }} />
         </div>
 
-        {/* Skip — on every step */}
-        {!current.final && (
-          <button
-            onClick={finish}
-            style={{
-              position: 'absolute', top: 18, right: 18,
-              background: 'transparent', border: 'none',
-              color: '#777', fontSize: 12, cursor: 'pointer',
-              transition: 'color 0.15s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#F0EEE9')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#777')}
-          >
-            Skip tour
-          </button>
-        )}
+        {/* Body */}
+        <div style={{ padding: '36px 36px 32px', textAlign: isFinal ? 'center' : 'left' }}>
+
+          {/* Icon / check */}
+          {isFinal ? (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+              <CheckCircle />
+            </div>
+          ) : (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 52, height: 52, borderRadius: 14,
+              background: 'rgba(34,211,238,0.08)',
+              border: '1px solid rgba(34,211,238,0.16)',
+              fontSize: 24, marginBottom: 20,
+            }}>
+              {current.icon}
+            </div>
+          )}
+
+          {/* Step counter */}
+          {!isFinal && (
+            <p style={{
+              fontSize: 11, fontWeight: 600, letterSpacing: '0.08em',
+              textTransform: 'uppercase', color: '#22D3EE',
+              marginBottom: 8, fontFamily: 'var(--font-mono)',
+            }}>
+              Step {step + 1} of {total}
+            </p>
+          )}
+
+          {/* Title */}
+          <h2 style={{
+            fontFamily: "'Bricolage Grotesque', sans-serif",
+            fontSize: isFinal ? 26 : 21,
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+            color: '#FFFFFF',
+            marginBottom: 10,
+            lineHeight: 1.2,
+          }}>
+            {current.title}
+          </h2>
+
+          {/* Body text */}
+          <p style={{
+            fontSize: 14.5, lineHeight: 1.65,
+            color: 'rgba(240,238,233,0.65)',
+            marginBottom: 32,
+          }}>
+            {current.body}
+          </p>
+
+          {/* Progress dots */}
+          {!isFinal && (
+            <div style={{ display: 'flex', gap: 6, marginBottom: 24 }}>
+              {steps.map((_, i) => (
+                <span
+                  key={i}
+                  style={{
+                    width: i === step ? 22 : 7, height: 7, borderRadius: 999,
+                    background: i === step ? '#22D3EE' : 'rgba(255,255,255,0.15)',
+                    transition: `all 280ms ${EASE}`,
+                    flexShrink: 0,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Buttons */}
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            gap: 10,
+            justifyContent: isFinal ? 'center' : 'space-between',
+          }}>
+            {isFinal ? (
+              <button
+                onClick={finish}
+                style={{
+                  background: '#22D3EE', color: '#04141A',
+                  border: 'none', borderRadius: 999,
+                  padding: '13px 32px', fontSize: 15, fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 24px rgba(34,211,238,0.35)',
+                  transition: 'opacity 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                Let's go →
+              </button>
+            ) : (
+              <>
+                {/* Back + Skip on the left */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {step > 0 && (
+                    <button
+                      onClick={prev}
+                      style={{
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: 999, padding: '9px 18px',
+                        fontSize: 13.5, fontWeight: 500, color: 'rgba(240,238,233,0.6)',
+                        cursor: 'pointer', transition: 'opacity 0.15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                    >
+                      ← Back
+                    </button>
+                  )}
+                  <button
+                    onClick={finish}
+                    style={{
+                      background: 'transparent', border: 'none',
+                      fontSize: 13, color: 'rgba(255,255,255,0.35)',
+                      cursor: 'pointer', padding: '9px 4px',
+                      transition: 'color 0.15s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
+                  >
+                    Skip tour
+                  </button>
+                </div>
+
+                {/* Next on the right */}
+                <button
+                  onClick={next}
+                  style={{
+                    background: '#22D3EE', color: '#04141A',
+                    border: 'none', borderRadius: 999,
+                    padding: '11px 24px', fontSize: 14, fontWeight: 700,
+                    cursor: 'pointer', transition: 'opacity 0.15s',
+                    boxShadow: '0 4px 16px rgba(34,211,238,0.25)',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                >
+                  {step === total - 1 ? 'Finish' : 'Next →'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

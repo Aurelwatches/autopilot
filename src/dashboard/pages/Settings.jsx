@@ -204,19 +204,21 @@ export default function Settings() {
   const [replySpeed,      setReplySpeed]      = useState('within_1h')
   const [postTone,        setPostTone]        = useState('friendly')
   const [autoPostEnabled, setAutoPostEnabled] = useState(true)
+  const [replyTone,       setReplyTone]       = useState('')
   const [prefsLoading,    setPrefsLoading]    = useState(false)
 
   // Load saved preferences from Supabase profiles on mount / when user id resolves
   useEffect(() => {
     if (!supabase || !userId) return
     supabase.from('profiles')
-      .select('reply_speed, post_tone, auto_post_enabled, business_hours, notification_prefs')
+      .select('reply_speed, post_tone, auto_post_enabled, business_hours, notification_prefs, reply_tone')
       .eq('id', userId).single()
       .then(({ data }) => {
         if (!data) return
         if (data.reply_speed       != null) setReplySpeed(data.reply_speed)
         if (data.post_tone         != null) setPostTone(data.post_tone)
         if (data.auto_post_enabled != null) setAutoPostEnabled(data.auto_post_enabled)
+        if (data.reply_tone        != null) setReplyTone(data.reply_tone)
         if (data.business_hours) {
           const bh = data.business_hours
           if (bh.enabled  != null) setBizHoursEnabled(bh.enabled)
@@ -240,6 +242,7 @@ export default function Settings() {
       reply_speed:       replySpeed,
       post_tone:         postTone,
       auto_post_enabled: autoPostEnabled,
+      reply_tone:        replyTone.trim() || null,
     })
     setPrefsLoading(false)
     if (!error) { setPrefSaved(true); setTimeout(() => setPrefSaved(false), 2500) }
@@ -637,6 +640,32 @@ export default function Settings() {
             />
             <p className="text-xs mt-1.5" style={{ color: C.primary }}>
               AI-generated social posts will match this writing style.
+            </p>
+          </div>
+
+          <div className="h-px" style={{ backgroundColor: C.divider }} />
+
+          {/* Reply personality */}
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: C.secondary }}>
+              Reply personality
+            </label>
+            <textarea
+              value={replyTone}
+              onChange={e => setReplyTone(e.target.value)}
+              rows={3}
+              placeholder="e.g. Warm and conversational, like a friendly local owner who genuinely cares. Always mention the customer by name and be specific about their experience."
+              className="w-full text-sm px-4 py-3 rounded outline-none resize-none"
+              style={{
+                backgroundColor: C.inputBg, color: C.primary,
+                border: `1px solid ${C.border}`,
+                lineHeight: 1.55,
+              }}
+              onFocus={e => e.target.style.borderColor = C.accent}
+              onBlur={e => e.target.style.borderColor = C.border}
+            />
+            <p className="text-xs mt-1.5" style={{ color: C.muted }}>
+              Describe how you want AutoPilot to sound when replying to reviews. This is unique to your restaurant — no one else shares it.
             </p>
           </div>
 

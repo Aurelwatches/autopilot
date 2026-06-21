@@ -176,7 +176,7 @@ function computeScheduledAt(replySpeed, bh) {
 
 // ── Groq reply generation ─────────────────────────────────────────────────────
 
-async function generateReply(reviewText, starRating, restaurantName) {
+async function generateReply(reviewText, starRating, restaurantName, replyTone) {
   const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY;
   if (!groqKey) {
     console.warn('[Poller] GROQ_API_KEY not set — skipping AI reply generation');
@@ -187,6 +187,10 @@ async function generateReply(reviewText, starRating, restaurantName) {
     ? { ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5 }[starRating] ?? parseInt(starRating) ?? 5
     : starRating;
 
+  const toneInstruction = replyTone
+    ? `\nPersonality & tone for this restaurant: ${replyTone}`
+    : '';
+
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -196,7 +200,7 @@ async function generateReply(reviewText, starRating, restaurantName) {
         max_tokens: 500,
         messages: [{
           role: 'user',
-          content: `You are managing Google reviews for a restaurant. The review has a star rating of ${ratingNum} out of 5 stars. If the rating is 4 or 5 stars write a warm enthusiastic thankful response. If the rating is 3 stars write a balanced response acknowledging both positives and areas for improvement. If the rating is 1 or 2 stars write a sincere apologetic response and offer to make things right. Restaurant name: ${restaurantName}\nReview: ${reviewText || '(no text left)'}\nSign off with the restaurant name. Return only the reply text, nothing else.`
+          content: `You are managing Google reviews for a restaurant. The review has a star rating of ${ratingNum} out of 5 stars. If the rating is 4 or 5 stars write a warm enthusiastic thankful response. If the rating is 3 stars write a balanced response acknowledging both positives and areas for improvement. If the rating is 1 or 2 stars write a sincere apologetic response and offer to make things right.${toneInstruction}\nRestaurant name: ${restaurantName}\nReview: ${reviewText || '(no text left)'}\nSign off with the restaurant name. Return only the reply text, nothing else.`
         }]
       })
     });
@@ -254,7 +258,7 @@ async function pollAllClients() {
 
   const { data: clients, error } = await supabase
     .from('profiles')
-    .select('id, restaurant_name, google_access_token, google_refresh_token, google_token_expires_at, google_account_id, google_location_id, auto_post_enabled, reply_speed, business_hours')
+    .select('id, restaurant_name, google_access_token, google_refresh_token, google_token_expires_at, google_account_id, google_location_id, auto_post_enabled, reply_speed, business_hours, reply_tone')
     .not('google_refresh_token', 'is', null);
 
   if (error) { console.error('Failed to fetch clients:', error); return; }
@@ -291,7 +295,7 @@ async function pollAllClients() {
           : Number(starRating) || 5;
 
         // Generate AI reply
-        const aiReply = await generateReply(reviewText, starRating, client.restaurant_name || 'the restaurant');
+        const aiReply = await generateReply(reviewText, starRating, client.restaurant_name || 'the restaurant', client.reply_tone || null);
 
         // Compute scheduling based on client prefs
         const isManual    = !client.auto_post_enabled || client.reply_speed === 'manual';
