@@ -250,6 +250,120 @@ app.use((req, _res, next) => {
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }))
 
+// GET /api/debug/connection-status — shows exactly what's set per user
+app.get('/api/debug/connection-status', async (req, res) => {
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+  const { user_id } = req.query
+  if (!user_id) return res.status(400).json({ error: 'user_id required' })
+  const { data: p } = await supabase.from('profiles')
+    .select('google_refresh_token, google_access_token, google_account_id, google_location_id, google_connected_at, google_token_expires_at, reply_speed, auto_post_enabled, reply_tone')
+    .eq('id', user_id).single()
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(user_id)
+  res.json({
+    email: authUser?.email,
+    google_connected:   !!p?.google_refresh_token,
+    google_account_id:  p?.google_account_id  ?? null,
+    google_location_id: p?.google_location_id ?? null,
+    google_connected_at: p?.google_connected_at ?? null,
+    token_expires_at:   p?.google_token_expires_at ?? null,
+    groq_key_set:       !!(process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY),
+    resend_key_set:     !!process.env.RESEND_API_KEY,
+    email_from:         process.env.EMAIL_FROM || 'onboarding@resend.dev (default)',
+    reply_speed:        p?.reply_speed,
+    auto_post_enabled:  p?.auto_post_enabled,
+    reply_tone:         p?.reply_tone ?? null,
+  })
+})
+
+// POST /api/test-pipeline — simulates a full review without Google connected
+// Generates AI reply via Groq, saves to reviews table, sends email to account owner
+app.post('/api/test-pipeline', async (req, res) => {
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+  const { user_id } = req.body
+  if (!user_id) return res.status(400).json({ error: 'user_id required' })
+
+  const { data: profile } = await supabase.from('profiles')
+    .select('reply_speed, auto_post_enabled, business_hours, reply_tone')
+    .eq('id', user_id).single()
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(user_id)
+  const ownerEmail = authUser?.email
+  if (!ownerEmail) return res.status(404).json({ error: 'User not found' })
+
+  // Fake review data
+  const restaurantName = authUser?.user_metadata?.restaurant_name || 'Your Restaurant'
+  const reviewerName   = 'Alex Thompson'
+  const reviewText     = 'Absolutely loved the pasta! The atmosphere was warm and the staff were incredibly attentive. Will definitely be back.'
+  const starRating     = 5
+
+  // Generate AI reply via Groq
+  const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY
+  let aiReply = '(GROQ_API_KEY not set — no AI reply generated)'
+  if (groqKey) {
+    try {
+      const toneInstruction = profile?.reply_tone ? `\nPersonality & tone: ${profile.reply_tone}` : ''
+      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 300,
+          messages: [{ role: 'user', content: `You are managing Google reviews for a restaurant. The review has a star rating of ${starRating} out of 5 stars. Write a warm enthusiastic thankful response.${toneInstruction}\nRestaurant name: ${restaurantName}\nReview: ${reviewText}\nSign off with the restaurant name. Return only the reply text, nothing else.` }]
+        })
+      })
+      const groqData = await groqRes.json()
+      if (groqRes.ok) aiReply = groqData.choices?.[0]?.message?.content?.trim() || aiReply
+    } catch (e) { aiReply = `Groq error: ${e.message}` }
+  }
+
+  // Save to reviews table
+  const fakeReviewId = `test_${Date.now()}`
+  await supabase.from('reviews').insert({
+    user_id:       user_id,
+    review_id:     fakeReviewId,
+    customer_name: reviewerName,
+    review_text:   reviewText,
+    ai_reply:      aiReply,
+    rating:        starRating,
+    status:        'pending',
+    created_at:    new Date().toISOString(),
+  })
+
+  // Send email notification
+  let emailResult = 'skipped (Resend not configured)'
+  if (resend) {
+    try {
+      const stars = '⭐⭐⭐⭐⭐'
+      const frontendUrl = process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'
+      const { data, error: emailErr } = await resend.emails.send({
+        from: buildFromAddress(),
+        to: ownerEmail,
+        subject: `New ${starRating}★ review from ${reviewerName} — ${restaurantName}`,
+        headers: { 'X-Entity-Ref-ID': fakeReviewId },
+        html: emailHtml(`
+          <h2 style="margin:0 0 4px;font-size:20px;color:#111">${stars} New Review</h2>
+          <p style="margin:0 0 20px;font-size:13px;color:#888">${starRating}/5 stars · ${restaurantName}</p>
+          <p style="margin:0 0 8px;font-size:15px;color:#374151"><strong>${reviewerName}</strong> wrote:</p>
+          <blockquote style="margin:0 0 20px;padding:14px 16px;background:#f9fafb;border-left:3px solid #22d3ee;border-radius:0 8px 8px 0;color:#555;font-size:14px;line-height:1.6">${reviewText}</blockquote>
+          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:0.05em">AI Reply Ready</p>
+          <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.6;padding:14px 16px;background:#f0fdf4;border-radius:8px">${aiReply}</p>
+          <a href="${frontendUrl}/dashboard/reviews" style="display:inline-block;background:#0a0a0a;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">View in Dashboard →</a>
+          <p style="margin:20px 0 0;font-size:12px;color:#9ca3af">(This is a test review — no real Google review was posted)</p>
+        `),
+      })
+      emailResult = emailErr ? `failed: ${JSON.stringify(emailErr)}` : `sent (id: ${data?.id})`
+    } catch (e) { emailResult = `exception: ${e.message}` }
+  }
+
+  res.json({
+    ok: true,
+    test_review_id: fakeReviewId,
+    reviewer:       reviewerName,
+    ai_reply:       aiReply,
+    email_sent_to:  ownerEmail,
+    email_result:   emailResult,
+  })
+})
+
 // In-memory ring buffer + SSE
 const events = []
 const MAX_EVENTS = 50

@@ -5,6 +5,6 @@ del .git\index 2>nul
 git reset
 echo Re-adding all project files...
 git add -A
-git commit -m "polish: remove all emojis from dashboard UI"
+git commit -m "feat: test-pipeline endpoint, debug/connection-status endpoint"
 git push
 pause
