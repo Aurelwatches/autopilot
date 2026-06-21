@@ -1,0 +1,630 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design-token CSS variables ───────────────────────────────────────────── */
+/* :root = dark (app default). [data-theme="light"] overrides every token.     */
+
+:root {
+  color-scheme: dark;
+
+  /* Warm near-black base — premium + food-adjacent, never cold */
+  --ap-bg:             #05070D;
+  --ap-bg2:            #0A0F18;
+  --ap-card:           rgba(255,255,255,0.04);
+  --ap-card-solid:     #0E1420;
+  --ap-input:          rgba(255,255,255,0.04);
+  --ap-input-solid:    #131110;
+  --ap-border:         rgba(255,255,255,0.09);
+  --ap-border-solid:   #2E2A24;
+  --ap-divider:        rgba(255,255,255,0.06);
+  --ap-text:           #EAF2FF;
+  --ap-text2:          #94A3B8;
+  --ap-text3:          #6E7A8F;
+  --ap-text3b:         #443E36;
+
+  /* Brand + semantic accents */
+  --ap-accent:         #22D3EE;   /* brand / every primary CTA  */
+  --ap-accent-hover:   #67E8F9;
+  --ap-accent-soft:    rgba(34,211,238,0.14);
+  --ap-on-accent:      #04141A;   /* dark ink on cyan (WCAG)    */
+  --ap-success:        #22D3EE;   /* "it's working" / growth    */
+  --ap-success-soft:   rgba(34,211,238,0.14);
+  --ap-warning:        #3B82F6;
+  --ap-warning-soft:   rgba(59,130,246,0.14);
+  --ap-danger:         #F0524B;
+  --ap-danger-soft:    rgba(240,82,75,0.14);
+  --ap-grad:           linear-gradient(90deg, #22D3EE, #3B82F6);
+
+  --ap-shadow:         0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+  --ap-glow:           0 8px 30px rgba(34,211,238,0.35);
+  --ap-blur:           blur(20px);
+  --ap-sidebar:        rgba(255,255,255,0.025);
+  --ap-sidebar-border: rgba(255,255,255,0.07);
+  --ap-sidebar-active: rgba(34,211,238,0.10);
+  --ap-sidebar-shadow: none;
+  --ap-bubble:         rgba(255,255,255,0.06);
+  --ap-popup-shadow:   0 12px 48px rgba(0,0,0,0.55);
+  --ap-float-shadow:   0 4px 20px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04);
+
+  --font-display:      'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+  --font-body:         'Inter', system-ui, sans-serif;
+  --font-mono:         'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Warm cream base — bright, appetizing, not clinical white */
+  --ap-bg:             #F7F5F0;
+  --ap-bg2:            #EFEBE3;
+  --ap-card:           #FFFFFF;
+  --ap-card-solid:     #FFFFFF;
+  --ap-input:          #FFFFFF;
+  --ap-input-solid:    #FFFFFF;
+  --ap-border:         #E5DFD3;
+  --ap-border-solid:   #D8D0C0;
+  --ap-divider:        #ECE7DD;
+  --ap-text:           #1A150E;
+  --ap-text2:          #6B6358;
+  --ap-text3:          #9C9486;
+  --ap-text3b:         #B6AE9F;
+
+  --ap-accent:         #0EA5E9;
+  --ap-accent-hover:   #0284C7;
+  --ap-accent-soft:    rgba(14,165,233,0.12);
+  --ap-on-accent:      #04141A;   /* dark ink on amber (WCAG)   */
+  --ap-success:        #0F9E69;
+  --ap-success-soft:   rgba(15,158,105,0.12);
+  --ap-warning:        #C77A12;
+  --ap-warning-soft:   rgba(199,122,18,0.12);
+  --ap-danger:         #DC3B34;
+  --ap-danger-soft:    rgba(220,59,52,0.10);
+  --ap-grad:           linear-gradient(90deg, #0EA5E9, #F0463A);
+
+  --ap-shadow:         0 1px 4px rgba(40,28,10,0.07), 0 0 0 1px rgba(40,28,10,0.04);
+  --ap-glow:           0 6px 22px rgba(14,165,233,0.28);
+  --ap-blur:           blur(12px);
+  --ap-sidebar:        #F1EDE4;
+  --ap-sidebar-border: #E5DFD3;
+  --ap-sidebar-active: rgba(14,165,233,0.10);
+  --ap-sidebar-shadow: 2px 0 12px rgba(40,28,10,0.05);
+  --ap-bubble:         #EDE8DE;
+  --ap-popup-shadow:   0 8px 32px rgba(40,28,10,0.12), 0 0 0 1px rgba(40,28,10,0.05);
+  --ap-float-shadow:   0 4px 16px rgba(40,28,10,0.12), 0 0 0 1px rgba(40,28,10,0.06);
+}
+
+/* ─── Smooth theme transition (applied only during the toggle) ──────────────── */
+/* Added/removed by AppContext.toggleTheme() — lasts 320ms then removed.        */
+
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition:
+    background-color 300ms ease,
+    border-color     300ms ease,
+    color            300ms ease,
+    box-shadow       300ms ease,
+    fill             300ms ease,
+    stroke           300ms ease !important;
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--ap-bg);
+    color: var(--ap-text);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: rgba(34, 211, 238, 0.30);
+  }
+}
+
+/* ─── Brand typography helpers ──────────────────────────────────────────────── */
+
+.font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
+.font-mono    { font-family: var(--font-mono); }
+
+/* Section eyebrow / data label: mono, uppercase, tracked */
+.ap-eyebrow {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 500;
+}
+
+/* Amber focus ring for keyboard users across interactive elements */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ap-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Custom slim scrollbar (chat thread) ──────────────────────────────────── */
+
+.chat-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.chat-scroll::-webkit-scrollbar { width: 4px; }
+.chat-scroll::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 2px; transition: background-color 0.2s; }
+.chat-scroll:hover { scrollbar-color: #2A2A2A transparent; }
+.chat-scroll:hover::-webkit-scrollbar-thumb { background-color: #2A2A2A; }
+
+.chat-scroll-light { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.chat-scroll-light::-webkit-scrollbar { width: 4px; }
+.chat-scroll-light::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll-light::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 2px; transition: background-color 0.2s; }
+.chat-scroll-light:hover { scrollbar-color: #CCCCCC transparent; }
+.chat-scroll-light:hover::-webkit-scrollbar-thumb { background-color: #CCCCCC; }
+
+/* ─── Hero breathing gradient blobs ─────────────────────────────────────────── */
+
+@keyframes heroBlobA {
+  0%, 100% { transform: translate(0, 0)        scale(1);    }
+  50%      { transform: translate(60px, 40px)  scale(1.15); }
+}
+
+@keyframes heroBlobB {
+  0%, 100% { transform: translate(0, 0)         scale(1);    }
+  50%      { transform: translate(-50px, -40px) scale(1.12); }
+}
+
+/* ─── Feature section responsive grid ───────────────────────────────────────── */
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .feature-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+  }
+  /* textSide === 'right' → flip columns on desktop (mockup left, text right) */
+  .feature-grid--flip > :first-child { order: 2; }
+  .feature-grid--flip > :last-child  { order: 1; }
+}
+
+/* ─── Hero skeleton shimmer sweep (left → right) ────────────────────────────── */
+
+@keyframes heroShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ─── Hero floating card animations ─────────────────────────────────────────── */
+
+/* Gentle bob — different durations so the 3 cards never sync */
+@keyframes cardBob {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+/* Amber pulse ring on status dot */
+@keyframes cardPulse {
+  0%   { box-shadow: 0 0 0 0   rgba(34, 211, 238, 0.55); }
+  60%  { box-shadow: 0 0 0 6px rgba(34, 211, 238, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(34, 211, 238, 0); }
+}
+
+/* ─── Scroll offset for fixed navbar (h-14 = 56px + 16px breathing room) ────── */
+
+#features,
+#pricing {
+  scroll-margin-top: 72px;
+}
+
+/* ─── Pulsing status dot ────────────────────────────────────────────────────── */
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+.pulse-dot {
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+/* ─── Section heading highlight on scroll arrival ───────────────────────────── */
+
+@keyframes sectionHighlight {
+  0%   { filter: brightness(2.2); }
+  100% { filter: brightness(1); }
+}
+
+.section-highlight {
+  animation: sectionHighlight 600ms ease-out forwards;
+}
+
+/* ─── Pricing card float ────────────────────────────────────────────────────── */
+
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* ─── Support chat pop-in ───────────────────────────────────────────────────── */
+
+@keyframes chatPopIn {
+  from { opacity: 0; transform: scale(0.93) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* ─── AutoPilot airplane loader ─────────────────────────────────────────────── */
+
+@keyframes apPlaneFly {
+  0%   { left: -24px; }
+  100% { left: calc(100% + 24px); }
+}
+
+@keyframes apTrailDot {
+  0%   { opacity: 0; transform: translateY(-50%) scale(0.3); }
+  7%   { opacity: 0.75; transform: translateY(-50%) scale(1); }
+  90%  { opacity: 0.12; transform: translateY(-50%) scale(1); }
+  100% { opacity: 0; transform: translateY(-50%) scale(0.3); }
+}
+
+.ap-plane-fly {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ap-accent);
+  animation: apPlaneFly 2s linear infinite;
+}
+
+.ap-trail-dot {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--ap-accent);
+  opacity: 0;
+  animation: apTrailDot 2s linear infinite;
+}
+
+/* ─── Login success: cinematic airplane fly-by (bottom-left → top-right) ─────── */
+
+/* A massive commercial jet sweeps diagonally across the whole screen, banked
+   ~15deg so the nose points to the upper-right. Off-screen at both ends. */
+@keyframes loginPlaneArc {
+  0%   { transform: translate(-120vw, 40vh)  rotate(-15deg); }
+  100% { transform: translate(120vw,  -40vh) rotate(-15deg); }
+}
+
+/* Subtle wordmark that breathes in and out behind the plane */
+@keyframes loginTitleFade {
+  0%   { opacity: 0;    transform: translateY(10px); }
+  28%  { opacity: 0.5;  transform: translateY(0); }
+  68%  { opacity: 0.5;  transform: translateY(0); }
+  100% { opacity: 0;    transform: translateY(-10px); }
+}
+
+/* ─── Payment success: checkmark draw-in ────────────────────────────────────── */
+
+@keyframes apSuccessPop {
+  0%   { opacity: 0; transform: scale(0.7); }
+  60%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes apCheckCircle { to { stroke-dashoffset: 0; } }
+@keyframes apCheckMark   { to { stroke-dashoffset: 0; } }
+
+@keyframes apFadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ap-success-circle {
+  stroke-dasharray: 327;
+  stroke-dashoffset: 327;
+  animation: apCheckCircle 700ms cubic-bezier(0.65, 0, 0.45, 1) 150ms forwards;
+}
+.ap-success-check {
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  animation: apCheckMark 420ms cubic-bezier(0.65, 0, 0.45, 1) 700ms forwards;
+}
+
+/* ─── Dashboard mobile drawer: base (desktop) state ─────────────────────────── */
+/* The mobile topbar and the slide-in sidebar behavior only apply under 768px;   */
+/* on desktop the topbar is hidden and the sidebar stays in its normal column.   */
+
+.ap-topbar         { display: none; }
+.ap-sidebar-close  { display: none; }
+.ap-mobile-overlay { display: none; }
+
+/* ─── Mobile responsiveness (< 768px) ───────────────────────────────────────── */
+
+@media (max-width: 767px) {
+
+  /* Navbar */
+  .nav-plane { display: none !important; }
+
+  /* Landing-page hero */
+  .hero-grid       { grid-template-columns: 1fr !important; padding-left: 20px !important; padding-right: 20px !important; }
+  .hero-right-col  { display: none !important; }
+  .hero-cards    { display: none !important; }
+  .hero-card-sk  { display: none !important; }
+  .hero-headline { font-size: 42px !important; }
+  .hero-sub      { font-size: 16px !important; }
+  .hero-btns     { flex-direction: column !important; align-items: stretch !important; width: 100%; }
+  .hero-btn {
+    width: 100%;
+    min-height: 44px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Dashboard layout: collapse the fixed sidebar into a slide-in drawer */
+  .ap-main { margin-left: 0 !important; }
+
+  .ap-topbar { display: flex !important; }
+
+  .ap-sidebar {
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .ap-sidebar--open { transform: translateX(0); }
+
+  .ap-sidebar-close { display: flex !important; }
+
+  .ap-mobile-overlay { display: block; }
+
+  /* Every dashboard page: 16px horizontal padding */
+  .ap-page { padding-left: 16px !important; padding-right: 16px !important; }
+
+  /* Sidebar nav links: 44px touch targets */
+  .ap-nav-link { min-height: 44px; }
+
+  /* Social Posts header stacks; New post button goes full width */
+  .ap-posts-header { flex-direction: column !important; align-items: stretch !important; gap: 16px; }
+  .ap-posts-newbtn { width: 100%; min-height: 44px; }
+  .ap-platform-tabs { flex-wrap: wrap !important; }
+
+  /* Reviews filters scroll horizontally instead of wrapping */
+  .ap-review-filters {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .ap-review-filters::-webkit-scrollbar { display: none; }
+  .ap-review-filters > button { flex-shrink: 0; min-height: 44px; }
+
+  /* Plan-lock overlays span full width (no 240px sidebar offset) */
+  .ap-lock-overlay { left: 0 !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─── Animation system (Framer Motion + CSS ambient) ────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Animated gradient base (slowly shifting colors) ───────────────────────── */
+
+@keyframes apGradientShift {
+  0%   { background-position:   0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position:   0% 50%; }
+}
+
+.ap-animated-gradient {
+  background: linear-gradient(125deg, #05070D 0%, #100A04 28%, #0D0804 55%, #0A0703 78%, #05070D 100%);
+  background-size: 320% 320%;
+  animation: apGradientShift 26s ease infinite;
+}
+
+/* ─── Subtle grid pattern overlay (low opacity, masked at edges) ─────────────── */
+
+.ap-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 35%, transparent 78%);
+          mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 35%, transparent 78%);
+}
+
+/* ─── Button shimmer sweep on hover ─────────────────────────────────────────── */
+
+.shimmer-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -160%;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.shimmer-btn:hover::after {
+  animation: apBtnShimmer 0.9s ease;
+}
+
+@keyframes apBtnShimmer {
+  from { left: -160%; }
+  to   { left: 160%; }
+}
+
+/* ─── Button click ripple ───────────────────────────────────────────────────── */
+
+.btn-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.45);
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+  z-index: 1;
+  animation: apBtnRipple 0.6s ease-out forwards;
+}
+
+@keyframes apBtnRipple {
+  to { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+}
+
+/* ─── Nav link underline slide-in on hover ──────────────────────────────────── */
+
+.nav-underline {
+  position: relative;
+}
+
+.nav-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  height: 1.5px;
+  width: 100%;
+  background: var(--ap-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-underline:hover::after {
+  transform: scaleX(1);
+}
+
+/* ─── Particle drift ────────────────────────────────────────────────────────── */
+
+.ap-particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation-name: apParticleFloat;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes apParticleFloat {
+  0%   { transform: translateY(0)      scale(1);   opacity: 0; }
+  12%  { opacity: var(--p-op, 0.4); }
+  88%  { opacity: var(--p-op, 0.4); }
+  100% { transform: translateY(-130px) scale(1.4); opacity: 0; }
+}
+
+/* ─── Animated blue/cyan color flow (text + line) ───────────────────────────── */
+
+@keyframes apHueFlow {
+  0%   { background-position:   0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.ap-flow-text {
+  background: linear-gradient(90deg, #38BDF8 0%, #22D3EE 25%, #2DD4BF 50%, #22D3EE 75%, #38BDF8 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: apHueFlow 4.5s linear infinite;
+}
+
+.ap-flow-line {
+  background: linear-gradient(90deg, #38BDF8 0%, #22D3EE 25%, #2DD4BF 50%, #22D3EE 75%, #38BDF8 100%);
+  background-size: 200% auto;
+  animation: apHueFlow 4.5s linear infinite;
+}
+
+/* ─── Flowing wave divider (hero → content seam) ────────────────────────────── */
+
+@keyframes apWaveDriftL {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes apWaveDriftR {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+/* Gentle vertical breathing so the band feels liquid, not rigid */
+@keyframes apWaveBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(7px); }
+}
+
+/* ─── Typewriter caret ──────────────────────────────────────────────────────── */
+
+.ap-caret {
+  display: inline-block;
+  width: 3px;
+  height: 0.92em;
+  margin-left: 4px;
+  vertical-align: text-bottom;
+  background: var(--ap-accent);
+  border-radius: 2px;
+  animation: apCaretBlink 1s steps(1) infinite;
+}
+
+@keyframes apCaretBlink {
+  0%, 50%   { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+/* ─── Pricing: animated glowing border on the featured card ─────────────────── */
+
+@keyframes apBorderGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(34,211,238,0.42),
+      0 0 26px rgba(34,211,238,0.20),
+      0 8px 32px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(34,211,238,0.85),
+      0 0 50px rgba(34,211,238,0.42),
+      0 8px 32px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.10);
+  }
+}
+
+.ap-glow-border {
+  animation: apBorderGlow 3.2s ease-in-out infinite;
+}
+
+/* ─── Respect reduced-motion: calm the ambient/decorative animations ─────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Custom select dropdown scrollbar hide ─────────────────────────────────── */
+.ap-select-list::-webkit-scrollbar { display: none; }
