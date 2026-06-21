@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useApp } from '../AppContext'
 import { getPlanMeta, getBillingInterval, planPrice } from '../planMeta'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL || 'https://autopilot-production-7671.up.railway.app'
 
 // Next billing date: anchored once in localStorage, then advanced by the
 // billing interval until it lands in the future. Stable across renders.

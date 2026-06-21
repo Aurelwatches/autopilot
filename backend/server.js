@@ -76,24 +76,22 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
     const plan = session.metadata?.plan ?? 'unknown'
     const interval = session.metadata?.interval ?? 'monthly'
     if (userId && supabase) {
-      const { data: profile, error } = await supabase.from('profiles').update({
+      const { error } = await supabase.from('profiles').update({
         plan,
         plan_interval: interval,
         subscribed_at: new Date().toISOString(),
         subscription_status: 'active',
         stripe_customer_id: session.customer ?? null,
-      }).eq('id', userId).select('email, restaurant_name, phone').single()
+      }).eq('id', userId)
       if (error) console.error('Supabase profile update error:', error.message)
-      // Notify the new subscriber
-      if (profile?.email) {
+      // email lives in auth.users — fetch via admin API
+      const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId)
+      if (authUser?.email) {
         sendEmail({
-          to: profile.email,
+          to: authUser.email,
           subject: '🎉 Welcome to AutoPilot!',
           html: `<h2>You're in!</h2><p>Your <strong>${plan}</strong> plan is now active. Head to your <a href="https://autopilot-pink.vercel.app/dashboard">dashboard</a> to get started.</p><p>Your 14-day free trial has started — you won't be charged until it ends.</p>`,
         })
-      }
-      if (profile?.phone) {
-        sendSms(profile.phone, `Welcome to AutoPilot! Your ${plan} plan is live. 14-day free trial started — you won't be charged until it ends. autopilot-pink.vercel.app/dashboard`)
       }
     }
   }
@@ -129,20 +127,21 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
       const { data: profile, error } = await supabase.from('profiles')
         .update({ subscription_status: 'past_due' })
         .eq('stripe_customer_id', customerId)
-        .select('email, phone, restaurant_name')
+        .select('id')
         .single()
       if (error) console.error('[Stripe] payment_failed update failed:', error.message)
       else {
         console.log('[Stripe] payment failed for customer', customerId)
-        if (profile?.email) {
-          sendEmail({
-            to: profile.email,
-            subject: 'Action required: AutoPilot payment failed',
-            html: `<h2>Payment failed</h2><p>We couldn't process your AutoPilot subscription payment. Please update your billing info to keep your account active.</p><p><a href="https://autopilot-pink.vercel.app/dashboard/subscription">Update billing →</a></p>`,
-          })
-        }
-        if (profile?.phone) {
-          sendSms(profile.phone, 'AutoPilot: Your payment failed. Update your billing info to keep your account active: autopilot-pink.vercel.app/dashboard/subscription')
+        // email lives in auth.users — fetch via admin API
+        if (profile?.id) {
+          const { data: { user: authUser } } = await supabase.auth.admin.getUserById(profile.id)
+          if (authUser?.email) {
+            sendEmail({
+              to: authUser.email,
+              subject: 'Action required: AutoPilot payment failed',
+              html: `<h2>Payment failed</h2><p>We couldn't process your AutoPilot subscription payment. Please update your billing info to keep your account active.</p><p><a href="https://autopilot-pink.vercel.app/dashboard/subscription">Update billing →</a></p>`,
+            })
+          }
         }
       }
     }
@@ -470,19 +469,19 @@ app.post('/api/webhook', webhookLimiter, async (req, res) => {
 
         // Notify the restaurant owner of new review
         if (userId) {
-          const { data: ownerProfile } = await supabase.from('profiles').select('email, phone, notification_prefs').eq('id', userId).single()
+          const { data: ownerProfile } = await supabase.from('profiles').select('notification_prefs').eq('id', userId).single()
+          // email lives in auth.users, not profiles — fetch it via admin API
+          const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId)
+          const ownerEmail = authUser?.email
           const notif = ownerProfile?.notification_prefs ?? {}
           const stars = numericRating ? `${'⭐'.repeat(numericRating)} (${numericRating}/5)` : ''
           const preview = clean(resolvedReviewText, 120)
-          if (ownerProfile?.email && notif.email !== false) {
+          if (ownerEmail && notif.email !== false) {
             sendEmail({
-              to: ownerProfile.email,
+              to: ownerEmail,
               subject: `New ${numericRating <= 3 ? '⚠️' : '⭐'} review from ${clean(resolvedCustomerName, 60)}`,
               html: `<h2>New review received ${stars}</h2><p><strong>${clean(resolvedCustomerName, 100)}</strong> left a review:</p><blockquote>${preview}</blockquote>${resolvedReply ? `<p><strong>AI Reply ready:</strong> ${clean(resolvedReply, 300)}</p>` : ''}<p><a href="https://autopilot-pink.vercel.app/dashboard">View in dashboard →</a></p>`,
             })
-          }
-          if (ownerProfile?.phone && notif.sms !== false) {
-            sendSms(ownerProfile.phone, `AutoPilot: New ${stars} review from ${clean(resolvedCustomerName, 40)}. "${preview.slice(0, 80)}..." — autopilot-pink.vercel.app/dashboard`)
           }
         }
       }
