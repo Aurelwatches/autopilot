@@ -5,6 +5,6 @@ del .git\index 2>nul
 git reset
 echo Re-adding all project files...
 git add -A
-git commit -m "fix: manual mode, env vars, Make.com dupe rows removed, test-review endpoint added"
+git commit -m "feat: poller now handles Groq + Discord directly, no Make.com dependency"
 git push
 pause
