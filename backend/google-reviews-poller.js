@@ -14,6 +14,37 @@ const supabase = createClient(
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
+function buildFromAddress() {
+  const raw = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+  return raw.includes('<') ? raw : `AutoPilot <${raw}>`;
+}
+
+function emailHtml(bodyHtml) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)">
+        <tr>
+          <td style="background:#0a0a0a;padding:24px 32px">
+            <span style="font-size:22px;font-weight:800;letter-spacing:-0.03em;color:#ffffff">Auto<span style="color:#22d3ee">Pilot</span></span>
+          </td>
+        </tr>
+        <tr><td style="padding:32px">${bodyHtml}</td></tr>
+        <tr>
+          <td style="padding:16px 32px 28px;border-top:1px solid #f0f0f0">
+            <p style="margin:0;font-size:11px;color:#9ca3af">AutoPilot — AI-powered review management for restaurants.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 async function sendOwnerEmail(userId, restaurantName, reviewerName, starRating, reviewText, aiReply) {
   if (!resend) return;
   try {
@@ -26,20 +57,28 @@ async function sendOwnerEmail(userId, restaurantName, reviewerName, starRating, 
 
     const stars = '⭐'.repeat(Number(starRating) || 0);
     const frontendUrl = process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app';
+    const from = buildFromAddress();
 
-    await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+    const { data, error } = await resend.emails.send({
+      from,
       to: ownerEmail,
       subject: `New ${starRating}★ review from ${reviewerName} — ${restaurantName}`,
-      html: `
-        <h2>⭐ New Review — ${stars} (${starRating}/5)</h2>
-        <p><strong>${reviewerName}</strong> left a review for <strong>${restaurantName}</strong>:</p>
-        <blockquote style="border-left:3px solid #ccc;padding-left:12px;color:#555">${reviewText || '(no text)'}</blockquote>
-        <p><strong>AI Reply ready:</strong><br>${aiReply || '(none generated)'}</p>
-        <p><a href="${frontendUrl}/dashboard/reviews" style="background:#000;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none">View in Dashboard →</a></p>
-      `,
+      html: emailHtml(`
+        <h2 style="margin:0 0 4px;font-size:20px;color:#111">${stars} New Review</h2>
+        <p style="margin:0 0 20px;font-size:13px;color:#888">${starRating}/5 stars · ${restaurantName}</p>
+        <p style="margin:0 0 8px;font-size:15px;color:#374151"><strong>${reviewerName}</strong> wrote:</p>
+        <blockquote style="margin:0 0 20px;padding:14px 16px;background:#f9fafb;border-left:3px solid #22d3ee;border-radius:0 8px 8px 0;color:#555;font-size:14px;line-height:1.6">${reviewText || '(no text left)'}</blockquote>
+        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:0.05em">AI Reply Ready</p>
+        <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.6;padding:14px 16px;background:#f0fdf4;border-radius:8px">${aiReply || '(none generated)'}</p>
+        <a href="${frontendUrl}/dashboard/reviews" style="display:inline-block;background:#0a0a0a;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">View in Dashboard →</a>
+      `),
     });
-    console.log(`[Poller] Email sent to ${ownerEmail} for review by ${reviewerName}`);
+
+    if (error) {
+      console.error(`[Poller] Email send failed for ${ownerEmail}:`, JSON.stringify(error));
+    } else {
+      console.log(`[Poller] Email sent → ${ownerEmail} (id: ${data?.id})`);
+    }
   } catch (err) {
     console.warn('[Poller] Email notification failed:', err.message);
   }

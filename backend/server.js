@@ -38,11 +38,62 @@ async function sendSms(to, body) {
   return { sid: msg.sid, status: msg.status, from: process.env.TWILIO_FROM_NUMBER, to }
 }
 
+// Build a branded "AutoPilot <addr>" from string
+function buildFromAddress() {
+  const raw = process.env.EMAIL_FROM || 'onboarding@resend.dev'
+  // If already formatted like "Name <addr>", use as-is; otherwise wrap it
+  return raw.includes('<') ? raw : `AutoPilot <${raw}>`
+}
+
+// Shared branded email wrapper — every email gets this shell
+function emailHtml(bodyHtml) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)">
+        <!-- Header -->
+        <tr>
+          <td style="background:#0a0a0a;padding:24px 32px">
+            <span style="font-size:22px;font-weight:800;letter-spacing:-0.03em;color:#ffffff">
+              Auto<span style="color:#22d3ee">Pilot</span>
+            </span>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px">
+            ${bodyHtml}
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="padding:16px 32px 28px;border-top:1px solid #f0f0f0">
+            <p style="margin:0;font-size:11px;color:#9ca3af">AutoPilot — AI-powered review management for restaurants. You're receiving this because you have an AutoPilot account.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
 async function sendEmail({ to, subject, html }) {
   if (!resend) throw new Error('Resend not configured (missing RESEND_API_KEY)')
-  const { data, error } = await resend.emails.send({ from: process.env.EMAIL_FROM || 'onboarding@resend.dev', to, subject, html })
-  if (error) throw new Error(JSON.stringify(error))
-  console.log('[Email] Sent:', data?.id)
+  const { data, error } = await resend.emails.send({
+    from: buildFromAddress(),
+    to,
+    subject,
+    html: emailHtml(html),
+  })
+  if (error) {
+    console.error('[Email] Resend error:', JSON.stringify(error))
+    throw new Error(JSON.stringify(error))
+  }
+  console.log('[Email] Sent successfully — id:', data?.id, '→', to)
 }
 
 // CORS
@@ -875,6 +926,34 @@ app.post('/api/test-review', async (req, res) => {
   }
 
   res.json({ ok: true, review: data, status: reviewRow.status, scheduled_at: reviewRow.scheduled_at })
+})
+
+// POST /api/test-email — quick diagnostic, returns full Resend response or error
+app.post('/api/test-email', async (req, res) => {
+  const { to } = req.body
+  if (!to) return res.status(400).json({ error: 'Provide { to: "email@example.com" }' })
+  if (!resend) return res.status(500).json({ error: 'RESEND_API_KEY not set in Railway env vars' })
+  const from = buildFromAddress()
+  console.log(`[TestEmail] Attempting send → from: ${from} → to: ${to}`)
+  const { data, error } = await resend.emails.send({
+    from,
+    to,
+    subject: 'AutoPilot — email delivery test',
+    html: emailHtml(`
+      <h2 style="margin:0 0 8px;font-size:20px;color:#111">Email is working! ✅</h2>
+      <p style="margin:0 0 16px;color:#555;font-size:15px;line-height:1.5">
+        Your AutoPilot email notifications are configured and delivering correctly.
+        From address: <strong>${from}</strong>
+      </p>
+      <p style="margin:0;font-size:13px;color:#888">Sent at ${new Date().toISOString()}</p>
+    `),
+  })
+  if (error) {
+    console.error('[TestEmail] Resend error:', JSON.stringify(error))
+    return res.status(500).json({ ok: false, error, from, to })
+  }
+  console.log('[TestEmail] Success — id:', data?.id)
+  res.json({ ok: true, id: data?.id, from, to })
 })
 
 // POST /api/smoke-test
