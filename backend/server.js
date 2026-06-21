@@ -281,7 +281,7 @@ function adjustForBizHours(date, bh) {
   const localCheck = getLocalParts(approxUtc, tz)
   const diffH = openH - localCheck.hour
   const diffM = targetMinute - localCheck.minute
-  return new Date(approxUtc.getTime() - (diffH * 60 + diffM) * 60_000)
+  return new Date(approxUtc.getTime() + (diffH * 60 + diffM) * 60_000)
 }
 
 // Compute when a review reply should auto-post

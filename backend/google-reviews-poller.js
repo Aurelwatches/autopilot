@@ -85,7 +85,7 @@ function adjustForBizHours(date, bh) {
   const localCheck = getLocalParts(approxUtc, tz);
   const diffH = openH - localCheck.hour;
   const diffM = targetMin - localCheck.minute;
-  return new Date(approxUtc.getTime() - (diffH * 60 + diffM) * 60_000);
+  return new Date(approxUtc.getTime() + (diffH * 60 + diffM) * 60_000);
 }
 
 function computeScheduledAt(replySpeed, bh) {
