@@ -4,6 +4,44 @@ SaaS dashboard for independent restaurants. Automates Google review replies, soc
 
 ---
 
+## How to work on this project
+
+### Before touching any code
+- Read the file you're editing first — never guess at existing structure
+- Check what Supabase columns actually exist before writing queries
+- The backend is on Railway, frontend on Vercel — they are separate services
+
+### Coding rules
+- **Colors**: never hardcode hex values in any dashboard component — always use `const { C } = useApp()` and reference `C.primary`, `C.secondary`, `C.accent`, `C.card`, `C.border`, `C.inputBg`, `C.divider`, `C.muted`, etc.
+- **HTTP**: use native `fetch()` — no axios
+- **Styling**: Tailwind utility classes + inline styles via `C` palette. No CSS modules, no styled-components
+- **State**: React `useState` / `useEffect` — no Redux, no Zustand
+- **Backend**: ESM (`import`/`export`) throughout — never `require()`
+- **Supabase on backend**: always use `SUPABASE_SERVICE_KEY` (bypasses RLS). Frontend uses `VITE_SUPABASE_ANON_KEY`
+
+### Deploying
+- **ONLY** push via `tools\git_push.bat` — never `git push` directly (git index can go stale)
+- `git_push.bat` does: `del .git\index` → `git reset` → `git add -A` → commit → push
+- Vercel auto-deploys frontend, Railway auto-deploys backend + bot on every push
+- After pushing, watch Vercel dashboard for build status — build takes ~60s
+
+### What not to do
+- Never commit `.env` — it's gitignored, Railway + Vercel have env vars set in their dashboards
+- Never hardcode the Railway URL — use `import.meta.env.VITE_API_URL` in frontend, `process.env.BACKEND_URL` in backend
+- Never change `status='replied'` filter in `processQueuedReplies` back to `'pending'` — that was the bug, `'replied'` is correct
+- Never add a Root Directory setting in Vercel — it must stay blank (monorepo: frontend at root, backend in `/backend`)
+- Don't add npm scripts that start both server and vite together for production — Railway runs them as separate services
+
+### Adding new features
+1. If it needs a new Supabase column — add a migration via Supabase MCP (`apply_migration`) before writing code that uses it
+2. If it's a new API route — add it to `backend/server.js` and update the routes table in this file
+3. If it's a new dashboard page — add the route in `src/App.jsx` and a nav link in `Sidebar.jsx`
+4. If it touches Google API — test token refresh logic; tokens expire after 1 hour
+
+---
+
+---
+
 ## Deployments
 
 | Service | Platform | URL |

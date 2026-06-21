@@ -90,7 +90,7 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
         sendEmail({
           to: authUser.email,
           subject: '🎉 Welcome to AutoPilot!',
-          html: `<h2>You're in!</h2><p>Your <strong>${plan}</strong> plan is now active. Head to your <a href="https://autopilot-pink.vercel.app/dashboard">dashboard</a> to get started.</p><p>Your 14-day free trial has started — you won't be charged until it ends.</p>`,
+          html: `<h2>You're in!</h2><p>Your <strong>${plan}</strong> plan is now active. Head to your <a href="${process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'}/dashboard">dashboard</a> to get started.</p><p>Your 14-day free trial has started — you won't be charged until it ends.</p>`,
         })
       }
     }
@@ -139,7 +139,7 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
             sendEmail({
               to: authUser.email,
               subject: 'Action required: AutoPilot payment failed',
-              html: `<h2>Payment failed</h2><p>We couldn't process your AutoPilot subscription payment. Please update your billing info to keep your account active.</p><p><a href="https://autopilot-pink.vercel.app/dashboard/subscription">Update billing →</a></p>`,
+              html: `<h2>Payment failed</h2><p>We couldn't process your AutoPilot subscription payment. Please update your billing info to keep your account active.</p><p><a href="${process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'}/dashboard/subscription">Update billing →</a></p>`,
             })
           }
         }
@@ -436,9 +436,16 @@ app.post('/api/webhook', webhookLimiter, async (req, res) => {
           profile = data
         }
 
-        const scheduledAt = (profile?.auto_post_enabled && profile?.reply_speed !== 'manual')
+        const isManual = !profile?.auto_post_enabled || profile?.reply_speed === 'manual'
+        const scheduledAt = (!isManual && resolvedReply)
           ? computeScheduledAt(profile.reply_speed, profile.business_hours)
           : null
+
+        // Manual mode: save as 'pending' so the Approve button shows in the dashboard
+        // Auto mode:   save as 'replied' so the cron picks it up and posts to Google
+        const reviewStatus = resolvedReply
+          ? (isManual ? 'pending' : 'replied')
+          : 'pending'
 
         const reviewRow = {
           user_id:       userId,
@@ -446,7 +453,7 @@ app.post('/api/webhook', webhookLimiter, async (req, res) => {
           review_text:   clean(resolvedReviewText, 5000),
           ai_reply:      clean(resolvedReply, 5000),
           rating:        numericRating,
-          status:        resolvedReply ? 'replied' : 'pending',
+          status:        reviewStatus,
           review_id:     reviewId ?? null,
           scheduled_at:  scheduledAt?.toISOString() ?? null,
         }
@@ -480,7 +487,7 @@ app.post('/api/webhook', webhookLimiter, async (req, res) => {
             sendEmail({
               to: ownerEmail,
               subject: `New ${numericRating <= 3 ? '⚠️' : '⭐'} review from ${clean(resolvedCustomerName, 60)}`,
-              html: `<h2>New review received ${stars}</h2><p><strong>${clean(resolvedCustomerName, 100)}</strong> left a review:</p><blockquote>${preview}</blockquote>${resolvedReply ? `<p><strong>AI Reply ready:</strong> ${clean(resolvedReply, 300)}</p>` : ''}<p><a href="https://autopilot-pink.vercel.app/dashboard">View in dashboard →</a></p>`,
+              html: `<h2>New review received ${stars}</h2><p><strong>${clean(resolvedCustomerName, 100)}</strong> left a review:</p><blockquote>${preview}</blockquote>${resolvedReply ? `<p><strong>AI Reply ready:</strong> ${clean(resolvedReply, 300)}</p>` : ''}<p><a href="${process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'}/dashboard">View in dashboard →</a></p>`,
             })
           }
         }
@@ -589,7 +596,7 @@ app.post('/api/generate-post', async (req, res) => {
 
 // POST /api/generate-post-groq  (Groq/Llama — server-side proxy, key never exposed)
 app.post('/api/generate-post-groq', async (req, res) => {
-  const groqKey = process.env.GROQ_API_KEY
+  const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY
   if (!groqKey) return res.status(500).json({ error: 'GROQ_API_KEY is not configured on the server.' })
 
   const { topic, platform, tone } = req.body
@@ -627,7 +634,7 @@ app.post('/api/generate-post-groq', async (req, res) => {
 
 // POST /api/discord/message  (Discord webhook proxy — URL never exposed to browser)
 app.post('/api/discord/message', async (req, res) => {
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL || process.env.VITE_DISCORD_WEBHOOK_URL
   if (!webhookUrl) return res.status(500).json({ error: 'DISCORD_WEBHOOK_URL not configured on server.' })
 
   const { content } = req.body
@@ -674,12 +681,13 @@ app.post('/api/create-checkout-session', async (req, res) => {
   const priceId = PRICE_IDS[plan]?.[interval === 'yearly' ? 'yearly' : 'monthly']
   if (!priceId) return res.status(400).json({ error: 'Invalid plan or price not configured' })
   try {
+    const frontendUrl = process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: 'https://autopilot-pink.vercel.app/payment-success',
-      cancel_url:  'https://autopilot-pink.vercel.app/pricing',
+      success_url: `${frontendUrl}/payment-success`,
+      cancel_url:  `${frontendUrl}/pricing`,
       client_reference_id: userId ?? undefined,
       metadata: { plan, interval, userId: userId ?? '' },
       subscription_data: { trial_period_days: 14 },
