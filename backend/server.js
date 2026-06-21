@@ -283,14 +283,14 @@ app.post('/api/test-pipeline', async (req, res) => {
   if (!user_id) return res.status(400).json({ error: 'user_id required' })
 
   const { data: profile } = await supabase.from('profiles')
-    .select('reply_speed, auto_post_enabled, business_hours, reply_tone')
+    .select('reply_speed, auto_post_enabled, business_hours, reply_tone, restaurant_name')
     .eq('id', user_id).single()
   const { data: { user: authUser } } = await supabase.auth.admin.getUserById(user_id)
   const ownerEmail = authUser?.email
   if (!ownerEmail) return res.status(404).json({ error: 'User not found' })
 
   // Fake review data
-  const restaurantName = authUser?.user_metadata?.restaurant_name || 'Your Restaurant'
+  const restaurantName = profile?.restaurant_name || authUser?.user_metadata?.restaurant_name || 'Your Restaurant'
   const reviewerName   = 'Alex Thompson'
   const reviewText     = 'Absolutely loved the pasta! The atmosphere was warm and the staff were incredibly attentive. Will definitely be back.'
   const starRating     = 5
@@ -718,6 +718,48 @@ app.post('/api/reviews/set-reply', async (req, res) => {
 
   if (result.error) return res.status(500).json({ error: result.error.message })
   res.json({ ok: true })
+})
+
+// POST /api/reviews/:id/regenerate — generate a fresh AI reply for a review
+app.post('/api/reviews/:id/regenerate', async (req, res) => {
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+  const { id } = req.params
+
+  const { data: review, error: revErr } = await supabase
+    .from('reviews')
+    .select('user_id, review_text, rating')
+    .eq('id', id).single()
+  if (revErr || !review) return res.status(404).json({ error: 'Review not found' })
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('restaurant_name, reply_tone')
+    .eq('id', review.user_id).single()
+
+  const restaurantName = profile?.restaurant_name || 'the restaurant'
+  const toneInstruction = profile?.reply_tone ? `\nPersonality & tone: ${profile.reply_tone}` : ''
+
+  const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY
+  if (!groqKey) return res.status(500).json({ error: 'GROQ_API_KEY not configured' })
+
+  try {
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: `You are managing Google reviews for a restaurant. The review has a star rating of ${review.rating} out of 5 stars. Write a warm, professional response.${toneInstruction}\nRestaurant name: ${restaurantName}\nReview: ${review.review_text}\nSign off with the restaurant name. Return only the reply text, nothing else.` }]
+      })
+    })
+    const groqData = await groqRes.json()
+    if (!groqRes.ok) return res.status(500).json({ error: 'Groq error', details: groqData })
+    const newReply = groqData.choices?.[0]?.message?.content?.trim() || ''
+    await supabase.from('reviews').update({ ai_reply: newReply }).eq('id', id)
+    res.json({ ok: true, reply: newReply })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
 })
 
 // POST /api/reply

@@ -91,15 +91,52 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://autopilot-production-76
 
 export default function Reviews() {
   const { C, userId, plan } = useApp()
-  const [reviews,   setReviews]   = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [error,     setError]     = useState('')
-  const [active,    setActive]    = useState('All')
-  const [approving, setApproving] = useState(new Set())
+  const [reviews,      setReviews]      = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [error,        setError]        = useState('')
+  const [active,       setActive]       = useState('All')
+  const [approving,    setApproving]    = useState(new Set())
+  const [editingId,    setEditingId]    = useState(null)
+  const [editText,     setEditText]     = useState('')
+  const [saving,       setSaving]       = useState(new Set())
+  const [regenerating, setRegenerating] = useState(new Set())
 
   const { events } = useDashboard()
 
   const isStarter = plan === 'starter'
+
+  async function handleSaveEdit(reviewId) {
+    if (!editText.trim()) return
+    setSaving(prev => new Set(prev).add(reviewId))
+    try {
+      const res = await fetch(`${API_URL}/api/reviews/set-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: reviewId, ai_reply: editText.trim() }),
+      })
+      if (!res.ok) { const d = await res.json(); alert(d.error || 'Save failed'); return }
+      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply: editText.trim() } : r))
+      setEditingId(null)
+    } catch (err) {
+      alert(`Network error: ${err.message}`)
+    } finally {
+      setSaving(prev => { const s = new Set(prev); s.delete(reviewId); return s })
+    }
+  }
+
+  async function handleRegenerate(reviewId) {
+    setRegenerating(prev => new Set(prev).add(reviewId))
+    try {
+      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/regenerate`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) { alert(data.error || 'Regenerate failed'); return }
+      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply: data.reply } : r))
+    } catch (err) {
+      alert(`Network error: ${err.message}`)
+    } finally {
+      setRegenerating(prev => { const s = new Set(prev); s.delete(reviewId); return s })
+    }
+  }
 
   async function fetchReviews() {
     if (!supabase) { setError('Supabase is not configured.'); setLoading(false); return }
@@ -282,9 +319,12 @@ export default function Reviews() {
         ) : filtered.length === 0 ? <EmptyState C={C} /> : (
           <div>
             {filtered.map((r, i) => {
-              const isPending   = r.status === 'pending'
-              const isPosted    = r.status === 'posted'
-              const isApproving = approving.has(r.id)
+              const isPending     = r.status === 'pending'
+              const isPosted      = r.status === 'posted'
+              const isApproving   = approving.has(r.id)
+              const isEditing     = editingId === r.id
+              const isSaving      = saving.has(r.id)
+              const isRegenerating = regenerating.has(r.id)
 
               const badgeStyle = isPending
                 ? { backgroundColor: 'rgba(251,191,36,0.08)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.15)' }
@@ -318,16 +358,65 @@ export default function Reviews() {
 
                   <div className="px-5 pb-5 pt-0">
                     <div className="rounded-xl px-4 py-3"
-                      style={{ backgroundColor: C.inputBg, border: `1px solid ${C.divider}` }}>
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <RobotIcon color={C.accent} />
-                        <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.muted, margin: 0 }}>
-                          AutoPilot reply
-                        </p>
+                      style={{ backgroundColor: C.inputBg, border: `1px solid ${isEditing ? C.accent : C.divider}`, transition: 'border-color 150ms' }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <RobotIcon color={C.accent} />
+                          <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.muted, margin: 0 }}>
+                            AutoPilot reply
+                          </p>
+                        </div>
+                        {!isEditing && r.reply && (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => { setEditingId(r.id); setEditText(r.reply) }}
+                              style={{ fontSize: 11, fontWeight: 500, color: C.secondary, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: 6, transition: 'color 150ms' }}
+                              onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                              onMouseLeave={e => e.currentTarget.style.color = C.secondary}
+                            >Edit</button>
+                            <span style={{ color: C.divider }}>·</span>
+                            <button
+                              onClick={() => handleRegenerate(r.id)}
+                              disabled={isRegenerating}
+                              style={{ fontSize: 11, fontWeight: 500, color: isRegenerating ? C.muted : C.accent, background: 'none', border: 'none', cursor: isRegenerating ? 'default' : 'pointer', padding: '2px 6px', borderRadius: 6, transition: 'color 150ms' }}
+                            >{isRegenerating ? 'Generating…' : 'Regenerate'}</button>
+                          </div>
+                        )}
                       </div>
-                      <p style={{ fontSize: 14, lineHeight: 1.6, color: r.reply ? C.primary : C.muted }}>
-                        {r.reply || 'No reply text received.'}
-                      </p>
+
+                      {isEditing ? (
+                        <>
+                          <textarea
+                            value={editText}
+                            onChange={e => setEditText(e.target.value)}
+                            rows={4}
+                            className="w-full text-sm outline-none resize-none"
+                            style={{ backgroundColor: 'transparent', color: C.primary, border: 'none', lineHeight: 1.6, fontFamily: 'inherit' }}
+                            autoFocus
+                          />
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={() => handleSaveEdit(r.id)}
+                              disabled={isSaving}
+                              style={{
+                                fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 8,
+                                backgroundColor: isSaving ? 'rgba(34,211,238,0.06)' : 'rgba(34,211,238,0.12)',
+                                color: isSaving ? C.muted : 'var(--ap-success)',
+                                border: '1px solid rgba(34,211,238,0.25)',
+                                cursor: isSaving ? 'default' : 'pointer',
+                              }}
+                            >{isSaving ? 'Saving…' : 'Save'}</button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              style={{ fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 8, backgroundColor: 'transparent', color: C.secondary, border: `1px solid ${C.border}`, cursor: 'pointer' }}
+                            >Cancel</button>
+                          </div>
+                        </>
+                      ) : (
+                        <p style={{ fontSize: 14, lineHeight: 1.6, color: r.reply ? C.primary : C.muted }}>
+                          {isRegenerating ? <span style={{ color: C.muted }}>Generating new reply…</span> : (r.reply || 'No reply text received.')}
+                        </p>
+                      )}
                     </div>
 
                     {isPending && (

@@ -5,6 +5,6 @@ del .git\index 2>nul
 git reset
 echo Re-adding all project files...
 git add -A
-git commit -m "feat: test-pipeline endpoint, debug/connection-status endpoint"
+git commit -m "feat: edit/regenerate reply on Reviews page, fix restaurant name in test-pipeline"
 git push
 pause
