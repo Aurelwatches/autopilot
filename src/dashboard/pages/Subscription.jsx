@@ -184,7 +184,7 @@ export default function Subscription() {
               </p>
             </div>
             <button
-              onClick={() => navigate('/pricing')}
+              onClick={() => navigate('/dashboard/upgrade')}
               className="shrink-0 text-sm font-semibold px-5 py-2 rounded transition-colors"
               style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: 'pointer' }}
               onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}

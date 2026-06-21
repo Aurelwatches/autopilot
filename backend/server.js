@@ -543,6 +543,37 @@ async function processQueuedReplies() {
 // Auto-reply: every 2 minutes
 cron.schedule('*/2 * * * *', processQueuedReplies)
 
+// Uptime monitor: every hour — checks Vercel frontend + this backend, SMS if down
+const ALERT_PHONE = '+19842021442'
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://getautopilot.net'
+
+async function checkUptime() {
+  const checks = [
+    { name: 'Backend',  url: `${process.env.BACKEND_URL || 'https://autopilot-production-7671.up.railway.app'}/health` },
+    { name: 'Frontend', url: FRONTEND_URL },
+  ]
+  const failed = []
+  for (const { name, url } of checks) {
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 10000)
+      const res = await fetch(url, { signal: controller.signal })
+      clearTimeout(timeout)
+      if (!res.ok) failed.push(`${name} returned ${res.status}`)
+    } catch (err) {
+      failed.push(`${name} is unreachable (${err.message})`)
+    }
+  }
+  if (failed.length > 0) {
+    const msg = `🚨 AutoPilot DOWN:\n${failed.join('\n')}\n\nCheck Railway + Vercel dashboards immediately.`
+    console.error('[Uptime] ALERT:', msg)
+    try { await sendSms(ALERT_PHONE, msg) } catch (e) { console.error('[Uptime] SMS failed:', e.message) }
+  } else {
+    console.log('[Uptime] All systems OK')
+  }
+}
+cron.schedule('0 * * * *', checkUptime)   // top of every hour
+
 
 // ── Webhook (Make.com) ────────────────────────────────────────────────────────
 app.post('/api/webhook', webhookLimiter, async (req, res) => {

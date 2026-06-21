@@ -128,9 +128,12 @@ export default function Reviews() {
     setRegenerating(prev => new Set(prev).add(reviewId))
     try {
       const res = await fetch(`${API_URL}/api/reviews/${reviewId}/regenerate`, { method: 'POST' })
-      const data = await res.json()
+      const text = await res.text()
+      let data
+      try { data = JSON.parse(text) } catch { alert('Server error — please wait a moment and try again.'); return }
       if (!res.ok) { alert(data.error || 'Regenerate failed'); return }
       setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply: data.reply } : r))
+      setEditingId(null)
     } catch (err) {
       alert(`Network error: ${err.message}`)
     } finally {
@@ -359,29 +362,11 @@ export default function Reviews() {
                   <div className="px-5 pb-5 pt-0">
                     <div className="rounded-xl px-4 py-3"
                       style={{ backgroundColor: C.inputBg, border: `1px solid ${isEditing ? C.accent : C.divider}`, transition: 'border-color 150ms' }}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-1.5">
-                          <RobotIcon color={C.accent} />
-                          <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.muted, margin: 0 }}>
-                            AutoPilot reply
-                          </p>
-                        </div>
-                        {!isEditing && r.reply && (
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={() => { setEditingId(r.id); setEditText(r.reply) }}
-                              style={{ fontSize: 11, fontWeight: 500, color: C.secondary, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: 6, transition: 'color 150ms' }}
-                              onMouseEnter={e => e.currentTarget.style.color = C.primary}
-                              onMouseLeave={e => e.currentTarget.style.color = C.secondary}
-                            >Edit</button>
-                            <span style={{ color: C.divider }}>·</span>
-                            <button
-                              onClick={() => handleRegenerate(r.id)}
-                              disabled={isRegenerating}
-                              style={{ fontSize: 11, fontWeight: 500, color: isRegenerating ? C.muted : C.accent, background: 'none', border: 'none', cursor: isRegenerating ? 'default' : 'pointer', padding: '2px 6px', borderRadius: 6, transition: 'color 150ms' }}
-                            >{isRegenerating ? 'Generating…' : 'Regenerate'}</button>
-                          </div>
-                        )}
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <RobotIcon color={C.accent} />
+                        <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.muted, margin: 0 }}>
+                          AutoPilot reply
+                        </p>
                       </div>
 
                       {isEditing ? (
@@ -407,17 +392,36 @@ export default function Reviews() {
                               }}
                             >{isSaving ? 'Saving…' : 'Save'}</button>
                             <button
+                              onClick={() => handleRegenerate(r.id)}
+                              disabled={isRegenerating}
+                              style={{
+                                fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 8,
+                                backgroundColor: 'transparent',
+                                color: isRegenerating ? C.muted : C.accent,
+                                border: `1px solid ${C.border}`,
+                                cursor: isRegenerating ? 'default' : 'pointer',
+                              }}
+                            >{isRegenerating ? 'Generating…' : 'Regenerate'}</button>
+                            <button
                               onClick={() => setEditingId(null)}
                               style={{ fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 8, backgroundColor: 'transparent', color: C.secondary, border: `1px solid ${C.border}`, cursor: 'pointer' }}
                             >Cancel</button>
                           </div>
                         </>
                       ) : (
-                        <p style={{ fontSize: 14, lineHeight: 1.6, color: r.reply ? C.primary : C.muted }}>
+                        <p
+                          onClick={() => r.reply && !isRegenerating && (setEditingId(r.id), setEditText(r.reply))}
+                          style={{ fontSize: 14, lineHeight: 1.6, color: r.reply ? C.primary : C.muted, cursor: r.reply ? 'text' : 'default' }}
+                        >
                           {isRegenerating ? <span style={{ color: C.muted }}>Generating new reply…</span> : (r.reply || 'No reply text received.')}
                         </p>
                       )}
                     </div>
+                    {!isEditing && r.reply && (
+                      <p style={{ fontSize: 11, color: C.muted, marginTop: 4, marginLeft: 2 }}>
+                        Click the reply to edit · <button onClick={() => handleRegenerate(r.id)} disabled={isRegenerating} style={{ fontSize: 11, color: C.accent, background: 'none', border: 'none', cursor: isRegenerating ? 'default' : 'pointer', padding: 0 }}>{isRegenerating ? 'Generating…' : 'regenerate'}</button>
+                      </p>
+                    )}
 
                     {isPending && (
                       <button
