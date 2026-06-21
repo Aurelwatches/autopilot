@@ -311,7 +311,7 @@ async function processQueuedReplies() {
   const { data: due, error } = await supabase
     .from('reviews')
     .select('id, user_id, ai_reply, review_id')
-    .eq('status', 'pending')
+    .eq('status', 'replied')
     .not('scheduled_at', 'is', null)
     .lte('scheduled_at', now)
     .limit(20)
@@ -645,6 +645,18 @@ app.post('/api/discord/message', async (req, res) => {
     console.error('Discord proxy error:', err.message)
     res.status(500).json({ error: err.message })
   }
+})
+
+// POST /api/auth/google/select-location  — save chosen location after multi-location picker
+app.post('/api/auth/google/select-location', async (req, res) => {
+  const { user_id, location_id } = req.body
+  if (!user_id || !location_id) return res.status(400).json({ error: 'user_id and location_id are required' })
+  const { error } = await supabase
+    .from('profiles')
+    .update({ google_location_id: location_id })
+    .eq('id', user_id)
+  if (error) return res.status(500).json({ error: error.message })
+  res.json({ ok: true })
 })
 
 // Stripe price map

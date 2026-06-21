@@ -5,6 +5,6 @@ del .git\index 2>nul
 git reset
 echo Re-adding all project files...
 git add -A
-git commit -m "fix: re-add all files after git index corruption, package.json was untracked"
+git commit -m "feat: multi-location Google Business support + fix auto_post status bug"
 git push
 pause

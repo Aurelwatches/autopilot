@@ -297,6 +297,12 @@ export default function Settings() {
   }
   const [connections, setConnections] = useState(() => loadConnections(restaurantName))
 
+  // Multi-location picker
+  const [chooseLocation,     setChooseLocation]     = useState(false)
+  const [googleLocations,    setGoogleLocations]    = useState([])
+  const [selectedLocationId, setSelectedLocationId] = useState('')
+  const [locationSaving,     setLocationSaving]     = useState(false)
+
   // On mount: check Supabase for real Google connection status
   useEffect(() => {
     if (!userId) return
@@ -311,18 +317,51 @@ export default function Settings() {
       })
   }, [userId])
 
-  // Handle ?google_connected=true redirect from OAuth callback
+  // Handle ?google_connected=true and ?choose_location=true redirect from OAuth callback
   useEffect(() => {
-    if (searchParams.get('google_connected') === 'true') {
-      setConnections(prev => {
-        const next = { ...prev, google: true }
-        localStorage.setItem(`ap_connections_${restaurantName}`, JSON.stringify(next))
-        return next
-      })
-      // Remove the query param cleanly
-      setSearchParams({}, { replace: true })
+    if (searchParams.get('google_connected') !== 'true') return
+
+    // Mark Google as connected in local state
+    setConnections(prev => {
+      const next = { ...prev, google: true }
+      localStorage.setItem(`ap_connections_${restaurantName}`, JSON.stringify(next))
+      return next
+    })
+
+    if (searchParams.get('choose_location') === 'true' && userId) {
+      // Multi-location: load all locations and show picker
+      supabase.from('profiles')
+        .select('google_locations, google_location_id')
+        .eq('id', userId).single()
+        .then(({ data }) => {
+          const locs = data?.google_locations ?? []
+          if (locs.length > 1) {
+            setGoogleLocations(locs)
+            setSelectedLocationId(data?.google_location_id ?? locs[0]?.id ?? '')
+            setChooseLocation(true)
+          }
+        })
     }
-  }, [searchParams])
+
+    setSearchParams({}, { replace: true })
+  }, [searchParams, userId])
+
+  async function handleSelectLocation() {
+    if (!selectedLocationId || !userId) return
+    setLocationSaving(true)
+    try {
+      await fetch(`${API_URL}/api/auth/google/select-location`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, location_id: selectedLocationId }),
+      })
+      setChooseLocation(false)
+    } catch (err) {
+      console.error('Failed to save location:', err)
+    } finally {
+      setLocationSaving(false)
+    }
+  }
 
   async function setConnected(service, value) {
     const next = { ...connections, [service]: value }
@@ -770,6 +809,45 @@ export default function Settings() {
           </button>
         </div>
       </div>
+
+      {/* Location picker modal */}
+      {chooseLocation && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+        >
+          <div style={{ width: '100%', maxWidth: 440, backgroundColor: C.card, borderRadius: 20, padding: '32px 28px', boxShadow: '0 24px 64px rgba(0,0,0,0.3)', border: `1px solid ${C.border}` }}>
+            <p className="text-base font-semibold mb-1" style={{ color: C.primary }}>Choose your location</p>
+            <p className="text-xs mb-5" style={{ color: C.secondary }}>
+              Your Google account manages multiple Business Profiles. Pick the one AutoPilot should monitor for reviews.
+            </p>
+            <div className="space-y-2">
+              {googleLocations.map(loc => (
+                <label key={loc.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, cursor: 'pointer', backgroundColor: selectedLocationId === loc.id ? 'rgba(34,211,238,0.08)' : C.inputBg, border: `1px solid ${selectedLocationId === loc.id ? 'rgba(34,211,238,0.3)' : C.border}` }}>
+                  <input
+                    type="radio"
+                    name="locationPicker"
+                    value={loc.id}
+                    checked={selectedLocationId === loc.id}
+                    onChange={() => setSelectedLocationId(loc.id)}
+                    style={{ accentColor: C.accent, width: 15, height: 15, cursor: 'pointer', flexShrink: 0 }}
+                  />
+                  <span className="text-sm" style={{ color: C.primary }}>{loc.name}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 mt-6">
+              <button
+                onClick={handleSelectLocation}
+                disabled={locationSaving}
+                className="text-sm font-semibold px-5 py-2.5 rounded"
+                style={{ backgroundColor: C.accent, color: 'var(--ap-on-accent)', cursor: locationSaving ? 'not-allowed' : 'pointer', opacity: locationSaving ? 0.6 : 1 }}
+              >
+                {locationSaving ? 'Saving…' : 'Confirm location'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cancel modal overlay */}
       {cancelStep && (
