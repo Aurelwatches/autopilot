@@ -364,6 +364,16 @@ function clean(v, maxLen = 5000) {
   return String(v).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').replace(/<\/?[^>]*>/g, '').trim().slice(0, maxLen)
 }
 
+// Escape user content before embedding in HTML email bodies
+function escHtml(v) {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 app.use((req, _res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`)
   next()
@@ -376,6 +386,7 @@ app.get('/api/debug/connection-status', requireAuth, async (req, res) => {
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
   const { user_id } = req.query
   if (!user_id) return res.status(400).json({ error: 'user_id required' })
+  if (user_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' })
   const { data: p } = await supabase.from('profiles')
     .select('google_refresh_token, google_access_token, google_account_id, google_location_id, google_connected_at, google_token_expires_at, reply_speed, auto_post_enabled, reply_tone')
     .eq('id', user_id).single()
@@ -402,6 +413,7 @@ app.post('/api/test-pipeline', requireAuth, async (req, res) => {
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
   const { user_id } = req.body
   if (!user_id) return res.status(400).json({ error: 'user_id required' })
+  if (user_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' })
 
   const { data: profile } = await supabase.from('profiles')
     .select('reply_speed, auto_post_enabled, business_hours, reply_tone, restaurant_name')
@@ -665,7 +677,7 @@ async function processQueuedReplies() {
 cron.schedule('*/2 * * * *', processQueuedReplies)
 
 // Uptime monitor: every hour — checks Vercel frontend + this backend, SMS if down
-const ALERT_PHONE = '+19842021442'
+const ALERT_PHONE = process.env.OWNER_ALERT_PHONE || ''
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://getautopilot.net'
 
 async function checkUptime() {
@@ -688,7 +700,9 @@ async function checkUptime() {
   if (failed.length > 0) {
     const msg = `🚨 AutoPilot DOWN:\n${failed.join('\n')}\n\nCheck Railway + Vercel dashboards immediately.`
     console.error('[Uptime] ALERT:', msg)
-    try { await sendSms(ALERT_PHONE, msg) } catch (e) { console.error('[Uptime] SMS failed:', e.message) }
+    if (ALERT_PHONE) {
+      try { await sendSms(ALERT_PHONE, msg) } catch (e) { console.error('[Uptime] SMS failed:', e.message) }
+    }
   } else {
     console.log('[Uptime] All systems OK')
   }
@@ -928,6 +942,7 @@ app.post('/api/reviews/:id/regenerate', requireAuth, async (req, res) => {
     .select('user_id, review_text, rating')
     .eq('id', id).single()
   if (revErr || !review) return res.status(404).json({ error: 'Review not found' })
+  if (review.user_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' })
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -961,7 +976,7 @@ app.post('/api/reviews/:id/regenerate', requireAuth, async (req, res) => {
 })
 
 // POST /api/reply
-app.post('/api/reply', replyLimiter, async (req, res) => {
+app.post('/api/reply', replyLimiter, requireAuth, async (req, res) => {
   const { id, reply } = req.body
   const cleanReply = clean(reply, 4000)
   if (!id || !cleanReply) return res.status(400).json({ error: 'id and reply are required' })
@@ -1038,7 +1053,7 @@ app.post('/api/generate-post-groq', generateLimiter, requireAuth, async (req, re
 })
 
 // POST /api/discord/message  (Discord webhook proxy — URL never exposed to browser)
-app.post('/api/discord/message', async (req, res) => {
+app.post('/api/discord/message', requireAuth, async (req, res) => {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL || process.env.VITE_DISCORD_WEBHOOK_URL
   if (!webhookUrl) return res.status(500).json({ error: 'DISCORD_WEBHOOK_URL not configured on server.' })
 
@@ -1060,9 +1075,10 @@ app.post('/api/discord/message', async (req, res) => {
 })
 
 // POST /api/auth/google/select-location  — save chosen location after multi-location picker
-app.post('/api/auth/google/select-location', async (req, res) => {
+app.post('/api/auth/google/select-location', requireAuth, async (req, res) => {
   const { user_id, location_id } = req.body
   if (!user_id || !location_id) return res.status(400).json({ error: 'user_id and location_id are required' })
+  if (user_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' })
   const { error } = await supabase
     .from('profiles')
     .update({ google_location_id: location_id })
@@ -1079,7 +1095,7 @@ const PRICE_IDS = {
 }
 
 // POST /api/create-checkout-session
-app.post('/api/create-checkout-session', async (req, res) => {
+app.post('/api/create-checkout-session', requireAuth, async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured' })
   const { plan, interval, userId } = req.body
   if (!plan || !interval) return res.status(400).json({ error: 'plan and interval are required' })
@@ -1105,10 +1121,11 @@ app.post('/api/create-checkout-session', async (req, res) => {
 })
 
 // POST /api/create-portal-session
-app.post('/api/create-portal-session', async (req, res) => {
+app.post('/api/create-portal-session', requireAuth, async (req, res) => {
   if (!stripe || !supabase) return res.status(500).json({ error: 'Stripe or Supabase not configured' })
   const { userId } = req.body
   if (!userId) return res.status(400).json({ error: 'userId is required' })
+  if (userId !== req.user.id) return res.status(403).json({ error: 'Forbidden' })
   const { data: profile, error } = await supabase.from('profiles').select('stripe_customer_id').eq('id', userId).single()
   if (error || !profile?.stripe_customer_id) return res.status(404).json({ error: 'No Stripe customer found.' })
   try {
@@ -1131,6 +1148,7 @@ app.post('/api/reviews/:reviewId/approve', requireAuth, async (req, res) => {
   const { data: review, error: reviewErr } = await supabase
     .from('reviews').select('user_id, ai_reply, review_id').eq('id', reviewId).single()
   if (reviewErr || !review) return res.status(404).json({ error: 'Review not found' })
+  if (review.user_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' })
   if (!review.ai_reply)   return res.status(400).json({ error: 'No AI reply to post' })
   if (!review.review_id)  return res.status(400).json({ error: 'Google review_id not stored' })
 
@@ -1181,7 +1199,7 @@ app.post('/api/reviews/:reviewId/approve', requireAuth, async (req, res) => {
 app.post('/api/test-review', requireAuth, async (req, res) => {
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
 
-  const {
+  let {
     user_id,
     rating        = 5,
     reviewer_name = 'Test Customer',
@@ -1190,6 +1208,9 @@ app.post('/api/test-review', requireAuth, async (req, res) => {
   } = req.body
 
   if (!user_id) return res.status(400).json({ error: 'user_id is required' })
+  if (user_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' })
+  reviewer_name = clean(reviewer_name, 200)
+  review_text   = clean(review_text, 5000)
 
   // Load user prefs
   const { data: profile } = await supabase
@@ -1261,12 +1282,12 @@ app.post('/api/test-review', requireAuth, async (req, res) => {
     if (ownerEmail && notif.email !== false) {
       await sendEmail({
         to: ownerEmail,
-        subject: `[TEST] New review from ${reviewer_name} — ${restName}`,
+        subject: `[TEST] New review from ${escHtml(reviewer_name)} — ${escHtml(restName)}`,
         html: `
-          <h2>🧪 Test Review — ${stars}</h2>
-          <p><strong>${reviewer_name}</strong> left a review for <strong>${restName}</strong>:</p>
-          <blockquote style="border-left:3px solid #ccc;padding-left:12px;color:#555">${review_text}</blockquote>
-          <p><strong>AI Reply ready:</strong><br>${ai_reply}</p>
+          <h2>🧪 Test Review — ${escHtml(stars)}</h2>
+          <p><strong>${escHtml(reviewer_name)}</strong> left a review for <strong>${escHtml(restName)}</strong>:</p>
+          <blockquote style="border-left:3px solid #ccc;padding-left:12px;color:#555">${escHtml(review_text)}</blockquote>
+          <p><strong>AI Reply ready:</strong><br>${escHtml(ai_reply)}</p>
           <p><a href="${frontendUrl}/dashboard/reviews" style="background:#000;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none">View in Dashboard →</a></p>
           <p style="color:#888;font-size:12px;margin-top:20px">This is a test review injected via the AutoPilot /api/test-review endpoint. No actual Google review was posted.</p>
         `,
@@ -1332,6 +1353,13 @@ app.post('/api/smoke-test', requireAuth, async (req, res) => {
     }
   }
   res.json({ ok: true, results })
+})
+
+// Global error handler — catches unhandled throws in async route handlers
+// Never expose stack traces to the client
+app.use((err, req, res, _next) => {
+  console.error('[UnhandledError]', err.message, err.stack)
+  res.status(500).json({ error: 'Internal server error' })
 })
 
 app.listen(PORT, '0.0.0.0', () => {

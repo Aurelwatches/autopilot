@@ -1,6 +1,19 @@
 @echo off
+echo Removing git lock if stale...
 cd /d C:\Users\brayd\autopilot
-git add backend/server.js src/App.jsx src/dashboard/pages/Reviews.jsx src/dashboard/pages/Subscription.jsx src/dashboard/pages/Upgrade.jsx src/pages/Pricing.jsx src/pages/Privacy.jsx src/pages/Terms.jsx AutoPilot-Client-Service-Agreement.md tools/git_push.bat
-git commit -m "Upgrade page, uptime monitor, Growth/Pro live, legal docs updated"
+if exist .git\index.lock del /f .git\index.lock
+echo Staging key files...
+git add nixpacks.toml
+git add tools\fix_and_push.bat
+git add tools\push_now.bat
+git add backend\server.js
+git add backend\google-oauth-routes.js
+git add backend\google-reviews-poller.js
+git add src\dashboard\
+echo Committing...
+git commit -m "fix: add nixpacks.toml + security hardening"
+echo Pushing...
 git push
+echo.
+echo Done! Check Railway in ~2 minutes.
 pause
