@@ -12,7 +12,7 @@ const navItems = [
     path: '/dashboard/overview',
     label: 'Overview',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
         <rect x="1" y="1" width="6" height="6" rx="1.2"/>
         <rect x="9" y="1" width="6" height="6" rx="1.2"/>
         <rect x="1" y="9" width="6" height="6" rx="1.2"/>
@@ -25,7 +25,7 @@ const navItems = [
     label: 'Reviews',
     tour: 'reviews',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
         <path d="M8 1l1.854 3.756L14 5.528l-3 2.924.708 4.128L8 10.5l-3.708 2.08L5 8.452 2 5.528l4.146-.772L8 1z"/>
       </svg>
     ),
@@ -35,7 +35,7 @@ const navItems = [
     label: 'Social Posts',
     tour: 'posts',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <circle cx="12.5" cy="3.5" r="1.5"/>
         <circle cx="12.5" cy="12.5" r="1.5"/>
         <circle cx="3.5" cy="8" r="1.5"/>
@@ -49,7 +49,7 @@ const navItems = [
     path: '/dashboard/analytics',
     label: 'Analytics',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
         <rect x="1" y="9" width="3" height="6" rx="0.5"/>
         <rect x="6" y="5" width="3" height="10" rx="0.5"/>
         <rect x="11" y="1" width="3" height="14" rx="0.5"/>
@@ -60,7 +60,7 @@ const navItems = [
     path: '/dashboard/settings',
     label: 'Settings',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
         <path fillRule="evenodd" d="M8 5a3 3 0 100 6A3 3 0 008 5zm-1.5 3a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd"/>
         <path fillRule="evenodd" d="M8 1a1 1 0 011 1v.1a5.985 5.985 0 011.634.677l.07-.07a1 1 0 011.415 1.415l-.07.07A5.985 5.985 0 0112.9 6H13a1 1 0 110 2h-.1a5.985 5.985 0 01-.677 1.634l.07.07a1 1 0 01-1.415 1.415l-.07-.07A5.985 5.985 0 019 11.9V12a1 1 0 11-2 0v-.1a5.985 5.985 0 01-1.634-.677l-.07.07a1 1 0 01-1.415-1.415l.07-.07A5.985 5.985 0 013.1 8H3a1 1 0 110-2h.1a5.985 5.985 0 01.677-1.634l-.07-.07a1 1 0 011.415-1.415l.07.07A5.985 5.985 0 017 2.1V2a1 1 0 011-1z" clipRule="evenodd"/>
       </svg>
@@ -70,7 +70,7 @@ const navItems = [
     path: '/dashboard/security',
     label: 'Security',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
         <path fillRule="evenodd" d="M8 1L2 3.5V8c0 3.314 2.686 5.5 6 6.5 3.314-1 6-3.186 6-6.5V3.5L8 1zm0 1.293l5 2.083V8c0 2.617-2 4.46-5 5.47-3-1.01-5-2.853-5-5.47V4.376L8 2.293zM7 9.5l-2-2 .707-.707L7 8.086l3.293-3.293.707.707L7 9.5z" clipRule="evenodd"/>
       </svg>
     ),
@@ -179,6 +179,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             style={{
               color: C.muted, padding: 4, borderRadius: 6,
               border: `1px solid ${C.border}`,
@@ -211,7 +212,11 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <nav
+        className="flex-1 px-3 py-4 overflow-y-auto"
+        aria-label="Main navigation"
+        style={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+      >
         {navItems.map(({ path, label, icon, tour }, index) => (
           <div key={path}>
             {/* Gradient separator between Social Posts and Analytics */}

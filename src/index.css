@@ -148,11 +148,46 @@
   font-weight: 500;
 }
 
+/* ─── Skip navigation link (keyboard users / screen readers) ────────────────── */
+/* Visually hidden until focused — first tab stop on every page.                */
+
+.skip-nav {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 9999;
+  padding: 10px 20px;
+  background: var(--ap-accent);
+  color: var(--ap-on-accent);
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-nav:focus {
+  top: 16px;
+}
+
 /* Amber focus ring for keyboard users across interactive elements */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--ap-accent);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* ─── Visually hidden (screen-reader only) ───────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ─── Custom slim scrollbar (chat thread) ──────────────────────────────────── */

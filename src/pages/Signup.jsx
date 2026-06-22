@@ -91,10 +91,11 @@ export default function Signup() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
+            <label htmlFor="signup-name" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
               Restaurant name
             </label>
             <input
+              id="signup-name"
               type="text"
               value={restaurantName}
               onChange={e => { setRestaurantName(e.target.value); setError('') }}
@@ -107,10 +108,11 @@ export default function Signup() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
+            <label htmlFor="signup-email" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
               Email
             </label>
             <input
+              id="signup-email"
               type="email"
               value={email}
               onChange={e => { setEmail(e.target.value); setError('') }}
@@ -123,12 +125,13 @@ export default function Signup() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
+            <label htmlFor="signup-password" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
               Password{' '}
               <span style={{ color: '#9CA3AF', fontWeight: 400 }}>min. 8 characters</span>
             </label>
             <div style={{ position: 'relative' }}>
               <input
+                id="signup-password"
                 type={showPw ? 'text' : 'password'}
                 value={password}
                 onChange={e => { setPassword(e.target.value); setError('') }}
@@ -143,7 +146,7 @@ export default function Signup() {
           </div>
 
           {error && (
-            <p style={{ fontSize: 13, color: '#EF4444', margin: 0 }}>{error}</p>
+            <p role="alert" aria-live="assertive" style={{ fontSize: 13, color: '#EF4444', margin: 0 }}>{error}</p>
           )}
 
           <button

@@ -113,6 +113,9 @@ function DashboardContent() {
           </div>
         )}
 
+        {/* Skip-to-content link — first tab stop, visible on focus */}
+        <a href="#main-content" className="skip-nav">Skip to main content</a>
+
         <Sidebar mobileOpen={mobileNavOpen} onClose={closeNav} />
 
         {/* Dark overlay behind the drawer — mobile only (CSS hides on desktop) */}
@@ -120,11 +123,12 @@ function DashboardContent() {
           <div
             className="ap-mobile-overlay"
             onClick={closeNav}
+            aria-hidden="true"
             style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.5)' }}
           />
         )}
 
-        <main className="ap-main" style={{ position: 'relative', zIndex: 1, marginLeft: 240, flex: 1, minHeight: '100vh', color: C.primary }}>
+        <main id="main-content" className="ap-main" style={{ position: 'relative', zIndex: 1, marginLeft: 240, flex: 1, minHeight: '100vh', color: C.primary }}>
 
           {/* Mobile topbar with hamburger — hidden on desktop via CSS */}
           <div

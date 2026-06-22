@@ -125,10 +125,11 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
+            <label htmlFor="login-email" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
               Email
             </label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={e => { setEmail(e.target.value); setError('') }}
@@ -141,11 +142,12 @@ export default function Login() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
+            <label htmlFor="login-password" style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
               Password
             </label>
             <div style={{ position: 'relative' }}>
               <input
+                id="login-password"
                 type={showPw ? 'text' : 'password'}
                 value={password}
                 onChange={e => { setPassword(e.target.value); setError('') }}
@@ -160,7 +162,7 @@ export default function Login() {
           </div>
 
           {error && (
-            <p style={{ fontSize: 13, color: '#EF4444', margin: 0 }}>{error}</p>
+            <p role="alert" aria-live="assertive" style={{ fontSize: 13, color: '#EF4444', margin: 0 }}>{error}</p>
           )}
 
           <button
