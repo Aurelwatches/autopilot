@@ -57,7 +57,6 @@ export default function Subscription() {
   const interval = getBillingInterval()
   const isYearly = interval === 'yearly'
   const price    = planPrice(meta, interval)
-  const yearlySavings = meta.monthly * 12 - meta.yearly
 
   const [showCancel,   setShowCancel]   = useState(false)
   const [canceled,     setCanceled]     = useState(false)
@@ -80,12 +79,6 @@ export default function Subscription() {
       setPortalError(err.message)
       setPortalLoading(false)
     }
-  }
-
-  function changeToYearly() {
-    localStorage.setItem('ap_selected_plan', planKey)
-    localStorage.setItem('ap_selected_interval', 'yearly')
-    navigate('/checkout')
   }
 
   return (
@@ -194,36 +187,6 @@ export default function Subscription() {
             </button>
           </div>
 
-          {/* Switch to yearly — only when on monthly */}
-          {!isYearly && (
-            <>
-              <div className="h-px" style={{ backgroundColor: C.divider }} />
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium" style={{ color: C.primary }}>Switch to yearly</p>
-                  <p className="text-xs mt-0.5" style={{ color: C.secondary }}>
-                    Pay annually and{' '}
-                    <span style={{ color: 'var(--ap-success)', fontWeight: 600 }}>
-                      save ${yearlySavings.toLocaleString()}
-                    </span>{' '}
-                    — that’s 2 months free.
-                  </p>
-                </div>
-                <button
-                  onClick={changeToYearly}
-                  className="shrink-0 text-sm font-semibold px-5 py-2 rounded transition-colors"
-                  style={{
-                    backgroundColor: 'rgba(34,211,238,0.12)', color: 'var(--ap-success)',
-                    border: '1px solid rgba(34,211,238,0.30)', cursor: 'pointer',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(34,211,238,0.2)'}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(34,211,238,0.12)'}
-                >
-                  Change to yearly
-                </button>
-              </div>
-            </>
-          )}
         </div>
       </div>
 
