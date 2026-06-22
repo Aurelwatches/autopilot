@@ -108,6 +108,8 @@ async function sendEmail({ to, subject, html }) {
 // CORS — only allow known origins
 const ALLOWED_ORIGINS = [
   process.env.FRONTEND_URL,
+  'https://www.getautopilot.net',
+  'https://getautopilot.net',
   'https://autopilot-pink.vercel.app',
   'http://localhost:5173',
   'http://localhost:3001',
