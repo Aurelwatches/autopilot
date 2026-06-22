@@ -7,11 +7,9 @@ import os
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from campaign_secrets import GMAIL_ADDRESS, APP_PASSWORD, ALERT_EMAIL
 
 # ── CONFIG ────────────────────────────────────────────────
-GMAIL_ADDRESS = "bray.200913@gmail.com"
-APP_PASSWORD   = "zyovwivvzcdtjakc"
-ALERT_EMAIL    = "9842021442@txt.att.net"
 LEADS_CSV      = os.path.join(os.path.dirname(__file__), "leads.csv")
 TRACKER_FILE   = os.path.join(os.path.dirname(__file__), "sent_tracker.json")
 # ─────────────────────────────────────────────────────────

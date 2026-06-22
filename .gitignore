@@ -21,3 +21,9 @@ Thumbs.db
 
 # Test output
 coverage/
+
+# Campaign secrets — never commit
+campaign_secrets.py
+sent_tracker.json
+leads.csv
+campaign_log.txt
