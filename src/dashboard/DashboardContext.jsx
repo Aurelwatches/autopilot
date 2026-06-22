@@ -53,12 +53,6 @@ export function DashboardProvider({ children }) {
       return true
     })
     .map(e => {
-      console.log('Mapping review event:', {
-        customerName: e.customerName,
-        reviewText:   e.reviewText,
-        aiReply:      e.aiReply,
-        details:      e.details,
-      })
       return {
         id:     e.id,
         name:   e.customerName || 'Anonymous',

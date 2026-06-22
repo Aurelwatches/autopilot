@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "client"],
       "port": 5173
+    },
+    {
+      "name": "redesign-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "5174", "."],
+      "port": 5174
     }
   ]
 }

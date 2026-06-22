@@ -90,10 +90,7 @@ export function AppProvider({ children, initialPlan = null }) {
       delete document.documentElement.dataset.theme
     }
 
-    // 3. Log so you can verify in DevTools that the attribute is switching
-    console.log('[AutoPilot] theme →', next, '| data-theme:', document.documentElement.getAttribute('data-theme'))
-
-    // 4. Update React state + localStorage
+    // 3. Update React state + localStorage
     setThemeState(next)
     localStorage.setItem('ap_theme', next)
 

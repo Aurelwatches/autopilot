@@ -24,16 +24,13 @@ class ErrorBoundary extends React.Component {
             <path d="M16 2L9.5 8.5M16 2L11 16L9.5 8.5M16 2L2 6.5L9.5 8.5"
               stroke="#F0EEE9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <p style={{ fontSize: 14, color: '#888780' }}>Something went wrong. Check the console for details.</p>
-          <pre style={{ fontSize: 11, color: '#3A3835', maxWidth: 600, wordBreak: 'break-all' }}>
-            {this.state.error.message}
-          </pre>
+          <p style={{ fontSize: 14, color: '#888780' }}>Something went wrong. Please try again.</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => window.location.href = '/'}
             style={{ marginTop: 8, fontSize: 13, padding: '8px 20px', borderRadius: 6,
               backgroundColor: '#F0EEE9', color: '#0A0A0A', border: 'none', cursor: 'pointer' }}
           >
-            Reload
+            Go home
           </button>
         </div>
       )

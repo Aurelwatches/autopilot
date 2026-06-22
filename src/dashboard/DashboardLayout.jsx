@@ -68,9 +68,6 @@ function DashboardContent() {
     document.body.style.color = 'var(--ap-text)'
   }, [theme])
 
-  useEffect(() => {
-    console.log('[AutoPilot] DashboardContent — theme:', theme, '| isDark:', isDark, '| light blobs in DOM:', !isDark)
-  }, [isDark])
 
   return (
     <RevealCtx.Provider value={revealed}>
