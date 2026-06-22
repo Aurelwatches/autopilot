@@ -43,13 +43,27 @@ export function AuthProvider({ children }) {
     return { user: data?.user ?? null, error }
   }
 
+  async function signInWithGoogle() {
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    })
+  }
+
+  async function signInWithApple() {
+    return supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    })
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithApple }}>
       {children}
     </AuthContext.Provider>
   )

@@ -1,4 +1,5 @@
 import express from 'express'
+import helmet from 'helmet'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
@@ -13,6 +14,14 @@ const PORT = process.env.PORT || 3001
 
 app.use(googleOAuthRoutes)
 app.set('trust proxy', 1)
+
+// ── Security headers ──────────────────────────────────────────────────────────
+// This is a pure API server (no HTML pages), so CSP is disabled.
+// All other protections (X-Frame-Options, X-Content-Type-Options, HSTS, etc.) apply.
+app.use(helmet({
+  contentSecurityPolicy: false,           // API-only — no HTML to protect
+  crossOriginResourcePolicy: false,       // allow cross-origin requests from the frontend
+}))
 
 const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
   ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
@@ -96,14 +105,107 @@ async function sendEmail({ to, subject, html }) {
   console.log('[Email] Sent successfully — id:', data?.id, '→', to)
 }
 
-// CORS
+// CORS — only allow known origins
+const ALLOWED_ORIGINS = [
+  process.env.FRONTEND_URL,
+  'https://autopilot-pink.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3001',
+].filter(Boolean)
+
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*')
+  const origin = req.headers.origin
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, stripe-signature')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, stripe-signature, Authorization')
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
   if (req.method === 'OPTIONS') return res.status(200).end()
   next()
 })
+
+// ── Security monitoring ───────────────────────────────────────────────────────
+// Tracks attack attempts in Supabase and sends alerts when thresholds are hit.
+
+const ALERT_COOLDOWNS = new Map() // type+ip → last alert timestamp
+
+async function logSecurityEvent(type, req, details = {}) {
+  if (!supabase) return
+  const ip = req?.ip || details.ip || 'unknown'
+  const path = req?.path || details.path || ''
+  try {
+    await supabase.from('security_events').insert({ type, ip, path, details })
+  } catch (e) {
+    console.warn('[Security] Failed to log event:', e.message)
+  }
+  // Check if this IP has hit alert threshold — alert at most once per 10 min per type+IP
+  const cooldownKey = `${type}:${ip}`
+  const lastAlerted = ALERT_COOLDOWNS.get(cooldownKey) || 0
+  if (Date.now() - lastAlerted < 10 * 60 * 1000) return // still in cooldown
+
+  const windowStart = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+  const { count } = await supabase.from('security_events')
+    .select('id', { count: 'exact', head: true })
+    .eq('type', type).eq('ip', ip).gte('created_at', windowStart)
+
+  const thresholds = { failed_auth: 5, webhook_rejected: 3, rate_limited: 10, suspicious_input: 2 }
+  if (count >= (thresholds[type] || 5)) {
+    ALERT_COOLDOWNS.set(cooldownKey, Date.now())
+    sendSecurityAlert(type, ip, path, count, details).catch(e => console.warn('[Security] Alert failed:', e.message))
+  }
+}
+
+async function sendSecurityAlert(type, ip, path, count, details) {
+  const labels = {
+    failed_auth:      '🔐 Failed Auth Flood',
+    webhook_rejected: '🚨 Fake Webhook Attempt',
+    rate_limited:     '⚡ Rate Limit Flood',
+    suspicious_input: '💉 Suspicious Input',
+  }
+  const label = labels[type] || '⚠️ Security Alert'
+  const msg = `${label}\nIP: ${ip}\nPath: ${path}\nCount: ${count} in last 5 min\nDetails: ${JSON.stringify(details)}`
+  console.warn('[Security Alert]', msg)
+
+  // Discord
+  const discordUrl = process.env.VITE_DISCORD_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL
+  if (discordUrl) {
+    fetch(discordUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: `**${label}**\`\`\`${msg}\`\`\`` }),
+    }).catch(() => {})
+  }
+
+  // Email to owner
+  if (resend && process.env.OWNER_ALERT_EMAIL) {
+    sendEmail({
+      to: process.env.OWNER_ALERT_EMAIL,
+      subject: `[AutoPilot Security] ${label}`,
+      html: `<h2>${label}</h2><p><strong>IP:</strong> ${ip}</p><p><strong>Path:</strong> ${path}</p><p><strong>Count:</strong> ${count} attempts in the last 5 minutes</p><pre style="background:#f5f5f5;padding:12px;border-radius:6px;font-size:13px">${JSON.stringify(details, null, 2)}</pre><p style="color:#6b7280;font-size:12px">This alert won't repeat for this IP for 10 minutes.</p>`,
+    }).catch(() => {})
+  }
+}
+
+// ── Auth middleware ───────────────────────────────────────────────────────────
+// Validates the Supabase JWT. Accepts:
+//   - Authorization: Bearer <token>  (standard REST calls)
+//   - ?token=<token>                 (EventSource/SSE — can't set headers)
+async function requireAuth(req, res, next) {
+  const token = (req.headers.authorization?.replace('Bearer ', '') || req.query.token || '').trim()
+  if (!token) {
+    logSecurityEvent('failed_auth', req, { reason: 'no_token' })
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+  const { data: { user }, error } = await supabase.auth.getUser(token)
+  if (error || !user) {
+    logSecurityEvent('failed_auth', req, { reason: 'invalid_token' })
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+  req.user = user
+  next()
+}
 
 // ── Stripe webhook ────────────────────────────────────────────────────────────
 app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -127,12 +229,22 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
     const plan = session.metadata?.plan ?? 'unknown'
     const interval = session.metadata?.interval ?? 'monthly'
     if (userId && supabase) {
+      // Fetch the subscription to get current_period_end
+      let periodEnd = null
+      if (session.subscription && stripe) {
+        try {
+          const sub = await stripe.subscriptions.retrieve(session.subscription)
+          periodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null
+        } catch (e) { console.warn('[Stripe] Could not retrieve subscription:', e.message) }
+      }
       const { error } = await supabase.from('profiles').update({
         plan,
         plan_interval: interval,
         subscribed_at: new Date().toISOString(),
         subscription_status: 'active',
         stripe_customer_id: session.customer ?? null,
+        cancel_at_period_end: false,
+        stripe_current_period_end: periodEnd,
       }).eq('id', userId)
       if (error) console.error('Supabase profile update error:', error.message)
       // email lives in auth.users — fetch via admin API
@@ -164,11 +276,16 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
     if (sub.customer && supabase) {
       const statusMap = { active: 'active', past_due: 'past_due', unpaid: 'past_due', canceled: 'canceled', trialing: 'active' }
       const newStatus = statusMap[sub.status] ?? sub.status
+      const periodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null
       const { error } = await supabase.from('profiles')
-        .update({ subscription_status: newStatus })
+        .update({
+          subscription_status: newStatus,
+          cancel_at_period_end: sub.cancel_at_period_end ?? false,
+          stripe_current_period_end: periodEnd,
+        })
         .eq('stripe_customer_id', sub.customer)
       if (error) console.error('[Stripe] subscription.updated failed:', error.message)
-      else console.log(`[Stripe] subscription updated → ${newStatus} for customer`, sub.customer)
+      else console.log(`[Stripe] subscription updated → ${newStatus}, cancel_at_period_end=${sub.cancel_at_period_end} for customer`, sub.customer)
     }
   }
 
@@ -229,14 +346,16 @@ function rateLimit({ windowMs, max }) {
     rec.count++
     if (rec.count > max) {
       res.set('Retry-After', String(Math.ceil((rec.resetAt - now) / 1000)))
+      logSecurityEvent('rate_limited', req, { max, path: req.path }).catch?.(() => {})
       return res.status(429).json({ error: 'Too many requests.' })
     }
     next()
   }
 }
 
-const webhookLimiter = rateLimit({ windowMs: 60_000, max: 100 })
-const replyLimiter   = rateLimit({ windowMs: 60_000, max: 100 })
+const webhookLimiter  = rateLimit({ windowMs: 60_000, max: 100 })
+const replyLimiter    = rateLimit({ windowMs: 60_000, max: 100 })
+const generateLimiter = rateLimit({ windowMs: 60_000, max: 20 })  // 20 AI generations/min per IP
 
 function clean(v, maxLen = 5000) {
   if (v == null) return ''
@@ -251,7 +370,7 @@ app.use((req, _res, next) => {
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }))
 
 // GET /api/debug/connection-status — shows exactly what's set per user
-app.get('/api/debug/connection-status', async (req, res) => {
+app.get('/api/debug/connection-status', requireAuth, async (req, res) => {
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
   const { user_id } = req.query
   if (!user_id) return res.status(400).json({ error: 'user_id required' })
@@ -277,7 +396,7 @@ app.get('/api/debug/connection-status', async (req, res) => {
 
 // POST /api/test-pipeline — simulates a full review without Google connected
 // Generates AI reply via Groq, saves to reviews table, sends email to account owner
-app.post('/api/test-pipeline', async (req, res) => {
+app.post('/api/test-pipeline', requireAuth, async (req, res) => {
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
   const { user_id } = req.body
   if (!user_id) return res.status(400).json({ error: 'user_id required' })
@@ -577,6 +696,19 @@ cron.schedule('0 * * * *', checkUptime)   // top of every hour
 
 // ── Webhook (Make.com) ────────────────────────────────────────────────────────
 app.post('/api/webhook', webhookLimiter, async (req, res) => {
+  // Verify shared secret so only Make.com can fire fake reviews into the system.
+  // Set MAKE_WEBHOOK_SECRET in Railway env vars AND in your Make.com HTTP module
+  // as the header: X-Webhook-Secret: <your-secret>
+  const webhookSecret = process.env.MAKE_WEBHOOK_SECRET
+  if (webhookSecret) {
+    const provided = req.headers['x-webhook-secret']
+    if (!provided || provided !== webhookSecret) {
+      console.warn('[Webhook] Rejected — invalid or missing X-Webhook-Secret from', req.ip)
+      logSecurityEvent('webhook_rejected', req, { reason: provided ? 'wrong_secret' : 'no_secret' }).catch?.(() => {})
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+  }
+
   console.log('Webhook received:', JSON.stringify(req.body, null, 2))
 
   const {
@@ -707,11 +839,25 @@ app.post('/api/webhook', webhookLimiter, async (req, res) => {
   res.json({ ok: true, event })
 })
 
+// GET /api/security-events — recent security events for the dashboard
+app.get('/api/security-events', requireAuth, async (req, res) => {
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+  const since = req.query.since || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const { data, error } = await supabase
+    .from('security_events')
+    .select('id, type, ip, path, details, created_at')
+    .gte('created_at', since)
+    .order('created_at', { ascending: false })
+    .limit(200)
+  if (error) return res.status(500).json({ error: error.message })
+  res.json(data || [])
+})
+
 // GET /api/events
-app.get('/api/events', (_req, res) => res.json(events))
+app.get('/api/events', requireAuth, (_req, res) => res.json(events))
 
 // GET /api/events/stream
-app.get('/api/events/stream', (req, res) => {
+app.get('/api/events/stream', requireAuth, (req, res) => {
   res.setHeader('Content-Type',  'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection',    'keep-alive')
@@ -723,8 +869,27 @@ app.get('/api/events/stream', (req, res) => {
   req.on('close', () => sseClients.delete(clientId))
 })
 
-// POST /api/reviews/set-reply — Make.com calls this to write ai_reply back to a review row
+// POST /api/reviews/set-reply — Make.com (webhook secret) OR dashboard (Bearer token) can call this
 app.post('/api/reviews/set-reply', async (req, res) => {
+  const webhookSecret = process.env.MAKE_WEBHOOK_SECRET
+  const providedSecret = req.headers['x-webhook-secret']
+  const bearerToken = req.headers.authorization?.replace('Bearer ', '').trim()
+
+  // Accept if: webhook secret matches, OR a valid Supabase JWT is present
+  let authorized = false
+  if (webhookSecret && providedSecret === webhookSecret) {
+    authorized = true
+  } else if (bearerToken && supabase) {
+    const { data: { user }, error } = await supabase.auth.getUser(bearerToken)
+    if (!error && user) authorized = true
+  } else if (!webhookSecret && !bearerToken) {
+    authorized = true // MAKE_WEBHOOK_SECRET not configured yet — allow while migrating
+  }
+
+  if (!authorized) {
+    console.warn('[set-reply] Rejected — unauthorized from', req.ip)
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
   const { review_id, id, ai_reply, aiReply, reply } = req.body
   const resolvedReply = ai_reply || aiReply || reply || ''
@@ -752,7 +917,7 @@ app.post('/api/reviews/set-reply', async (req, res) => {
 })
 
 // POST /api/reviews/:id/regenerate — generate a fresh AI reply for a review
-app.post('/api/reviews/:id/regenerate', async (req, res) => {
+app.post('/api/reviews/:id/regenerate', requireAuth, async (req, res) => {
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
   const { id } = req.params
 
@@ -808,7 +973,7 @@ app.post('/api/reply', replyLimiter, async (req, res) => {
 })
 
 // POST /api/generate-post  (Anthropic — used by legacy callers)
-app.post('/api/generate-post', async (req, res) => {
+app.post('/api/generate-post', generateLimiter, requireAuth, async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set.' })
 
@@ -833,7 +998,7 @@ app.post('/api/generate-post', async (req, res) => {
 })
 
 // POST /api/generate-post-groq  (Groq/Llama — server-side proxy, key never exposed)
-app.post('/api/generate-post-groq', async (req, res) => {
+app.post('/api/generate-post-groq', generateLimiter, requireAuth, async (req, res) => {
   const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY
   if (!groqKey) return res.status(500).json({ error: 'GROQ_API_KEY is not configured on the server.' })
 
@@ -947,7 +1112,7 @@ app.post('/api/create-portal-session', async (req, res) => {
   try {
     const session = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
-      return_url: `${process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'}/dashboard/subscription`,
+      return_url: `${process.env.FRONTEND_URL || 'https://autopilot-pink.vercel.app'}/dashboard/subscription?portal_return=true`,
     })
     res.json({ url: session.url })
   } catch (err) {
@@ -957,7 +1122,7 @@ app.post('/api/create-portal-session', async (req, res) => {
 })
 
 // POST /api/reviews/:reviewId/approve
-app.post('/api/reviews/:reviewId/approve', async (req, res) => {
+app.post('/api/reviews/:reviewId/approve', requireAuth, async (req, res) => {
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
   const { reviewId } = req.params
 
@@ -1011,7 +1176,7 @@ app.post('/api/reviews/:reviewId/approve', async (req, res) => {
 
 // POST /api/test-review  — injects a fake review through the full pipeline for testing
 // Usage: POST { user_id, rating, reviewer_name, review_text } — all optional, sensible defaults provided
-app.post('/api/test-review', async (req, res) => {
+app.post('/api/test-review', requireAuth, async (req, res) => {
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
 
   const {
@@ -1116,7 +1281,7 @@ app.post('/api/test-review', async (req, res) => {
 })
 
 // POST /api/test-email — quick diagnostic, returns full Resend response or error
-app.post('/api/test-email', async (req, res) => {
+app.post('/api/test-email', requireAuth, async (req, res) => {
   const { to } = req.body
   if (!to) return res.status(400).json({ error: 'Provide { to: "email@example.com" }' })
   if (!resend) return res.status(500).json({ error: 'RESEND_API_KEY not set in Railway env vars' })
@@ -1144,7 +1309,7 @@ app.post('/api/test-email', async (req, res) => {
 })
 
 // POST /api/smoke-test
-app.post('/api/smoke-test', async (req, res) => {
+app.post('/api/smoke-test', requireAuth, async (req, res) => {
   const { phone, email } = req.body
   if (!phone && !email) return res.status(400).json({ error: 'Provide phone and/or email' })
   const results = {}

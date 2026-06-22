@@ -72,7 +72,7 @@ def save_tracker(tracker):
 
 def send_email(to, subject, body):
     msg = MIMEMultipart()
-    msg["From"]    = GMAIL_ADDRESS
+    msg["From"]    = f"Braydon @ AutoPilot <{GMAIL_ADDRESS}>"
     msg["To"]      = to
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
@@ -144,7 +144,7 @@ def run():
             subject, body = email_1(first_name, restaurant)
             send_email(addr, subject, body)
             tracker["sent"].setdefault(addr, {})["e1"] = str(today)
-            print(f"[EMAIL 1] → {addr} ({restaurant})")
+            print(f"[EMAIL 1] -> {addr} ({restaurant})")
 
         elif "e2" not in history:
             e1_date = datetime.strptime(history["e1"], "%Y-%m-%d").date()
@@ -152,7 +152,7 @@ def run():
                 subject, body = email_2(first_name, restaurant)
                 send_email(addr, subject, body)
                 tracker["sent"][addr]["e2"] = str(today)
-                print(f"[EMAIL 2] → {addr} ({restaurant})")
+                print(f"[EMAIL 2] -> {addr} ({restaurant})")
 
         elif "e3" not in history:
             e2_date = datetime.strptime(history["e2"], "%Y-%m-%d").date()
@@ -160,7 +160,7 @@ def run():
                 subject, body = email_3(first_name, restaurant)
                 send_email(addr, subject, body)
                 tracker["sent"][addr]["e3"] = str(today)
-                print(f"[EMAIL 3] → {addr} ({restaurant})")
+                print(f"[EMAIL 3] -> {addr} ({restaurant})")
 
         save_tracker(tracker)
 

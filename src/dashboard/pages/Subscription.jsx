@@ -1,27 +1,10 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useApp } from '../AppContext'
+import { supabase } from '../../lib/supabase'
 import { getPlanMeta, getBillingInterval, planPrice } from '../planMeta'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://autopilot-production-7671.up.railway.app'
-
-// Next billing date: anchored once in localStorage, then advanced by the
-// billing interval until it lands in the future. Stable across renders.
-function nextBillingDate(interval) {
-  let anchor = localStorage.getItem('ap_billing_anchor')
-  if (!anchor) {
-    anchor = new Date().toISOString()
-    localStorage.setItem('ap_billing_anchor', anchor)
-  }
-  const next = new Date(anchor)
-  const now = new Date()
-  let guard = 0
-  while (next <= now && guard++ < 240) {
-    if (interval === 'yearly') next.setFullYear(next.getFullYear() + 1)
-    else next.setMonth(next.getMonth() + 1)
-  }
-  return next.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-}
 
 function Row({ label, children, C, last }) {
   return (
@@ -48,20 +31,58 @@ function SadFace() {
   )
 }
 
+function formatDate(isoString) {
+  if (!isoString) return '—'
+  return new Date(isoString).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+}
+
 export default function Subscription() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { C, plan, userId } = useApp()
 
   const meta     = getPlanMeta(plan)
-  const planKey  = meta.key
   const interval = getBillingInterval()
   const isYearly = interval === 'yearly'
   const price    = planPrice(meta, interval)
 
   const [showCancel,   setShowCancel]   = useState(false)
-  const [canceled,     setCanceled]     = useState(false)
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalError,   setPortalError]   = useState('')
+
+  // Real subscription data from Supabase
+  const [cancelAtPeriodEnd,  setCancelAtPeriodEnd]  = useState(false)
+  const [currentPeriodEnd,   setCurrentPeriodEnd]   = useState(null)
+  const [subLoading,         setSubLoading]         = useState(true)
+
+  async function fetchSubData() {
+    if (!userId || !supabase) { setSubLoading(false); return }
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('cancel_at_period_end, stripe_current_period_end, subscription_status')
+        .eq('id', userId)
+        .single()
+      if (data) {
+        setCancelAtPeriodEnd(data.cancel_at_period_end ?? false)
+        setCurrentPeriodEnd(data.stripe_current_period_end ?? null)
+      }
+    } catch (err) {
+      console.warn('[Subscription] Failed to fetch sub data:', err.message)
+    } finally {
+      setSubLoading(false)
+    }
+  }
+
+  // Fetch on mount; also refresh when returning from Stripe portal
+  useEffect(() => {
+    fetchSubData()
+    if (searchParams.get('portal_return') === 'true') {
+      // Clean up the URL param
+      setSearchParams({}, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
 
   async function handleCancelConfirm() {
     setPortalLoading(true)
@@ -81,6 +102,8 @@ export default function Subscription() {
     }
   }
 
+  const canceled = cancelAtPeriodEnd
+
   return (
     <div className="ap-page px-8 py-8" style={{ maxWidth: 660 }}>
       <div className="mb-8">
@@ -98,7 +121,6 @@ export default function Subscription() {
         <div className="px-6 py-6" style={{ borderBottom: `1px solid ${C.divider}` }}>
           <div className="flex items-start justify-between gap-4">
             <div>
-              {/* Large plan name in its accent color */}
               <div className="flex items-center gap-2.5 mb-1.5">
                 <h2 style={{
                   fontFamily: "'Bricolage Grotesque', sans-serif",
@@ -107,18 +129,20 @@ export default function Subscription() {
                 }}>
                   {meta.emoji ? `${meta.emoji} ` : ''}{meta.label}
                 </h2>
-                <span style={{
-                  fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                  padding: '3px 10px', borderRadius: 980,
-                  background: canceled ? 'rgba(59,130,246,0.14)' : 'rgba(34,211,238,0.14)',
-                  color: canceled ? '#3B82F6' : '#22D3EE',
-                  border: `1px solid ${canceled ? 'rgba(59,130,246,0.30)' : 'rgba(34,211,238,0.30)'}`,
-                }}>
-                  {canceled ? 'CANCELING' : 'ACTIVE'}
-                </span>
+                {!subLoading && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                    padding: '3px 10px', borderRadius: 980,
+                    background: canceled ? 'rgba(59,130,246,0.14)' : 'rgba(34,211,238,0.14)',
+                    color: canceled ? '#3B82F6' : '#22D3EE',
+                    border: `1px solid ${canceled ? 'rgba(59,130,246,0.30)' : 'rgba(34,211,238,0.30)'}`,
+                  }}>
+                    {canceled ? 'CANCELING' : 'ACTIVE'}
+                  </span>
+                )}
               </div>
               <p className="text-sm font-medium" style={{ color: C.primary }}>
-                You’re on the {meta.label} plan
+                You're on the {meta.label} plan
               </p>
               <p className="text-sm mt-0.5" style={{ color: C.secondary }}>{meta.blurb}</p>
             </div>
@@ -136,7 +160,7 @@ export default function Subscription() {
             {isYearly ? 'Yearly' : 'Monthly'}
           </Row>
           <Row label={canceled ? 'Access until' : 'Next billing date'} C={C} last>
-            {nextBillingDate(interval)}
+            {subLoading ? '…' : formatDate(currentPeriodEnd)}
           </Row>
         </div>
       </div>
@@ -150,7 +174,7 @@ export default function Subscription() {
             Your subscription is set to cancel
           </p>
           <p className="text-xs mt-1" style={{ color: C.secondary }}>
-            You’ll keep full access until {nextBillingDate(interval)}. Change your mind anytime —
+            You'll keep full access until {formatDate(currentPeriodEnd)}. Change your mind anytime —
             just pick a plan again to stay on AutoPilot.
           </p>
         </div>
@@ -187,6 +211,26 @@ export default function Subscription() {
             </button>
           </div>
 
+          {/* Manage billing */}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium" style={{ color: C.primary }}>Billing portal</p>
+              <p className="text-xs mt-0.5" style={{ color: C.secondary }}>
+                Update payment method, download invoices, or change billing interval.
+              </p>
+            </div>
+            <button
+              onClick={handleCancelConfirm}
+              disabled={portalLoading}
+              className="shrink-0 text-sm font-semibold px-5 py-2 rounded transition-colors"
+              style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}`, color: C.primary, cursor: portalLoading ? 'default' : 'pointer', opacity: portalLoading ? 0.6 : 1 }}
+              onMouseEnter={e => { if (!portalLoading) e.currentTarget.style.opacity = '0.8' }}
+              onMouseLeave={e => e.currentTarget.style.opacity = portalLoading ? '0.6' : '1'}
+            >
+              {portalLoading ? 'Opening…' : 'Manage billing'}
+            </button>
+          </div>
+
         </div>
       </div>
 
@@ -206,14 +250,14 @@ export default function Subscription() {
           </p>
           <button
             onClick={() => setShowCancel(true)}
-            disabled={canceled}
+            disabled={canceled || subLoading}
             className="shrink-0 text-sm font-medium px-4 py-2 rounded transition-colors"
             style={{
               color: 'rgb(239,68,68)', border: '1px solid rgba(239,68,68,0.3)',
               backgroundColor: 'rgba(239,68,68,0.06)',
-              cursor: canceled ? 'default' : 'pointer', opacity: canceled ? 0.5 : 1,
+              cursor: (canceled || subLoading) ? 'default' : 'pointer', opacity: (canceled || subLoading) ? 0.5 : 1,
             }}
-            onMouseEnter={e => { if (!canceled) e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.12)' }}
+            onMouseEnter={e => { if (!canceled && !subLoading) e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.12)' }}
             onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.06)'}
           >
             {canceled ? 'Cancellation scheduled' : 'Cancel subscription'}
@@ -246,7 +290,7 @@ export default function Subscription() {
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
               <SadFace />
             </div>
-            <h3 className="text-xl font-semibold mb-2" style={{ color: C.primary }}>We’ll miss you</h3>
+            <h3 className="text-xl font-semibold mb-2" style={{ color: C.primary }}>We'll miss you</h3>
             <p className="text-sm mb-7" style={{ color: C.secondary, lineHeight: 1.6 }}>
               Are you sure you want to cancel? AutoPilot keeps replying to reviews and posting
               for you around the clock — your restaurant loses that the moment your plan ends.

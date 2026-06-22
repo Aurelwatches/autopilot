@@ -109,9 +109,11 @@ export default function Reviews() {
     if (!editText.trim()) return
     setSaving(prev => new Set(prev).add(reviewId))
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
       const res = await fetch(`${API_URL}/api/reviews/set-reply`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ id: reviewId, ai_reply: editText.trim() }),
       })
       if (!res.ok) { const d = await res.json(); alert(d.error || 'Save failed'); return }
@@ -127,7 +129,12 @@ export default function Reviews() {
   async function handleRegenerate(reviewId) {
     setRegenerating(prev => new Set(prev).add(reviewId))
     try {
-      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/regenerate`, { method: 'POST' })
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/regenerate`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
       const text = await res.text()
       let data
       try { data = JSON.parse(text) } catch { alert('Server error — please wait a moment and try again.'); return }
@@ -161,7 +168,12 @@ export default function Reviews() {
   async function handleApprove(reviewId) {
     setApproving(prev => new Set(prev).add(reviewId))
     try {
-      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/approve`, { method: 'POST' })
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/approve`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
       const data = await res.json()
       if (!res.ok) {
         alert(`Could not post to Google: ${data.error}`)

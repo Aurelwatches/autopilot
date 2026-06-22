@@ -315,9 +315,14 @@ export default function SocialPosts() {
     setIsLoading(true); setAiError(''); setMsgIdx(0)
     const API = import.meta.env.VITE_API_URL || 'https://autopilot-production-7671.up.railway.app'
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
       const res = await fetch(`${API}/api/generate-post-groq`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ topic: topic.trim(), platform, tone: postTone }),
       })
       const data = await res.json()

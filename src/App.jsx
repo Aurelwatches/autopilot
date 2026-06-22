@@ -20,6 +20,7 @@ import Analytics from './dashboard/pages/Analytics'
 import Settings from './dashboard/pages/Settings'
 import Subscription from './dashboard/pages/Subscription'
 import Upgrade from './dashboard/pages/Upgrade'
+import Security from './dashboard/pages/Security'
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="settings"  element={<Settings />} />
             <Route path="subscription" element={<Subscription />} />
             <Route path="upgrade" element={<Upgrade />} />
+            <Route path="security" element={<Security />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

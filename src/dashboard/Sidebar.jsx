@@ -66,6 +66,15 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    path: '/dashboard/security',
+    label: 'Security',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <path fillRule="evenodd" d="M8 1L2 3.5V8c0 3.314 2.686 5.5 6 6.5 3.314-1 6-3.186 6-6.5V3.5L8 1zm0 1.293l5 2.083V8c0 2.617-2 4.46-5 5.47-3-1.01-5-2.853-5-5.47V4.376L8 2.293zM7 9.5l-2-2 .707-.707L7 8.086l3.293-3.293.707.707L7 9.5z" clipRule="evenodd"/>
+      </svg>
+    ),
+  },
 ]
 
 function SunIcon() {

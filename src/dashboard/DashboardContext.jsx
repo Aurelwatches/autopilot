@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
 
 const DashboardContext = createContext(null)
 
@@ -12,14 +13,16 @@ export function DashboardProvider({ children }) {
   useEffect(() => {
     let es = null
     let retryTimer = null
-
-    // Use the absolute Railway API URL so the SSE stream connects to the
-    // Express server, not the Netlify frontend (a relative URL would hit
-    // Netlify and get back an HTML 404, not text/event-stream).
     const API = 'https://autopilot-production-7671.up.railway.app'
 
-    function connect() {
-      es = new EventSource(`${API}/api/events/stream`)
+    async function connect() {
+      // Get the current session token so the backend can auth the SSE stream
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      if (!token) return  // not logged in — don't connect
+
+      const url = `${API}/api/events/stream?token=${encodeURIComponent(token)}`
+      es = new EventSource(url)
 
       es.onmessage = e => {
         try { setEvents(JSON.parse(e.data)) } catch {}
@@ -29,7 +32,9 @@ export function DashboardProvider({ children }) {
         es.close()
         es = null
         // Fetch a snapshot so the UI isn't empty while waiting to reconnect
-        fetch(`${API}/api/events`).then(r => r.json()).then(setEvents).catch(() => {})
+        fetch(`${API}/api/events`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }).then(r => r.json()).then(setEvents).catch(() => {})
         retryTimer = setTimeout(connect, 5000)
       }
     }
