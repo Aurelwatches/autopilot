@@ -893,11 +893,12 @@ app.post('/api/reviews/set-reply', async (req, res) => {
 
   // Accept if: webhook secret matches, OR a valid Supabase JWT is present
   let authorized = false
+  let jwtUser = null
   if (webhookSecret && providedSecret === webhookSecret) {
     authorized = true
   } else if (bearerToken && supabase) {
     const { data: { user }, error } = await supabase.auth.getUser(bearerToken)
-    if (!error && user) authorized = true
+    if (!error && user) { authorized = true; jwtUser = user }
   }
 
   if (!authorized) {
@@ -911,13 +912,22 @@ app.post('/api/reviews/set-reply', async (req, res) => {
 
   const cleanedReply = clean(resolvedReply, 5000)
 
+  // When called via JWT (dashboard), verify ownership before updating
   let result
   if (review_id) {
+    if (jwtUser) {
+      const { data: existing } = await supabase.from('reviews').select('user_id').eq('review_id', review_id).single()
+      if (existing && existing.user_id !== jwtUser.id) return res.status(403).json({ error: 'Forbidden' })
+    }
     result = await supabase
       .from('reviews')
       .update({ ai_reply: cleanedReply, status: 'replied' })
       .eq('review_id', review_id)
   } else if (id) {
+    if (jwtUser) {
+      const { data: existing } = await supabase.from('reviews').select('user_id').eq('id', id).single()
+      if (existing && existing.user_id !== jwtUser.id) return res.status(403).json({ error: 'Forbidden' })
+    }
     result = await supabase
       .from('reviews')
       .update({ ai_reply: cleanedReply, status: 'replied' })
@@ -992,8 +1002,10 @@ app.post('/api/generate-post', generateLimiter, requireAuth, async (req, res) =>
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set.' })
 
-  const { topic, platform, tone } = req.body
-  if (!topic?.trim()) return res.status(400).json({ error: 'topic is required' })
+  const topic    = clean(req.body.topic, 500)
+  const platform = clean(req.body.platform, 50)
+  const tone     = clean(req.body.tone, 50)
+  if (!topic) return res.status(400).json({ error: 'topic is required' })
 
   const charHint = platform === 'Twitter' ? 'Keep it under 280 characters.' : 'Aim for 150–300 characters.'
 
@@ -1017,8 +1029,10 @@ app.post('/api/generate-post-groq', generateLimiter, requireAuth, async (req, re
   const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY
   if (!groqKey) return res.status(500).json({ error: 'GROQ_API_KEY is not configured on the server.' })
 
-  const { topic, platform, tone } = req.body
-  if (!topic?.trim()) return res.status(400).json({ error: 'topic is required' })
+  const topic    = clean(req.body.topic, 500)
+  const platform = clean(req.body.platform, 50)
+  const tone     = clean(req.body.tone, 50)
+  if (!topic) return res.status(400).json({ error: 'topic is required' })
 
   const TONE_DESC = {
     friendly:     'Friendly & casual, warm and conversational',
@@ -1303,8 +1317,10 @@ app.post('/api/test-review', requireAuth, async (req, res) => {
 
 // POST /api/test-email — quick diagnostic, returns full Resend response or error
 app.post('/api/test-email', requireAuth, async (req, res) => {
-  const { to } = req.body
-  if (!to) return res.status(400).json({ error: 'Provide { to: "email@example.com" }' })
+  // Only allow sending to the authenticated user's own email — prevents using this as a free spam tool
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(req.user.id)
+  const to = authUser?.email
+  if (!to) return res.status(400).json({ error: 'Could not resolve your email address' })
   if (!resend) return res.status(500).json({ error: 'RESEND_API_KEY not set in Railway env vars' })
   const from = buildFromAddress()
   console.log(`[TestEmail] Attempting send → from: ${from} → to: ${to}`)
@@ -1331,8 +1347,11 @@ app.post('/api/test-email', requireAuth, async (req, res) => {
 
 // POST /api/smoke-test
 app.post('/api/smoke-test', requireAuth, async (req, res) => {
-  const { phone, email } = req.body
-  if (!phone && !email) return res.status(400).json({ error: 'Provide phone and/or email' })
+  // Restrict to owner's own email and configured alert phone — prevents abuse
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(req.user.id)
+  const email = authUser?.email
+  const phone = process.env.OWNER_ALERT_PHONE || null
+  if (!phone && !email) return res.status(400).json({ error: 'No alert phone or email configured' })
   const results = {}
   if (phone) {
     try {
