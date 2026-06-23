@@ -4,6 +4,7 @@ cd /d C:\Users\brayd\autopilot
 if exist .git\index.lock del /f .git\index.lock
 echo Staging key files...
 git add nixpacks.toml
+git add vercel.json
 git add tools\fix_and_push.bat
 git add tools\push_now.bat
 git add backend\server.js
@@ -20,7 +21,7 @@ git add src\pages\Pricing.jsx
 git add src\pages\HowItWorks.jsx
 git add src\index.css
 echo Committing...
-git commit -m "fix: remove false advertising, sanitize API error messages, security hardening"
+git commit -m "fix: remove false advertising, sanitize API errors, add CSP/HSTS/security headers"
 echo Pushing...
 git push
 echo.
