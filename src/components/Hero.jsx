@@ -206,6 +206,46 @@ export default function Hero() {
               See how it works
             </ShimmerButton>
           </motion.div>
+
+          {/* Social proof — trust signals below CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE, delay: 1.6 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 28, flexWrap: 'wrap' }}
+          >
+            {/* Star rating */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 2 }}>
+                {[0,1,2,3,4].map(i => (
+                  <svg key={i} width="14" height="14" viewBox="0 0 14 14" fill="#FBBF24">
+                    <path d="M7 1l1.545 3.09L12 4.635l-2.5 2.43.59 3.435L7 8.91l-3.09 1.59.59-3.435L2 4.635l3.455-.545z"/>
+                  </svg>
+                ))}
+              </div>
+              <span style={{ fontSize: 13, color: '#6B7280', fontWeight: 500 }}>4.9/5 avg rating</span>
+            </div>
+
+            <div style={{ width: 1, height: 16, backgroundColor: 'rgba(0,0,0,0.12)' }} />
+
+            {/* No credit card */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span style={{ fontSize: 13, color: '#6B7280' }}>No credit card required</span>
+            </div>
+
+            <div style={{ width: 1, height: 16, backgroundColor: 'rgba(0,0,0,0.12)' }} />
+
+            {/* Cancel anytime */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span style={{ fontSize: 13, color: '#6B7280' }}>Cancel anytime</span>
+            </div>
+          </motion.div>
         </div>
 
         {/* Right — logo with scroll parallax (hidden on mobile) */}

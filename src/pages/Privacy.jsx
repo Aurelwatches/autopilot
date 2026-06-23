@@ -5,7 +5,7 @@ const PRIVACY_EMAIL = 'privacy@getautopilot.net'
 
 export default function Privacy() {
   return (
-    <LegalLayout title="Privacy Policy" updated="June 21, 2026">
+    <LegalLayout title="Privacy Policy" updated="June 23, 2026">
       <p className="text-sm leading-relaxed mb-8" style={{ color: '#94A3B8' }}>
         This Privacy Policy explains how AutoPilot ("AutoPilot", "we", "us", or "our") collects,
         uses, and protects information when you use our service. We are committed to handling your
@@ -16,7 +16,9 @@ export default function Privacy() {
       <LSection n="1" title="Information We Collect">
         <p>We collect only the information needed to operate the service:</p>
         <ul className="list-disc pl-5 space-y-1">
-          <li><strong>Account information</strong> — your email address and business (restaurant) name.</li>
+          <li><strong>Account information</strong> — your email address and business (restaurant) name, collected when you register or sign in.</li>
+          <li><strong>Social sign-in data</strong> — if you use "Sign in with Google" or "Sign in with Apple", we receive your name and email address from that provider. We do not receive your Google or Apple password. You may also sign in with an email and password created directly with AutoPilot.</li>
+          <li><strong>Google Business Profile data</strong> — if you connect your Google Business Profile, we receive an OAuth access token and refresh token to read your reviews and post replies on your behalf. We store only the tokens and your location identifier; we do not receive or store your Google account password.</li>
           <li><strong>Review data</strong> — customer reviews and the AI-generated replies we produce for them.</li>
           <li><strong>Messages</strong> — customer messages and the replies sent through the service.</li>
           <li><strong>Usage data</strong> — basic technical information (such as activity timestamps) needed to provide and secure the service.</li>
@@ -31,7 +33,23 @@ export default function Privacy() {
         </p>
       </LSection>
 
-      <LSection n="3" title="We Never Sell Your Data">
+      <LSection n="3" title="Third-Party Sign-In Providers (Google &amp; Apple)">
+        <p>
+          When you sign in with Google, your authentication is handled by Google LLC under
+          Google's own privacy policy. When you sign in with Apple, authentication is handled
+          by Apple Inc. under Apple's privacy policy. AutoPilot receives only the information
+          those providers share with us (typically your name and email address) and uses it
+          solely to create or access your AutoPilot account. We do not share your data back
+          with Google or Apple beyond what is required to complete authentication.
+        </p>
+        <p>
+          You may disconnect Google or Apple sign-in at any time by revoking access in your
+          Google Account settings (myaccount.google.com) or Apple ID settings, and by
+          contacting us to convert your account to email/password login.
+        </p>
+      </LSection>
+
+      <LSection n="4" title="We Never Sell Your Data">
         <p>
           We do not and will never sell, rent, or trade your personal information to third parties.
           We share data only with the service providers strictly necessary to run AutoPilot (for
@@ -40,7 +58,7 @@ export default function Privacy() {
         </p>
       </LSection>
 
-      <LSection n="4" title="Your Rights (GDPR & CCPA)">
+      <LSection n="5" title="Your Rights (GDPR & CCPA)">
         <p>
           Depending on where you live, you have rights over your personal information. Under the GDPR,
           you may access, correct, export (data portability), restrict, or erase your personal data,
@@ -56,7 +74,7 @@ export default function Privacy() {
         </p>
       </LSection>
 
-      <LSection n="5" title="How to Request Deletion">
+      <LSection n="6" title="How to Request Deletion">
         <p>
           You can request deletion of your account and associated data at any time by emailing{' '}
           <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--ap-accent)' }}>{PRIVACY_EMAIL}</a>{' '}
@@ -65,7 +83,7 @@ export default function Privacy() {
         </p>
       </LSection>
 
-      <LSection n="6" title="Data Retention & Security">
+      <LSection n="7" title="Data Retention & Security">
         <p>
           We retain your information for as long as your account is active or as needed to provide the
           service, and we apply reasonable technical and organizational measures to protect it. No method
@@ -73,14 +91,14 @@ export default function Privacy() {
         </p>
       </LSection>
 
-      <LSection n="7" title="Children's Privacy">
+      <LSection n="8" title="Children's Privacy">
         <p>
           AutoPilot is a business tool not directed to children under 16, and we do not knowingly collect
           personal information from them.
         </p>
       </LSection>
 
-      <LSection n="8" title="Changes to This Policy">
+      <LSection n="9" title="Changes to This Policy">
         <p>
           We may update this Privacy Policy from time to time. Material changes will be reflected by the
           "Last updated" date above, and continued use of the service constitutes acceptance of the
@@ -88,14 +106,14 @@ export default function Privacy() {
         </p>
       </LSection>
 
-      <LSection n="9" title="Governing Law">
+      <LSection n="10" title="Governing Law">
         <p>
           This Privacy Policy is governed by the laws of the State of North Carolina, United States,
           without regard to its conflict-of-laws principles.
         </p>
       </LSection>
 
-      <LSection n="10" title="Contact Us">
+      <LSection n="11" title="Contact Us">
         <p>
           Questions about this policy or your data? Email{' '}
           <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--ap-accent)' }}>{PRIVACY_EMAIL}</a>.

@@ -10,7 +10,8 @@ import DashboardSkeleton from './DashboardSkeleton'
 import Onboarding from './Onboarding'
 import RevealCtx from './revealContext'
 
-const ADMIN_EMAIL = 'bray.200913@gmail.com'
+const ADMIN_EMAIL   = 'bray.200913@gmail.com'
+const ADMIN_USER_ID = '6cab4088-2733-495d-8110-d3324745ad92'
 
 const SKELETON_MS = 1500
 
@@ -179,7 +180,7 @@ export default function DashboardLayout() {
     if (!user) { setSubChecked(true); return }
 
     // Admin bypasses all subscription/plan checks — treated as Pro
-    if (user.email === ADMIN_EMAIL) {
+    if (user.email === ADMIN_EMAIL || user.id === ADMIN_USER_ID) {
       setSubStatus('active')
       setPlan('pro')
       setSubChecked(true)
