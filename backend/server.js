@@ -1,6 +1,5 @@
 import express from 'express'
 import helmet from 'helmet'
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 import cron from 'node-cron'
@@ -995,33 +994,6 @@ app.post('/api/reply', replyLimiter, requireAuth, async (req, res) => {
     .eq('id', id)
   if (error) return res.status(500).json({ error: error.message })
   res.json({ ok: true })
-})
-
-// POST /api/generate-post  (Anthropic — used by legacy callers)
-app.post('/api/generate-post', generateLimiter, requireAuth, async (req, res) => {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set.' })
-
-  const topic    = clean(req.body.topic, 500)
-  const platform = clean(req.body.platform, 50)
-  const tone     = clean(req.body.tone, 50)
-  if (!topic) return res.status(400).json({ error: 'topic is required' })
-
-  const charHint = platform === 'Twitter' ? 'Keep it under 280 characters.' : 'Aim for 150–300 characters.'
-
-  try {
-    const anthropic = new Anthropic({ apiKey })
-    const msg = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 512,
-      system: "You are a social media expert for independent restaurants. Write engaging, authentic posts that sound like a real restaurant owner — not a marketing agency. Be specific, warm, and conversational. Include relevant emojis and 3-5 hashtags.",
-      messages: [{ role: 'user', content: `Write a ${platform} post about: ${topic.trim()}. ${charHint} Return only the post text.` }],
-    })
-    res.json({ text: msg.content[0].text.trim() })
-  } catch (err) {
-    console.error('Anthropic error:', err.message)
-    res.status(500).json({ error: err.message ?? 'AI generation failed.' })
-  }
 })
 
 // POST /api/generate-post-groq  (Groq/Llama — server-side proxy, key never exposed)
