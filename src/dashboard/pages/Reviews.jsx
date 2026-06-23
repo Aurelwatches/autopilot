@@ -91,15 +91,18 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://autopilot-production-76
 
 export default function Reviews() {
   const { C, userId, plan } = useApp()
-  const [reviews,      setReviews]      = useState([])
-  const [loading,      setLoading]      = useState(true)
-  const [error,        setError]        = useState('')
-  const [active,       setActive]       = useState('All')
-  const [approving,    setApproving]    = useState(new Set())
-  const [editingId,    setEditingId]    = useState(null)
-  const [editText,     setEditText]     = useState('')
-  const [saving,       setSaving]       = useState(new Set())
-  const [regenerating, setRegenerating] = useState(new Set())
+  const [reviews,        setReviews]        = useState([])
+  const [loading,        setLoading]        = useState(true)
+  const [error,          setError]          = useState('')
+  const [active,         setActive]         = useState('All')
+  const [approving,      setApproving]      = useState(new Set())
+  const [editingId,      setEditingId]      = useState(null)
+  const [editText,       setEditText]       = useState('')
+  const [saving,         setSaving]         = useState(new Set())
+  const [regenerating,   setRegenerating]   = useState(new Set())
+  const [googleConnected, setGoogleConnected] = useState(null) // null = loading
+  const [testingPipeline, setTestingPipeline] = useState(false)
+  const [testResult,      setTestResult]      = useState('')
 
   const { events } = useDashboard()
 
@@ -165,6 +168,38 @@ export default function Reviews() {
     }
   }
 
+  async function checkGoogleConnection() {
+    if (!supabase || !userId) return
+    const { data } = await supabase
+      .from('profiles')
+      .select('google_refresh_token')
+      .eq('id', userId)
+      .single()
+    setGoogleConnected(!!data?.google_refresh_token)
+  }
+
+  async function handleTestPipeline() {
+    setTestingPipeline(true)
+    setTestResult('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const res = await fetch(`${API_URL}/api/test-pipeline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ user_id: userId }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setTestResult(`❌ ${data.error}`); return }
+      setTestResult('✅ Test review sent! Check your email and the Pending filter.')
+      fetchReviews()
+    } catch (err) {
+      setTestResult(`❌ ${err.message}`)
+    } finally {
+      setTestingPipeline(false)
+    }
+  }
+
   async function handleApprove(reviewId) {
     setApproving(prev => new Set(prev).add(reviewId))
     try {
@@ -189,6 +224,7 @@ export default function Reviews() {
 
   useEffect(() => {
     fetchReviews()
+    checkGoogleConnection()
     const interval = setInterval(fetchReviews, 30000)
     return () => clearInterval(interval)
   }, [userId])
@@ -257,6 +293,56 @@ export default function Reviews() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Google not connected banner */}
+      {googleConnected === false && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+          padding: '14px 18px', borderRadius: 12, marginBottom: 20,
+          backgroundColor: 'rgba(251,191,36,0.07)',
+          border: '1px solid rgba(251,191,36,0.25)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🔗</span>
+            <div>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: C.primary }}>Connect Google Business Profile</p>
+              <p style={{ margin: 0, fontSize: 12, color: C.secondary, marginTop: 2 }}>
+                Link your account so AutoPilot can fetch and reply to real reviews automatically.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/dashboard/settings"
+            style={{
+              flexShrink: 0, fontSize: 12, fontWeight: 600, padding: '7px 16px',
+              borderRadius: 8, textDecoration: 'none', color: '#000',
+              backgroundColor: '#fbbf24', whiteSpace: 'nowrap',
+            }}
+          >
+            Connect now →
+          </Link>
+        </div>
+      )}
+
+      {/* Test pipeline button */}
+      <div style={{ marginBottom: 20 }}>
+        <button
+          onClick={handleTestPipeline}
+          disabled={testingPipeline}
+          style={{
+            fontSize: 12, fontWeight: 600, padding: '7px 16px', borderRadius: 8,
+            border: `1px solid ${C.border}`, backgroundColor: C.card, color: C.secondary,
+            cursor: testingPipeline ? 'not-allowed' : 'pointer', opacity: testingPipeline ? 0.6 : 1,
+          }}
+        >
+          {testingPipeline ? 'Sending test…' : '🧪 Send Test Review (Groq)'}
+        </button>
+        {testResult && (
+          <span style={{ marginLeft: 12, fontSize: 12, color: testResult.startsWith('✅') ? 'var(--ap-success)' : 'var(--ap-danger)' }}>
+            {testResult}
+          </span>
+        )}
       </div>
 
       {/* Starter plan: monthly review cap indicator */}
