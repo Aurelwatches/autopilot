@@ -898,8 +898,6 @@ app.post('/api/reviews/set-reply', async (req, res) => {
   } else if (bearerToken && supabase) {
     const { data: { user }, error } = await supabase.auth.getUser(bearerToken)
     if (!error && user) authorized = true
-  } else if (!webhookSecret && !bearerToken) {
-    authorized = true // MAKE_WEBHOOK_SECRET not configured yet — allow while migrating
   }
 
   if (!authorized) {
