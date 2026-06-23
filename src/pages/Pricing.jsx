@@ -387,7 +387,7 @@ export default function Pricing() {
           style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}
         >
           <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 8 }}>
-            All plans include a 14-day free trial. No credit card required.
+            All plans include a 14-day free trial. Cancel anytime.
           </p>
           <p style={{ fontSize: 13, color: '#9CA3AF' }}>
             Built for independent restaurants

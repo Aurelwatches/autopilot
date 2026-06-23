@@ -39,7 +39,7 @@ const faqs = [
   },
   {
     q: 'How much does it cost?',
-    a: 'AutoPilot starts at $99/mo for automated Google review replies. No credit card required to get started.',
+    a: 'AutoPilot starts at $99/mo for automated Google review replies. All plans include a 14-day free trial — cancel anytime.',
   },
 ]
 

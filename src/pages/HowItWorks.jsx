@@ -14,7 +14,7 @@ const steps = [
   {
     number: '01',
     title: 'Sign up',
-    body: "Create your account in 2 minutes. No credit card, no setup calls. Just your email and you’re in.",
+    body: "Create your account in 2 minutes. No setup calls. Just your email and you’re in — with a 14-day free trial.",
   },
   {
     number: '02',

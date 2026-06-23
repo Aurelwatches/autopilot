@@ -1121,7 +1121,7 @@ app.post('/api/create-portal-session', requireAuth, async (req, res) => {
     res.json({ url: session.url })
   } catch (err) {
     console.error('Stripe portal error:', err.message)
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: 'Failed to open billing portal. Please try again.' })
   }
 })
 
@@ -1146,7 +1146,8 @@ app.post('/api/reviews/:reviewId/approve', requireAuth, async (req, res) => {
 
   let accessToken
   try { accessToken = await getValidAccessToken(profile) } catch (err) {
-    return res.status(500).json({ error: `Token refresh failed: ${err.message}` })
+    console.error('[approve] Token refresh failed:', err.message)
+    return res.status(500).json({ error: 'Google authentication error. Please reconnect your Google account.' })
   }
   if (!accessToken) return res.status(500).json({ error: 'Could not obtain Google access token' })
 
@@ -1160,13 +1161,14 @@ app.post('/api/reviews/:reviewId/approve', requireAuth, async (req, res) => {
       body: JSON.stringify({ comment: review.ai_reply }),
     })
   } catch (err) {
-    return res.status(502).json({ error: `Network error reaching Google: ${err.message}` })
+    console.error('[approve] Google network error:', err.message)
+    return res.status(502).json({ error: 'Could not reach Google. Please try again.' })
   }
 
   if (!googleRes.ok) {
     const errText = await googleRes.text()
-    console.error(`Google reply API error (${googleRes.status}):`, errText)
-    return res.status(502).json({ error: `Google API error (${googleRes.status}): ${errText}` })
+    console.error(`[approve] Google reply API error (${googleRes.status}):`, errText)
+    return res.status(502).json({ error: `Failed to post reply to Google (status ${googleRes.status}). Try again or check your Google connection.` })
   }
 
   const { error: updateErr } = await supabase.from('reviews').update({ status: 'posted', scheduled_at: null }).eq('id', reviewId)
@@ -1232,7 +1234,10 @@ app.post('/api/test-review', requireAuth, async (req, res) => {
   }
 
   const { data, error } = await supabase.from('reviews').insert(reviewRow).select().single()
-  if (error) return res.status(500).json({ error: error.message })
+  if (error) {
+    console.error('[test-review] Insert error:', error.message)
+    return res.status(500).json({ error: 'Failed to save test review.' })
+  }
 
   // Push to SSE so the dashboard updates instantly without a refresh
   const sseEvent = {

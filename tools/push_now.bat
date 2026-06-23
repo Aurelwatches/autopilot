@@ -15,9 +15,12 @@ git add src\pages\Privacy.jsx
 git add src\pages\Login.jsx
 git add src\pages\Signup.jsx
 git add src\components\Hero.jsx
+git add src\components\FAQ.jsx
+git add src\pages\Pricing.jsx
+git add src\pages\HowItWorks.jsx
 git add src\index.css
 echo Committing...
-git commit -m "fix: OAuth error handling, improved buttons, privacy policy, trust signals"
+git commit -m "fix: remove false advertising, sanitize API error messages, security hardening"
 echo Pushing...
 git push
 echo.
