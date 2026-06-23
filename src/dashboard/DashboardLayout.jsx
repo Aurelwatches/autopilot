@@ -191,13 +191,19 @@ export default function DashboardLayout() {
       .select('subscription_status, plan')
       .eq('id', user.id)
       .single()
-      .then(({ data }) => {
-        setSubStatus(data?.subscription_status ?? null)
-        setPlan(data?.plan ?? null)
+      .then(({ data, error }) => {
+        if (error || !data) {
+          // Query failed (e.g. stale API key) — allow access rather than locking users out
+          setSubStatus('active')
+          setPlan('starter')
+        } else {
+          setSubStatus(data.subscription_status ?? null)
+          setPlan(data.plan ?? null)
+        }
         setSubChecked(true)
       })
       .catch(() => {
-        // On error allow access rather than locking users out
+        // Thrown errors also allow access
         setSubStatus('active')
         setPlan('starter')
         setSubChecked(true)

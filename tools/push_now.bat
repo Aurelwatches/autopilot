@@ -10,6 +10,7 @@ git add backend\server.js
 git add backend\google-oauth-routes.js
 git add backend\google-reviews-poller.js
 git add src\dashboard\
+git add index.html
 echo Committing...
 git commit -m "fix: add nixpacks.toml + security hardening"
 echo Pushing...
