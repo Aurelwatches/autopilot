@@ -11,6 +11,7 @@ import Pricing from './pages/Pricing'
 import HowItWorks from './pages/HowItWorks'
 import Checkout from './pages/Checkout'
 import PaymentSuccess from './pages/PaymentSuccess'
+import AuthCallback from './pages/AuthCallback'
 import CookieConsent from './components/CookieConsent'
 import DashboardLayout from './dashboard/DashboardLayout'
 import Overview from './dashboard/pages/Overview'
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/admin" element={<Admin />} />
 
           <Route path="/dashboard" element={<DashboardLayout />}>

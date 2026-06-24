@@ -1,4 +1,5 @@
 // AutoPilot backend — v2
+import crypto from 'crypto'
 import express from 'express'
 import helmet from 'helmet'
 import { createClient } from '@supabase/supabase-js'
@@ -1070,6 +1071,85 @@ app.post('/api/auth/google/select-location', requireAuth, async (req, res) => {
     .eq('id', user_id)
   if (error) return res.status(500).json({ error: error.message })
   res.json({ ok: true })
+})
+
+// ── Google Sign-In (custom OAuth — avoids Supabase domain on consent screen) ──
+// Separate from google-oauth-routes.js which handles Google Business Profile.
+// These routes use /user-signin and /user-callback to avoid collisions.
+
+// Redirect goes to Vercel proxy so Google shows "getautopilot.net" on the consent screen
+const GOOGLE_SIGNIN_REDIRECT = 'https://www.getautopilot.net/api/auth/google/user-callback'
+const GOOGLE_SIGNIN_SCOPES = 'openid email profile'
+
+// In-memory state store (CSRF protection) — values expire after 10 min
+const oauthStates = new Map()
+
+// GET /api/auth/google/user-signin
+// Redirects the browser to Google's OAuth consent screen
+app.get('/api/auth/google/user-signin', (req, res) => {
+  const state = crypto.randomUUID()
+  oauthStates.set(state, Date.now())
+  // Clean up states older than 10 min
+  for (const [k, t] of oauthStates) if (Date.now() - t > 600_000) oauthStates.delete(k)
+
+  const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
+  url.searchParams.set('client_id', process.env.GOOGLE_CLIENT_ID)
+  url.searchParams.set('redirect_uri', GOOGLE_SIGNIN_REDIRECT)
+  url.searchParams.set('response_type', 'code')
+  url.searchParams.set('scope', GOOGLE_SIGNIN_SCOPES)
+  url.searchParams.set('state', state)
+  url.searchParams.set('access_type', 'online')
+  url.searchParams.set('prompt', 'select_account')
+  res.redirect(url.toString())
+})
+
+// GET /api/auth/google/user-callback
+// Google redirects here with ?code= after user consents
+app.get('/api/auth/google/user-callback', async (req, res) => {
+  const { code, state, error } = req.query
+  const FRONTEND = process.env.FRONTEND_URL || 'https://www.getautopilot.net'
+
+  if (error) return res.redirect(`${FRONTEND}/login?error=google_denied`)
+
+  // Verify CSRF state
+  if (!state || !oauthStates.has(state)) {
+    return res.redirect(`${FRONTEND}/login?error=invalid_state`)
+  }
+  oauthStates.delete(state)
+
+  try {
+    // 1. Exchange code for Google tokens
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: GOOGLE_SIGNIN_REDIRECT,
+        grant_type: 'authorization_code',
+      }),
+    })
+    const tokens = await tokenRes.json()
+    if (!tokens.id_token) throw new Error('No id_token from Google')
+
+    // 2. Sign into Supabase using the Google ID token
+    const { createClient: mkClient } = await import('@supabase/supabase-js')
+    const anonClient = mkClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+    const { data, error: authErr } = await anonClient.auth.signInWithIdToken({
+      provider: 'google',
+      token: tokens.id_token,
+    })
+    if (authErr) throw authErr
+
+    const { access_token, refresh_token, expires_in } = data.session
+    // 3. Redirect to frontend with session — AuthCallback.jsx stores it
+    const params = new URLSearchParams({ access_token, refresh_token, expires_in: String(expires_in) })
+    res.redirect(`${FRONTEND}/auth/callback?${params}`)
+  } catch (err) {
+    console.error('[Google Sign-In] callback error:', err.message)
+    res.redirect(`${FRONTEND}/login?error=auth_failed`)
+  }
 })
 
 // Stripe price map

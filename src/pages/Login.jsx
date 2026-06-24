@@ -1,16 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { supabase } from '../lib/supabase'
 import EyeToggle from '../components/EyeToggle'
 import LoginPlane from '../components/LoginPlane'
-
-const ADMIN_EMAIL = 'bray.200913@gmail.com'
 
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { signIn, signInWithGoogle } = useAuth()
+  const { signIn } = useAuth()
 
   const notice = location.state?.message
 
@@ -30,7 +27,7 @@ export default function Login() {
     setLoading(true)
     setError('')
 
-    const { user, error: authError } = await signIn(email, password)
+    const { error: authError } = await signIn(email, password)
 
     if (authError) {
       setError(authError.message)
@@ -38,42 +35,15 @@ export default function Login() {
       return
     }
 
-    const hasSelectedPlan = !!localStorage.getItem('ap_selected_plan')
-    let hasActiveSub = false
-
-    if (user) {
-      if (user.email === ADMIN_EMAIL) {
-        hasActiveSub = true
-      } else {
-        try {
-          const { data } = await supabase
-            .from('profiles')
-            .select('subscription_status')
-            .eq('id', user.id)
-            .single()
-          hasActiveSub = data?.subscription_status === 'active'
-        } catch {
-          hasActiveSub = false
-        }
-      }
-    }
-
-    if (hasSelectedPlan && !hasActiveSub) {
-      navigate('/checkout')
-    } else {
-      setFlying(true)
-    }
+    // Sign-in always goes to dashboard — checkout redirect is signup's job only
+    setFlying(true)
   }
 
-  async function handleGoogle() {
+  function handleGoogle() {
     setGoogleLoading(true)
     setOauthError('')
-    const { error: err } = await signInWithGoogle()
-    if (err) {
-      setOauthError(err.message || 'Google sign-in failed. Please try again.')
-      setGoogleLoading(false)
-    }
-    // On success, Supabase redirects the page — no need to reset loading
+    // Redirect to Railway backend — custom OAuth so Google shows "getautopilot.net" not Supabase's domain
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google/user-signin`
   }
 
   const inputStyle = {

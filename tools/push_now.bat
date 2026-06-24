@@ -5,23 +5,28 @@ if exist .git\index.lock del /f .git\index.lock
 echo Staging key files...
 git add nixpacks.toml
 git add vercel.json
+git add api\auth\google\user-callback.js
 git add tools\fix_and_push.bat
 git add tools\push_now.bat
 git add backend\server.js
 git add backend\google-oauth-routes.js
 git add backend\google-reviews-poller.js
 git add src\dashboard\
+git add package.json
+git add src\main.jsx
 git add index.html
 git add src\pages\Privacy.jsx
 git add src\pages\Login.jsx
 git add src\pages\Signup.jsx
+git add src\pages\AuthCallback.jsx
+git add src\App.jsx
 git add src\components\Hero.jsx
 git add src\components\FAQ.jsx
 git add src\pages\Pricing.jsx
 git add src\pages\HowItWorks.jsx
 git add src\index.css
 echo Committing...
-git commit -m "fix: remove false advertising, sanitize API errors, add CSP/HSTS/security headers"
+git commit -m "fix: custom Google OAuth, self-host fonts, CSP hash, login always to dashboard"
 echo Pushing...
 git push
 echo.
