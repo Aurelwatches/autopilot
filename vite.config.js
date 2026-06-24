@@ -10,6 +10,7 @@ export default defineConfig({
     allowedHosts: ['disown-slogan-yanking.ngrok-free.dev'],
   },
   build: {
+    sourcemap: false, // never expose source maps in production
     rollupOptions: {
       output: {
         manualChunks: {

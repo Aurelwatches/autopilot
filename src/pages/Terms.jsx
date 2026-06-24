@@ -5,7 +5,7 @@ const CONTACT_EMAIL = 'hello@getautopilot.net'
 
 export default function Terms() {
   return (
-    <LegalLayout title="Terms of Service" updated="June 21, 2026">
+    <LegalLayout title="Terms of Service" updated="June 23, 2026">
       <p className="text-sm leading-relaxed mb-8" style={{ color: '#94A3B8' }}>
         These Terms of Service ("Terms") govern your access to and use of AutoPilot. By creating an
         account or using the service, you agree to these Terms. If you do not agree, do not use the service.
@@ -20,13 +20,29 @@ export default function Terms() {
         </p>
       </LSection>
 
-      <LSection n="2" title="No Guarantee of Results">
+      <LSection n="2" title="AI-Generated Content — Disclaimer & Your Responsibility">
         <p>
-          AutoPilot uses AI to generate content. AI output may be inaccurate, incomplete, or otherwise
-          imperfect. We do not guarantee any particular results, increase in reviews, ratings, traffic,
-          or revenue. <strong>You are responsible for reviewing all AI-generated content before it is
-          published or sent</strong>, and you remain solely responsible for what is posted under your
-          accounts.
+          AutoPilot uses third-party artificial intelligence models (including but not limited to
+          Anthropic Claude and Groq) to generate review replies, social media posts, and customer
+          messages on your behalf. You acknowledge and agree that:
+        </p>
+        <ul style={{ marginTop: 12, paddingLeft: 20, lineHeight: 2 }}>
+          <li>AI-generated content may be <strong>inaccurate, incomplete, misleading, offensive, or
+          otherwise unsuitable</strong> for publication.</li>
+          <li>AutoPilot makes <strong>no representations or warranties</strong> regarding the accuracy,
+          quality, legality, or appropriateness of any AI-generated content.</li>
+          <li><strong>You are solely responsible</strong> for reviewing, editing, and approving all
+          AI-generated content before it is published or sent — whether or not you use the auto-post
+          feature.</li>
+          <li>AutoPilot is <strong>not liable</strong> for any harm, reputational damage, loss of
+          business, customer complaints, platform penalties, or legal claims arising from AI-generated
+          content posted under your accounts.</li>
+          <li>Enabling auto-posting means content may be published without your manual review. You
+          accept full responsibility for that choice.</li>
+        </ul>
+        <p style={{ marginTop: 12 }}>
+          We do not guarantee any particular results, increase in reviews, ratings, traffic, or
+          revenue from using the service.
         </p>
       </LSection>
 
@@ -61,10 +77,23 @@ export default function Terms() {
         <p>
           To the maximum extent permitted by law, AutoPilot and its owners, employees, and suppliers will
           not be liable for any indirect, incidental, special, consequential, or punitive damages, or for
-          any loss of profits, revenue, data, or goodwill, arising out of or related to your use of (or
-          inability to use) the service. Our total aggregate liability for any claim relating to the
-          service will not exceed the amount you paid us in the three (3) months preceding the claim. The
-          service is provided "as is" and "as available" without warranties of any kind, express or implied.
+          any loss of profits, revenue, data, goodwill, or reputation, arising out of or related to your
+          use of (or inability to use) the service. This expressly includes, without limitation:
+        </p>
+        <ul style={{ marginTop: 12, paddingLeft: 20, lineHeight: 2 }}>
+          <li>Any claim arising from <strong>AI-generated content</strong> that is inaccurate, offensive,
+          misleading, or otherwise harmful.</li>
+          <li>Any content <strong>automatically posted</strong> to your Google Business Profile or social
+          media accounts via the auto-post feature.</li>
+          <li>Any <strong>platform penalties, account suspensions, or policy violations</strong> on
+          third-party platforms resulting from content generated or posted through AutoPilot.</li>
+          <li>Any <strong>customer complaints or legal claims</strong> resulting from AI-generated replies
+          or messages sent on your behalf.</li>
+        </ul>
+        <p style={{ marginTop: 12 }}>
+          Our total aggregate liability for any claim relating to the service will not exceed the amount
+          you paid us in the three (3) months preceding the claim. The service is provided "as is" and
+          "as available" without warranties of any kind, express or implied.
         </p>
       </LSection>
 
