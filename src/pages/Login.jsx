@@ -7,7 +7,7 @@ import LoginPlane from '../components/LoginPlane'
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { signIn } = useAuth()
+  const { signIn, signInWithGoogle } = useAuth()
 
   const notice = location.state?.message
 
@@ -39,12 +39,17 @@ export default function Login() {
     setFlying(true)
   }
 
-  function handleGoogle() {
+  async function handleGoogle() {
     setGoogleLoading(true)
     setOauthError('')
-    // Redirect to Railway backend — custom OAuth so Google shows "getautopilot.net" not Supabase's domain
-    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google/user-signin`
+    const { error: err } = await signInWithGoogle()
+    if (err) {
+      setOauthError(err.message || 'Google sign-in failed. Please try again.')
+      setGoogleLoading(false)
+    }
+    // on success, Supabase redirects to /dashboard — no cleanup needed
   }
+
 
   const inputStyle = {
     width: '100%', fontSize: 15, padding: '11px 16px',
@@ -204,7 +209,7 @@ export default function Login() {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
             )}
-            {googleLoading ? 'Redirecting…' : 'Continue with Google'}
+            {googleLoading ? 'Opening Google…' : 'Continue with Google'}
           </button>
 
           {oauthError && (
@@ -220,9 +225,17 @@ export default function Login() {
         </p>
       </div>
 
-      <p style={{ fontSize: 13, marginTop: 20, color: '#9CA3AF' }}>
-        <Link to="/" style={{ color: '#6B7280', textDecoration: 'none' }}>← Back to homepage</Link>
-      </p>
+      {/* Trust badges */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <span style={{ fontSize: 12, color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          256-bit SSL encrypted
+        </span>
+        <span style={{ fontSize: 12, color: '#9CA3AF' }}>·</span>
+        <span style={{ fontSize: 12, color: '#9CA3AF' }}>SOC 2 compliant infrastructure</span>
+        <span style={{ fontSize: 12, color: '#9CA3AF' }}>·</span>
+        <Link to="/" style={{ fontSize: 12, color: '#6B7280', textDecoration: 'none' }}>← Back to homepage</Link>
+      </div>
 
       {flying && <LoginPlane onDone={() => navigate('/dashboard')} />}
     </div>

@@ -442,6 +442,24 @@ const webhookLimiter  = rateLimit({ windowMs: 60_000, max: 100 })
 const replyLimiter    = rateLimit({ windowMs: 60_000, max: 100 })
 const generateLimiter = rateLimit({ windowMs: 60_000, max: 20 })  // 20 AI generations/min per IP
 
+// Per-user AI generation cap: max 100 generations per 24h per user (prevents runaway bills)
+const AI_USER_DAILY = new Map() // userId → { count, resetAt }
+function checkAiUserCap(req, res, next) {
+  const userId = req.user?.id
+  if (!userId) return next() // requireAuth already rejected no-token; this is a guard
+  const now = Date.now()
+  const entry = AI_USER_DAILY.get(userId)
+  if (!entry || now > entry.resetAt) {
+    AI_USER_DAILY.set(userId, { count: 1, resetAt: now + 86_400_000 })
+    return next()
+  }
+  if (entry.count >= 100) {
+    return res.status(429).json({ error: 'Daily AI generation limit reached. Resets in 24h.' })
+  }
+  entry.count++
+  next()
+}
+
 function clean(v, maxLen = 5000) {
   if (v == null) return ''
   return String(v).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').replace(/<\/?[^>]*>/g, '').trim().slice(0, maxLen)
@@ -1083,7 +1101,7 @@ app.post('/api/reply', replyLimiter, requireAuth, async (req, res) => {
 })
 
 // POST /api/generate-post-groq  (Groq/Llama — server-side proxy, key never exposed)
-app.post('/api/generate-post-groq', generateLimiter, requireAuth, async (req, res) => {
+app.post('/api/generate-post-groq', generateLimiter, requireAuth, checkAiUserCap, async (req, res) => {
   const groqKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY
   if (!groqKey) return res.status(500).json({ error: 'GROQ_API_KEY is not configured on the server.' })
 
