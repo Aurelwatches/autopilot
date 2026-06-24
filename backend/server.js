@@ -22,7 +22,14 @@ app.set('trust proxy', 1)
 app.use(helmet({
   contentSecurityPolicy: false,           // API-only — no HTML to protect
   crossOriginResourcePolicy: false,       // allow cross-origin requests from the frontend
+  permittedCrossDomainPolicies: true,
 }))
+// Explicit Permissions-Policy for the API (pushes Railway from A → A+)
+app.use((_req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()')
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+  next()
+})
 
 const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY)
   ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
@@ -788,17 +795,19 @@ cron.schedule('0 * * * *', checkUptime)   // top of every hour
 
 // ── Webhook (Make.com) ────────────────────────────────────────────────────────
 app.post('/api/webhook', webhookLimiter, async (req, res) => {
-  // Verify shared secret so only Make.com can fire fake reviews into the system.
-  // Set MAKE_WEBHOOK_SECRET in Railway env vars AND in your Make.com HTTP module
-  // as the header: X-Webhook-Secret: <your-secret>
+  // Verify shared secret — REQUIRED. Set MAKE_WEBHOOK_SECRET in Railway env vars
+  // AND in your Make.com HTTP module as header: X-Webhook-Secret: <your-secret>
   const webhookSecret = process.env.MAKE_WEBHOOK_SECRET
-  if (webhookSecret) {
-    const provided = req.headers['x-webhook-secret']
-    if (!provided || provided !== webhookSecret) {
-      console.warn('[Webhook] Rejected — invalid or missing X-Webhook-Secret from', req.ip)
-      logSecurityEvent('webhook_rejected', req, { reason: provided ? 'wrong_secret' : 'no_secret' }).catch?.(() => {})
-      return res.status(401).json({ error: 'Unauthorized' })
-    }
+  if (!webhookSecret) {
+    console.error('[Webhook] MAKE_WEBHOOK_SECRET not configured — rejecting all webhook calls')
+    return res.status(503).json({ error: 'Webhook not configured' })
+  }
+  const provided = req.headers['x-webhook-secret']
+  if (!provided || !crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(webhookSecret))) {
+    console.warn('[Webhook] Rejected — invalid or missing X-Webhook-Secret from', req.ip)
+    fastCheckAndBlock(req.ip, 'failed_auth')
+    logSecurityEvent('webhook_rejected', req, { reason: provided ? 'wrong_secret' : 'no_secret' }).catch?.(() => {})
+    return res.status(401).json({ error: 'Unauthorized' })
   }
 
   console.log('Webhook received:', JSON.stringify(req.body, null, 2))
