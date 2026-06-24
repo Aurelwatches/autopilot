@@ -8,6 +8,7 @@ import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
 import DashboardSkeleton from './DashboardSkeleton'
 import Onboarding from './Onboarding'
+import TermsGate from './TermsGate'
 import RevealCtx from './revealContext'
 
 const ADMIN_EMAIL   = 'bray.200913@gmail.com'
@@ -34,8 +35,21 @@ function LoadingScreen() {
 }
 
 function DashboardContent() {
-  const { C, theme } = useApp()
+  const { C, theme, userId } = useApp()
+  const { user } = useAuth()
   const isDark = theme === 'dark'
+
+  // Terms gate — show until user accepts
+  const [termsAccepted, setTermsAccepted] = useState(null) // null = loading
+  const isAdmin = user?.email === ADMIN_EMAIL || user?.id === ADMIN_USER_ID
+
+  useEffect(() => {
+    if (isAdmin) { setTermsAccepted(true); return }
+    if (!userId) return
+    supabase.from('profiles').select('terms_accepted_at').eq('id', userId).single()
+      .then(({ data }) => setTermsAccepted(!!data?.terms_accepted_at))
+      .catch(() => setTermsAccepted(true)) // fail open so users aren't locked out
+  }, [userId, isAdmin])
 
   // Mobile slide-in drawer (< 768px)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -164,6 +178,11 @@ function DashboardContent() {
         <Onboarding />
 
         {mountSkeleton && <DashboardSkeleton hidden={!showSkeleton} />}
+
+        {/* Terms gate — blocks dashboard until user accepts */}
+        {termsAccepted === false && (
+          <TermsGate onAccept={() => setTermsAccepted(true)} />
+        )}
       </div>
     </RevealCtx.Provider>
   )

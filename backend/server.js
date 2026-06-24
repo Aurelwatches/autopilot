@@ -129,7 +129,7 @@ app.use((req, res, next) => {
 })
 
 // ── IP blocklist ──────────────────────────────────────────────────────────────
-// Seed known attackers; auto-populated when failed_auth flood threshold is hit.
+// Persisted in Supabase `blocked_ips` table; loaded on startup.
 const BLOCKED_IPS = new Set([
   '89.222.103.193', // auth flood detected 2026-06-23
 ])
@@ -137,6 +137,46 @@ app.use((req, res, next) => {
   if (BLOCKED_IPS.has(req.ip)) return res.status(403).end()
   next()
 })
+
+// ── Fast-block: in-memory counter, no Supabase round-trip ────────────────────
+// Blocks an IP immediately in-memory, then persists to Supabase async.
+const FAST_HITS = new Map() // `type:ip` → [timestamps]
+const FAST_LIMITS = { failed_auth: 3, probe_404: 6, rate_limited: 15 }
+const FAST_WINDOW = 60_000 // 60 seconds
+
+async function persistBlock(ip, reason) {
+  if (!supabase) return
+  try {
+    await supabase.from('blocked_ips')
+      .upsert({ ip, reason, blocked_at: new Date().toISOString(), active: true }, { onConflict: 'ip' })
+  } catch (e) { console.warn('[Security] Failed to persist block:', e.message) }
+}
+
+function fastCheckAndBlock(ip, type) {
+  if (!ip || ip === 'unknown' || ip === '::1' || ip === '127.0.0.1') return false
+  const key = `${type}:${ip}`
+  const now = Date.now()
+  const hits = (FAST_HITS.get(key) || []).filter(t => now - t < FAST_WINDOW)
+  hits.push(now)
+  FAST_HITS.set(key, hits)
+  const limit = FAST_LIMITS[type] || 5
+  if (hits.length >= limit && !BLOCKED_IPS.has(ip)) {
+    BLOCKED_IPS.add(ip)
+    console.warn(`[Security] Fast-blocked ${ip} — ${hits.length} ${type} in 60s`)
+    persistBlock(ip, type)
+    return true
+  }
+  return false
+}
+
+// Load persisted blocked IPs from Supabase on startup
+async function loadBlockedIPs() {
+  if (!supabase) return
+  try {
+    const { data } = await supabase.from('blocked_ips').select('ip').eq('active', true)
+    if (data) { data.forEach(r => BLOCKED_IPS.add(r.ip)); console.log(`[Security] Loaded ${data.length} blocked IPs`) }
+  } catch (e) { console.warn('[Security] Could not load blocked IPs:', e.message) }
+}
 
 // ── Security monitoring ───────────────────────────────────────────────────────
 // Tracks attack attempts in Supabase and sends alerts when thresholds are hit.
@@ -175,6 +215,7 @@ async function sendSecurityAlert(type, ip, path, count, details) {
     webhook_rejected: '🚨 Fake Webhook Attempt',
     rate_limited:     '⚡ Rate Limit Flood',
     suspicious_input: '💉 Suspicious Input',
+    probe_404:        '🔍 Path Scanning / Probe',
   }
   const label = labels[type] || '⚠️ Security Alert'
   const msg = `${label}\nIP: ${ip}\nPath: ${path}\nCount: ${count} in last 5 min\nDetails: ${JSON.stringify(details)}`
@@ -229,12 +270,14 @@ app.use((req, res, next) => {
 async function requireAuth(req, res, next) {
   const token = (req.headers.authorization?.replace('Bearer ', '') || req.query.token || '').trim()
   if (!token) {
+    fastCheckAndBlock(req.ip, 'failed_auth')
     logSecurityEvent('failed_auth', req, { reason: 'no_token' })
     return res.status(401).json({ error: 'Unauthorized' })
   }
   if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
   const { data: { user }, error } = await supabase.auth.getUser(token)
   if (error || !user) {
+    fastCheckAndBlock(req.ip, 'failed_auth')
     logSecurityEvent('failed_auth', req, { reason: 'invalid_token' })
     return res.status(401).json({ error: 'Unauthorized' })
   }
@@ -1497,6 +1540,48 @@ app.post('/api/smoke-test', requireAuth, async (req, res) => {
 
 // Global error handler — catches unhandled throws in async route handlers
 // Never expose stack traces to the client
+// ── Admin: block / unblock IPs ────────────────────────────────────────────────
+const ADMIN_EMAILS = new Set(['bray.200913@gmail.com'])
+function requireAdmin(req, res, next) {
+  if (!req.user || !ADMIN_EMAILS.has(req.user.email)) return res.status(403).json({ error: 'Forbidden' })
+  next()
+}
+
+app.get('/api/admin/blocked-ips', requireAuth, requireAdmin, async (req, res) => {
+  if (!supabase) return res.json({ ips: [...BLOCKED_IPS] })
+  try {
+    const { data } = await supabase.from('blocked_ips').select('*').eq('active', true).order('blocked_at', { ascending: false })
+    res.json({ ips: data || [] })
+  } catch { res.json({ ips: [...BLOCKED_IPS].map(ip => ({ ip, reason: 'in-memory', blocked_at: null })) }) }
+})
+
+app.post('/api/admin/block-ip', requireAuth, requireAdmin, async (req, res) => {
+  const { ip, reason = 'manual' } = req.body
+  if (!ip) return res.status(400).json({ error: 'ip required' })
+  BLOCKED_IPS.add(ip)
+  await persistBlock(ip, reason)
+  console.warn(`[Security] Manually blocked IP: ${ip} by ${req.user.email}`)
+  res.json({ ok: true })
+})
+
+app.post('/api/admin/unblock-ip', requireAuth, requireAdmin, async (req, res) => {
+  const { ip } = req.body
+  if (!ip) return res.status(400).json({ error: 'ip required' })
+  BLOCKED_IPS.delete(ip)
+  if (supabase) {
+    await supabase.from('blocked_ips').update({ active: false, unblocked_at: new Date().toISOString() }).eq('ip', ip)
+  }
+  console.log(`[Security] Unblocked IP: ${ip} by ${req.user.email}`)
+  res.json({ ok: true })
+})
+
+// ── 404 catch-all — must be LAST route ───────────────────────────────────────
+app.use((req, res) => {
+  fastCheckAndBlock(req.ip, 'probe_404')
+  logSecurityEvent('probe_404', req, { method: req.method }).catch(() => {})
+  res.status(404).json({ error: 'Not found' })
+})
+
 app.use((err, req, res, _next) => {
   console.error('[UnhandledError]', err.message, err.stack)
   res.status(500).json({ error: 'Internal server error' })
@@ -1504,5 +1589,6 @@ app.use((err, req, res, _next) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`API server -> http://0.0.0.0:${PORT}`)
+  loadBlockedIPs()
   startReviewsPoller()
 })
