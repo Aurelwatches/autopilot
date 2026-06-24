@@ -128,6 +128,16 @@ app.use((req, res, next) => {
   next()
 })
 
+// ── IP blocklist ──────────────────────────────────────────────────────────────
+// Seed known attackers; auto-populated when failed_auth flood threshold is hit.
+const BLOCKED_IPS = new Set([
+  '89.222.103.193', // auth flood detected 2026-06-23
+])
+app.use((req, res, next) => {
+  if (BLOCKED_IPS.has(req.ip)) return res.status(403).end()
+  next()
+})
+
 // ── Security monitoring ───────────────────────────────────────────────────────
 // Tracks attack attempts in Supabase and sends alerts when thresholds are hit.
 
@@ -169,6 +179,11 @@ async function sendSecurityAlert(type, ip, path, count, details) {
   const label = labels[type] || '⚠️ Security Alert'
   const msg = `${label}\nIP: ${ip}\nPath: ${path}\nCount: ${count} in last 5 min\nDetails: ${JSON.stringify(details)}`
   console.warn('[Security Alert]', msg)
+  // Auto-block confirmed auth flood IPs
+  if (type === 'failed_auth' && ip && ip !== 'unknown') {
+    BLOCKED_IPS.add(ip)
+    console.warn(`[Security] Auto-blocked IP: ${ip}`)
+  }
 
   // Discord
   const discordUrl = process.env.VITE_DISCORD_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL
@@ -189,6 +204,23 @@ async function sendSecurityAlert(type, ip, path, count, details) {
     }).catch(() => {})
   }
 }
+
+// ── Global rate limiter ───────────────────────────────────────────────────────
+const RATE_HITS = new Map() // ip → [timestamps]
+const RATE_MAX  = 120       // requests per window
+const RATE_WIN  = 60_000    // 1 minute
+app.use((req, res, next) => {
+  if (req.path === '/health') return next()
+  const ip = req.ip, now = Date.now()
+  const hits = (RATE_HITS.get(ip) || []).filter(t => now - t < RATE_WIN)
+  hits.push(now)
+  RATE_HITS.set(ip, hits)
+  if (hits.length > RATE_MAX) {
+    logSecurityEvent('rate_limited', req, { count: hits.length }).catch(() => {})
+    return res.status(429).json({ error: 'Too many requests. Slow down.' })
+  }
+  next()
+})
 
 // ── Auth middleware ───────────────────────────────────────────────────────────
 // Validates the Supabase JWT. Accepts:
@@ -1181,6 +1213,39 @@ app.post('/api/create-checkout-session', requireAuth, async (req, res) => {
     res.json({ url: session.url })
   } catch (err) {
     console.error('Stripe checkout error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// GET /api/subscription/status — live Stripe billing data, syncs to Supabase
+app.get('/api/subscription/status', requireAuth, async (req, res) => {
+  if (!stripe || !supabase) return res.status(500).json({ error: 'Not configured' })
+  try {
+    const { data: profile } = await supabase.from('profiles')
+      .select('stripe_customer_id').eq('id', req.user.id).single()
+    if (!profile?.stripe_customer_id) return res.json({ current_period_end: null, cancel_at_period_end: false, status: 'none' })
+    const subs = await stripe.subscriptions.list({ customer: profile.stripe_customer_id, limit: 1, status: 'active' })
+    const sub = subs.data[0]
+    if (!sub) {
+      // Check for canceled subs to show period end
+      const cSubs = await stripe.subscriptions.list({ customer: profile.stripe_customer_id, limit: 1 })
+      const cSub = cSubs.data[0]
+      if (cSub) {
+        const periodEnd = new Date(cSub.current_period_end * 1000).toISOString()
+        return res.json({ current_period_end: periodEnd, cancel_at_period_end: cSub.cancel_at_period_end, status: cSub.status })
+      }
+      return res.json({ current_period_end: null, cancel_at_period_end: false, status: 'none' })
+    }
+    const periodEnd = new Date(sub.current_period_end * 1000).toISOString()
+    // Sync fresh data back to Supabase
+    await supabase.from('profiles').update({
+      stripe_current_period_end: periodEnd,
+      cancel_at_period_end: sub.cancel_at_period_end,
+      subscription_status: sub.status,
+    }).eq('id', req.user.id)
+    res.json({ current_period_end: periodEnd, cancel_at_period_end: sub.cancel_at_period_end, status: sub.status })
+  } catch (err) {
+    console.error('[subscription/status]', err.message)
     res.status(500).json({ error: err.message })
   }
 })

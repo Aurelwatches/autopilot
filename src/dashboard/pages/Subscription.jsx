@@ -50,23 +50,27 @@ export default function Subscription() {
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalError,   setPortalError]   = useState('')
 
-  // Real subscription data from Supabase
+  // Real subscription data — fetched live from Stripe via backend
   const [cancelAtPeriodEnd,  setCancelAtPeriodEnd]  = useState(false)
   const [currentPeriodEnd,   setCurrentPeriodEnd]   = useState(null)
   const [subLoading,         setSubLoading]         = useState(true)
 
+  async function getToken() {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token || ''
+  }
+
   async function fetchSubData() {
-    if (!userId || !supabase) { setSubLoading(false); return }
+    if (!userId) { setSubLoading(false); return }
     try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('cancel_at_period_end, stripe_current_period_end, subscription_status')
-        .eq('id', userId)
-        .single()
-      if (data) {
-        setCancelAtPeriodEnd(data.cancel_at_period_end ?? false)
-        setCurrentPeriodEnd(data.stripe_current_period_end ?? null)
-      }
+      const token = await getToken()
+      const res = await fetch(`${API_URL}/api/subscription/status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error('Failed to fetch subscription status')
+      const data = await res.json()
+      setCancelAtPeriodEnd(data.cancel_at_period_end ?? false)
+      setCurrentPeriodEnd(data.current_period_end ?? null)
     } catch (err) {
       console.warn('[Subscription] Failed to fetch sub data:', err.message)
     } finally {
@@ -84,13 +88,14 @@ export default function Subscription() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
 
-  async function handleCancelConfirm() {
+  async function openBillingPortal() {
     setPortalLoading(true)
     setPortalError('')
     try {
+      const token = await getToken()
       const res = await fetch(`${API_URL}/api/create-portal-session`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ userId }),
       })
       const data = await res.json()
@@ -100,6 +105,10 @@ export default function Subscription() {
       setPortalError(err.message)
       setPortalLoading(false)
     }
+  }
+
+  async function handleCancelConfirm() {
+    await openBillingPortal()
   }
 
   const canceled = cancelAtPeriodEnd
@@ -220,7 +229,7 @@ export default function Subscription() {
               </p>
             </div>
             <button
-              onClick={handleCancelConfirm}
+              onClick={openBillingPortal}
               disabled={portalLoading}
               className="shrink-0 text-sm font-semibold px-5 py-2 rounded transition-colors"
               style={{ backgroundColor: C.inputBg, border: `1px solid ${C.border}`, color: C.primary, cursor: portalLoading ? 'default' : 'pointer', opacity: portalLoading ? 0.6 : 1 }}
@@ -232,6 +241,11 @@ export default function Subscription() {
           </div>
 
         </div>
+        {portalError && (
+          <div className="px-6 pb-4">
+            <p className="text-xs" style={{ color: 'rgb(239,68,68)' }}>{portalError}</p>
+          </div>
+        )}
       </div>
 
       {/* Cancel */}
