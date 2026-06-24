@@ -15,9 +15,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
-    "@fontsource-variable/bricolage-grotesque": "^5.1.1",
-    "@fontsource-variable/inter": "^5.1.1",
-    "@fontsource/jetbrains-mono": "^5.2.5",
     "@supabase/supabase-js": "^2.107.0",
     "discord.js": "^14.26.4",
     "express": "^4.19.2",
@@ -33,6 +30,9 @@
     "twilio": "^6.0.2"
   },
   "devDependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.1.1",
+    "@fontsource-variable/inter": "^5.1.1",
+    "@fontsource/jetbrains-mono": "^5.2.5",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
     "concurrently": "^9.1.2",
